@@ -1,0 +1,50 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  /* ========= Fonts ========= */
+  --font-sans: "Poppins", sans-serif;
+
+  /* ========= Brand ========= */
+  --color-primary: #1078a9;
+  --color-primary-hover: #0d688f;
+  --color-primary-light: #e8f6fb;
+
+  --color-secondary: #121417;
+  --color-secondary-hover: #1d2126;
+
+  /* ========= Surfaces ========= */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-card: #ffffff;
+  --color-ring: #1078a9;
+  --color-muted-foreground: #6b7280;
+
+  /* ========= Text ========= */
+  --color-foreground: #121417;
+  --color-muted: #6b7280;
+  --color-muted-light: #9ca3af;
+
+  /* ========= Borders ========= */
+  --color-border: #e5e7eb;
+  --color-border-light: #f1f5f9;
+
+  /* ========= Status ========= */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-destructive: #ef4444;
+  --color-info: #3b82f6;
+
+  /* ========= Radius ========= */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}

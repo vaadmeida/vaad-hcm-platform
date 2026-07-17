@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String     @unique @db.VarChar(255)
+  description String?
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @default(now())
+  employees   Employee[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  first_name             String             @db.VarChar(100)
+  last_name              String             @db.VarChar(100)
+  email                  String             @unique @db.VarChar(255)
+  phone                  String?            @db.VarChar(20)
+  job_title              String?            @db.VarChar(150)
+  job_description        String?
+  department_id          String?            @db.Uuid
+  manager_id             String?            @db.Uuid
+  status                 String             @default("probation") @db.VarChar(20)
+  employment_type        String             @default("full-time") @db.VarChar(50)
+  hire_date              DateTime?          @db.Date
+  probation_end_date     DateTime?
+  work_email             String?            @db.VarChar(255)
+  owns_personal_computer Boolean            @default(false)
+  password_hash          String             @db.VarChar(255)
+  role                   String             @default("employee") @db.VarChar(20)
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @default(now())
+  documents              EmployeeDocument[] @relation("EmployeeDocuments")
+  uploadedDocuments      EmployeeDocument[] @relation("UploadedDocuments")
+  verifiedDocuments      EmployeeDocument[] @relation("VerifiedDocuments")
+  department             Department?        @relation(fields: [department_id], references: [id])
+  manager                Employee?          @relation("EmployeeManager", fields: [manager_id], references: [id])
+  subordinates           Employee[]         @relation("EmployeeManager")
+  leaveBalances          LeaveBalance[]
+  approvedLeaveRequests  LeaveRequest[]     @relation("ApprovedLeaveRequests")
+  leaveRequests          LeaveRequest[]     @relation("EmployeeLeaveRequests")
+
+  @@map("employees")
+}
+
+model LeaveType {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String         @db.VarChar(100)
+  default_days_per_year Int?
+  requires_document     Boolean?       @default(false)
+  is_paid               Boolean?       @default(true)
+  carries_over          Boolean?       @default(false)
+  max_carryover_days    Int?           @default(0)
+  created_at            DateTime?      @default(now()) @db.Timestamp(6)
+  leaveBalances         LeaveBalance[]
+  leaveRequests         LeaveRequest[]
+
+  @@map("leave_types")
+}
+
+model LeaveBalance {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id   String    @db.Uuid
+  leave_type_id String    @db.Uuid
+  year          Int       @default(dbgenerated("EXTRACT(year FROM now())"))
+  entitled_days Decimal   @db.Decimal(5, 1)
+  used_days     Decimal?  @default(0) @db.Decimal(5, 1)
+  pending_days  Decimal?  @default(0) @db.Decimal(5, 1)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  employee      Employee  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leaveType     LeaveType @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([employee_id, leave_type_id, year])
+  @@map("leave_balances")
+}
+
+model LeaveRequest {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id      String    @db.Uuid
+  leave_type_id    String    @db.Uuid
+  start_date       DateTime  @db.Date
+  end_date         DateTime  @db.Date
+  total_days       Decimal   @db.Decimal(5, 1)
+  reason           String?
+  status           String?   @default("pending") @db.VarChar(20)
+  approved_by      String?   @db.Uuid
+  approved_at      DateTime? @db.Timestamp(6)
+  rejection_reason String?
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  approver         Employee? @relation("ApprovedLeaveRequests", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee         Employee  @relation("EmployeeLeaveRequests", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leaveType        LeaveType @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("leave_requests")
+}
+
+model DocumentType {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String           @unique @db.VarChar(150)
+  category          DocumentCategory
+  description       String?
+  isRequired        Boolean          @default(false) @map("is_required")
+  hasExpiry         Boolean          @default(false) @map("has_expiry")
+  allowedExtensions String[]         @default(["pdf", "jpg", "jpeg", "png"]) @map("allowed_extensions")
+  maxSizeMb         Int              @default(5) @map("max_size_mb")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime         @default(now()) @map("updated_at") @db.Timestamp(6)
+  employeeDocuments EmployeeDocument[]
+  @@map("document_types")
+}
+
+model EmployeeDocument {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId     String    @map("employee_id") @db.Uuid
+  documentTypeId String    @map("document_type_id") @db.Uuid
+  fileName       String    @map("file_name") @db.VarChar(255)
+  fileUrl        String    @map("file_url")
+  fileSizeMb     Decimal?  @map("file_size_mb") @db.Decimal(5, 2)
+  status         String?   @default("pending") @db.VarChar(20)
+  expiryDate     DateTime? @map("expiry_date") @db.Date
+  notes          String?
+  uploadedBy     String?   @map("uploaded_by") @db.Uuid
+  verifiedBy     String?   @map("verified_by") @db.Uuid
+  verifiedAt     DateTime? @map("verified_at") @db.Timestamp(6)
+  uploadedAt     DateTime? @default(now()) @map("uploaded_at") @db.Timestamp(6)
+  updatedAt      DateTime? @default(now()) @map("updated_at") @db.Timestamp(6)
+  employee       Employee  @relation("EmployeeDocuments", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  uploader       Employee? @relation("UploadedDocuments", fields: [uploadedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  verifier       Employee? @relation("VerifiedDocuments", fields: [verifiedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documentType  DocumentType @relation(fields: [documentTypeId],references: [id], onDelete: NoAction,onUpdate: NoAction)
+
+  @@map("employee_documents")
+}
+
+enum DocumentCategory {
+  identity
+  contract
+  compliance
+  certificate
+  onboarding
+  other
+
+  @@map("document_category")
+}
