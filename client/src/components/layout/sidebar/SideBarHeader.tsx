@@ -15,8 +15,8 @@ const SideBarHeader = ({ setSidebarOpen }: SidebarHeaderProps) => {
       />
 
       <div className="ml-3 min-w-0">
-        <h1 className="truncate text-sm font-semibold tracking-wide text-white sm:text-base">
-          VAAD HR
+        <h1 className="truncate text-xs font-semibold tracking-wide text-white sm:text-base">
+          VAAD MEDIA LTD
         </h1>
 
         <p className="truncate text-xs text-gray-400">
