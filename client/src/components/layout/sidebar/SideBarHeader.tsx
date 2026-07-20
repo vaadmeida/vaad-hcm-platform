@@ -1,23 +1,36 @@
 import logo from "@/assets/vaad_icon.jpeg";
+import { XIcon } from "lucide-react";
 
-const SideBarHeader = () => {
+interface SidebarHeaderProps {
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const SideBarHeader = ({ setSidebarOpen }: SidebarHeaderProps) => {
   return (
-    <div className="flex items-center gap-3 border-b border-white/10 px-6 py-5">
+    <div className="flex items-center border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
       <img
         src={logo}
         alt="VAAD HR"
-        className="h-10 w-10 object-contain rounded-full"
+        className="h-9 w-9 rounded-full object-cover sm:h-10 sm:w-10"
       />
 
-      <div>
-        <h1 className="text-base font-semibold tracking-wide text-white">
+      <div className="ml-3 min-w-0">
+        <h1 className="truncate text-sm font-semibold tracking-wide text-white sm:text-base">
           VAAD HR
         </h1>
 
-        <p className="text-xs text-gray-400">
+        <p className="truncate text-xs text-gray-400">
           Human Resource Platform
         </p>
       </div>
+
+      {/* Close Button */}
+      <button
+        onClick={() => setSidebarOpen(false)}
+        className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/10 hover:text-white md:hidden"
+      >
+        <XIcon className="h-5 w-5" />
+      </button>
     </div>
   );
 };

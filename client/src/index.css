@@ -43,8 +43,27 @@
   --radius-xl: 18px;
 }
 
+
 body {
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-foreground);
+}
+
+@layer components {
+  .action-icon-blue {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600;
+  }
+
+  .action-icon-green {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600;
+  }
+
+  .action-icon-amber {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600;
+  }
+
+  .action-icon-purple {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600;
+  }
 }

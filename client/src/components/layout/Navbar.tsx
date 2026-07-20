@@ -1,9 +1,15 @@
-import { Bell, PlusIcon, Search } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { useLocation } from "react-router-dom";
-
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/auth.store";
-import { Button } from "../ui/button";
+import QuickActionDropdown from "../common/QuickActionDropdown";
+import MobileMenu from "./sidebar/MobileMenu";
+
+interface NavbarProps {
+  sidebarOpen: boolean;
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 
 const pageTitles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
@@ -14,8 +20,9 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
 };
 
-const Navbar = () => {
+const Navbar = ({ setSidebarOpen }: NavbarProps) => {
   const { pathname } = useLocation();
+
   const user = useAuthStore((state) => state.user);
 
   const title = pageTitles[pathname] || "Dashboard";
@@ -23,18 +30,22 @@ const Navbar = () => {
   const initials = `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface px-4 md:px-6">
       {/* Left */}
-      <div>
-        <h1 className="text-md font-semibold text-foreground">
+      <div className="flex items-center gap-3">
+        <div className="md:hidden">
+          <MobileMenu onClick={() => setSidebarOpen(true)} />
+        </div>
+
+        <h1 className="text-sm font-semibold text-foreground md:text-base">
           {title}
         </h1>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
         {/* Search */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden lg:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
           <Input
@@ -43,26 +54,22 @@ const Navbar = () => {
           />
         </div>
 
-        {/* Notifications */}
-        <button
-          className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted-light"
-        >
+        {/* Notification */}
+        <button className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted-light">
           <Bell className="h-4 w-4" />
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
         </button>
 
         {/* Quick Action */}
-        <Button className="h-9 gap-2 rounded-lg px-3 text-sm text-white">
-          <PlusIcon className="h-4 w-4" />
-          Quick Action
-        </Button>
+        <div className="hidden sm:block">
+          <QuickActionDropdown />
+        </div>
 
-        {/* User */}
+        {/* Avatar */}
         <button className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
           {initials}
         </button>
       </div>
-
     </header>
   );
 };

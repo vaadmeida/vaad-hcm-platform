@@ -6,7 +6,7 @@ import prisma from './config/prisma.ts';
 
 const PORT = process.env.PORT || 5000;
 
-console.log("DB URL:", process.env.DATABASE_URL);
+//console.log("DB URL:", process.env.DATABASE_URL);
 
 async function startServer() {
     try {
