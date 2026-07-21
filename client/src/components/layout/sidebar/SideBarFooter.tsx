@@ -1,9 +1,19 @@
 import { useAuthStore } from "@/store/auth.store";
 import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const SideBarFooter = () => { 
    
+
    const user = useAuthStore((state)=>state.user)
+   const logout  = useAuthStore((state)=> state.logout)
+
+   const navigate = useNavigate()
+
+   const handleLogout = ()=>{
+       logout()
+       navigate('/login' , {replace: true})
+   }
 
 
   return (
@@ -27,7 +37,7 @@ const SideBarFooter = () => {
         </div>
 
         {/* Logout */}
-        <button className="rounded-md p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+        <button onClick={handleLogout} className="rounded-md p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
           aria-label="Logout">
           <LogOut size={18} />
         </button>

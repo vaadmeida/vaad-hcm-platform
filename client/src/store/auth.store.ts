@@ -26,7 +26,6 @@ export const useAuthStore = create<AuthState>()(
                     token: null,
                 }),
         }),
-
         {
             name: "vaad-auth",
         }
