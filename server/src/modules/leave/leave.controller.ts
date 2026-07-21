@@ -24,7 +24,10 @@ export const createLeaveTypesController = async (req: Request, res: Response) =>
 
     const result = await createLeaveTypes({
         ...parsed.data,
-        user: req.user,
+        user: {
+            id: req.user.id,
+            role: req.user.role as "admin" | "manager" | "employee",
+        },
     });
 
     return res.status(201).json({
@@ -127,7 +130,10 @@ export const getLeaveRequestsController = async (req: Request, res: Response) =>
     }
 
     const result = await getLeaveRequests({
-        user: req.user,
+        user: {
+            id: req.user.id,
+            role: req.user.role as "admin" | "manager" | "employee",
+        },
         ...parsed.data,
     });
 
@@ -241,7 +247,7 @@ export const cancelRequestController = async (req: Request, res: Response) => {
     const requestId = parsedParams.data.id;
     const employeeId = req.user!.id;
 
-   const result = await cancelRequest(requestId, employeeId);
+    const result = await cancelRequest(requestId, employeeId);
 
     return res.status(200).json({
         success: true,

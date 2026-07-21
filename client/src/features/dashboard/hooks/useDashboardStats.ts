@@ -3,7 +3,6 @@ import { getDashboardStats } from "../api/dashboard.api"
 import type { DashboardResponse } from "../types/dashboard.type"
 
 export const useDashboardStats=()=>{
-      console.log("useDashboardStats called");
 
     return useQuery<DashboardResponse>({
         queryKey: ["dashboard-stats"],

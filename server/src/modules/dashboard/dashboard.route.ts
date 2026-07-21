@@ -2,10 +2,10 @@ import { Router } from "express";
 import { authenticate } from "../../middlewares/auth.ts";
 import { requireRoles } from "../../middlewares/role.ts";
 import { getDashboardStats } from "./dashbaord.controller.ts";
+import { asyncHandler } from "../../utils/asyncHandler.ts";
 
 const dashboardRouter = Router()
-
-dashboardRouter.get("/stats", authenticate , getDashboardStats)
+dashboardRouter.get("/stats", authenticate , asyncHandler(getDashboardStats))
 
 
 export default dashboardRouter
