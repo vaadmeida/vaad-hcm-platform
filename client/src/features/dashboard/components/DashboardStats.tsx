@@ -4,16 +4,19 @@ import StatsCard from "./StatsCard";
 import ErrorState from "@/components/common/ErrorState";
 import SkeletonLoader from "@/components/common/SkeletonLoader";
 
-
 const DashboardStats = () => {
-  const { isLoading,data, error } = useDashboardStats();
-
+  const { isLoading, data, error, refetch } = useDashboardStats();
 
   if (error) {
-    return <ErrorState/>
+    return (
+      <ErrorState
+        message="Unable to load dashboard statistics."
+        onRetry={refetch}
+      />
+    );
   }
-    if (isLoading) {
-    return <SkeletonLoader/>
+  if (isLoading) {
+    return <SkeletonLoader />
   }
 
 
