@@ -5,7 +5,7 @@ import { getDashboardStats } from "./dashbaord.controller.ts";
 
 const dashboardRouter = Router()
 
-dashboardRouter.get("/stats", authenticate , requireRoles('admin'), getDashboardStats)
+dashboardRouter.get("/stats", authenticate , getDashboardStats)
 
 
 export default dashboardRouter

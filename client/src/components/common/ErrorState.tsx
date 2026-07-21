@@ -1,4 +1,4 @@
-const LoadingSpinner = () => {
+const ErrorState = () => {
   return (
     <div>
       
@@ -6,4 +6,4 @@ const LoadingSpinner = () => {
   )
 }
 
-export default LoadingSpinner
+export default ErrorState
