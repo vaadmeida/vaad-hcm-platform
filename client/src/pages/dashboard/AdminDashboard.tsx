@@ -1,7 +1,6 @@
 import { formatCurrentDate, getGreeting } from "@/utils/date";
 import { useAuthStore } from "@/store/auth.store";
 import { useDashboardStats } from "@/features/dashboard/hooks/useDashboardStats";
-import PageLoader from "@/components/common/PageLoader";
 import ErrorState from "@/components/common/ErrorState";
 import DashboardStats from "@/features/dashboard/components/DashboardStats";
 
@@ -9,15 +8,14 @@ const AdminDashboard = () => {
 
   const user = useAuthStore((state) => state.user);
 
-  const { isLoading, error } = useDashboardStats()
-
-  if (isLoading) {
-    return <PageLoader/>
-  }
+  const { error } = useDashboardStats();
 
   if (error) {
-     <ErrorState/>
-  } 
+    return <ErrorState />;
+  }
+
+
+
 
   return (
     <div className="space-y-8">
@@ -33,9 +31,9 @@ const AdminDashboard = () => {
       </section>
 
       {/* Stats Cards */}
-       <DashboardStats/>
-    
-   
+      <DashboardStats />
+
+
       {/* Charts */}
 
       {/* Recent Employees */}
