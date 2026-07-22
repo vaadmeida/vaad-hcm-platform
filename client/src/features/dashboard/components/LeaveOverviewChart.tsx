@@ -29,7 +29,7 @@ const LeaveOverviewChart = ({ data }: LeaveOverviewChartProps) => {
         Leave Overview
       </h2>
 
-      <div className="relative h-[300px] w-full">
+      <div className="relative h-75 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
             <Pie
