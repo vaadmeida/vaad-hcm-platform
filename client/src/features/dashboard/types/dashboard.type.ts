@@ -10,3 +10,23 @@ export interface DashboardResponse {
     message: string;
     data: DashboardStats;
 }
+export interface EmployeesChart {
+    department: string;
+    employees: number;
+}
+
+export interface EmployeeChartResponse {
+    success: boolean;
+    message: string;
+    data: EmployeesChart[];
+}
+export interface LeaveOverview {
+    leaveStatus: string;
+    count: number;
+}
+
+export interface LeaveOverviewResponse {
+    success: boolean;
+    message: string;
+    data: LeaveOverview[];
+}

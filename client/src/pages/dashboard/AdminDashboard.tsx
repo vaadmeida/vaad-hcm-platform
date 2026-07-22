@@ -1,11 +1,18 @@
-import { formatCurrentDate, getGreeting } from "@/utils/date";
+import { getGreeting } from "@/utils/date";
 import { useAuthStore } from "@/store/auth.store";
 import DashboardStats from "@/features/dashboard/components/DashboardStats";
+import EmployeeByDepartmentChart from "@/features/dashboard/components/EmployeeByDepartmentsChart";
+import { useEmployeesByDepartment } from "@/features/dashboard/hooks/useEmployeesByDepartment";
+import LeaveOverviewChart from "@/features/dashboard/components/LeaveOverviewChart";
+import { useLeaveOverview } from "@/features/dashboard/hooks/useLeaveOverview";
+import { dashboardSubtitle } from "@/utils/dashboardSubtitle";
 
 const AdminDashboard = () => {
 
   const user = useAuthStore((state) => state.user);
 
+  const { data: employeeDepartments } = useEmployeesByDepartment();
+  const { data: leaveOverview } = useLeaveOverview();
 
 
   return (
@@ -16,16 +23,27 @@ const AdminDashboard = () => {
           {getGreeting()}, {user?.first_name} 👋
         </h1>
 
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here's your organization at a glance — {formatCurrentDate()}
-        </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {dashboardSubtitle[user?.role ?? "employee"]}
+          </p>
+      
       </section>
 
       {/* Stats Cards */}
       <DashboardStats />
 
-
       {/* Charts */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <EmployeeByDepartmentChart
+          data={employeeDepartments?.data ?? []}
+        />
+
+        <LeaveOverviewChart
+          data={leaveOverview?.data ?? []}
+        />
+      </div>
+
+
 
       {/* Recent Employees */}
 
