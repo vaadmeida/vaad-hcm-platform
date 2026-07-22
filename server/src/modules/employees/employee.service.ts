@@ -4,6 +4,7 @@ import { AppError } from "../../errors/appError.ts";
 import validator from 'validator'
 import { Prisma } from "@prisma/client";
 import { UpdateEmployeeDTO } from "./employee.validator.ts";
+import { seedLeaveBalance } from "../leave/leave.service.ts";
 
 type UpdateEmployeeInput = {
     id: string;
@@ -28,6 +29,10 @@ type CreateEmployeeType = {
     role?: string;
     hire_date?: Date;
     manager_id?: string
+    department_id?: string;
+    phone?: string;
+    job_title?: string;
+    employment_type?: string;
 }
 
 const softDeactivate = async (id: string) => {
@@ -43,60 +48,82 @@ const softDeactivate = async (id: string) => {
     });
 };
 
+
 export const createEmployee = async ({
     first_name,
     last_name,
     email,
     password,
     role = 'employee',
-    manager_id
+    phone,
+    job_title,
+    hire_date,
+    manager_id,
+    department_id,
+    employment_type,
 }: CreateEmployeeType) => {
 
-    const existingEmployee = await prisma.employee.findUnique({
-        where: { email }
+
+    return prisma.$transaction(async (tx) => {
+
+        const existingEmployee = await tx.employee.findUnique({
+            where: { email }
+        })
+
+        if (existingEmployee) {
+            throw new AppError(
+                "Employee already exists",
+                409,
+                "EMPLOYEE_ALREADY_EXISTS"
+            );
+        }
+
+        if (!validator.isEmail(email)) {
+            throw new AppError("Invalid email format", 400, "INVALID_EMAIL");
+        }
+
+        const hashedpassword = await bcrypt.hash(password, 10);
+
+        const employee = await tx.employee.create({
+            data: {
+                first_name,
+                last_name,
+                email,
+                password_hash: hashedpassword,
+                role,
+                hire_date: hire_date || new Date(),
+                manager_id: manager_id || null,
+                phone,
+                department_id,
+                job_title,
+                employment_type
+            },
+        });
+
+        await seedLeaveBalance(tx, employee.id)
+
+        return {
+            user: {
+                id: employee.id,
+                first_name: employee.first_name,
+                last_name: employee.last_name,
+                email: employee.email,
+                hire_date: employee.hire_date,
+                role: employee.role,
+                manager_id: employee.manager_id,
+                phone: employee.phone,
+                department_id: employee.department_id,
+                job_title: employee.job_title,
+                employment_type: employee.employment_type
+            }
+        }
     })
 
-    if (existingEmployee) {
-        throw new AppError(
-            "Employee already exists",
-            409,
-            "EMPLOYEE_ALREADY_EXISTS"
-        );
-    }
-
-    if (!validator.isEmail(email)) {
-        throw new AppError("Invalid email format", 400, "INVALID_EMAIL");
-    }
-
-    const hashedpassword = await bcrypt.hash(password, 10);
-
-    const employee = await prisma.employee.create({
-        data: {
-            first_name,
-            last_name,
-            email,
-            password_hash: hashedpassword,
-            role,
-            hire_date: new Date(),
-            manager_id: manager_id || null
-        },
-    });
-
-    return {
-        user: {
-            id: employee.id,
-            first_name: employee.first_name,
-            last_name: employee.last_name,
-            email: employee.email,
-            hire_date: employee.hire_date,
-            role: employee.role,
-            manager_id: employee.manager_id
-        }
-    }
 }
 
+
 export const getEmployee = async (id: string, user: { id: string; role: string }) => {
-    
+
     const employee = await prisma.employee.findUnique({
         where: { id },
         select: {
@@ -114,6 +141,7 @@ export const getEmployee = async (id: string, user: { id: string; role: string }
             created_at: true,
             department: {
                 select: {
+                    id: true,
                     name: true,
                 },
             },
@@ -152,25 +180,31 @@ export const getEmployee = async (id: string, user: { id: string; role: string }
             name: `${employee.manager.first_name} ${employee.manager.last_name}`,
         }
         : null;
-
+        
+    const department = employee.department
+        ? {
+            id: employee.department.id,
+            name: employee.department.name,
+        }
+        : null
     return {
         id: employee.id,
         first_name: employee.first_name,
         last_name: employee.last_name,
         email: employee.email,
         phone: employee.phone,
-        job_title: employee.job_title,
         role: employee.role,
         status: employee.status,
+        job_title: employee.job_title,
         hire_date: employee.hire_date,
         created_at: employee.created_at,
-        department_name: employee.department?.name || null,
+        department,
         manager
-    }
+    };
 }
 
 export const getAllEmployees = async (user: { id: string; role: string }) => {
-    
+
     const isManager = user.role?.toLowerCase() === "manager";
 
     const whereClause: Prisma.EmployeeWhereInput = {
@@ -199,15 +233,15 @@ export const getAllEmployees = async (user: { id: string; role: string }) => {
             employment_type: true,
             hire_date: true,
             created_at: true,
-
             department: {
                 select: {
                     name: true,
+                    id: true
                 },
             },
-
             manager: {
                 select: {
+                    id: true,
                     first_name: true,
                     last_name: true,
                 },
@@ -231,9 +265,17 @@ export const getAllEmployees = async (user: { id: string; role: string }) => {
         employment_type: emp.employment_type,
         hire_date: emp.hire_date,
         created_at: emp.created_at,
-        department_name: emp.department?.name || null,
-        manager_name: emp.manager
-            ? `${emp.manager.first_name} ${emp.manager.last_name}`
+        department: emp.department
+            ? {
+                id: emp.department.id,
+                name: emp.department.name,
+            }
+            : null,
+        manager: emp.manager
+            ? {
+                id: emp.manager.id,
+                name: `${emp.manager.first_name} ${emp.manager.last_name}`,
+            }
             : null,
     }));
 };

@@ -3,18 +3,21 @@ import { z } from "zod";
 export const createEmployeeSchema = z.object({
   first_name: z.string().min(2),
   last_name: z.string().min(2),
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(6),
-  role: z.enum(["employee", "admin","manager"]).optional(),
+  role: z.enum(["employee", "admin", "hr", "manager"]).optional(),
   hire_date: z.string().optional(),
-  manager_id: z.string().optional()
-})
-
+  manager_id: z.uuid().optional(),
+  department_id: z.uuid().optional(),
+  phone: z.string().optional(),
+  job_title: z.string().optional(),
+  employment_type: z.enum(["full-time", "part-time", "contract", "intern"]).optional(),
+});
 
 export const updateEmployeeSchema = z.object({
   first_name: z.string().min(2).optional(),
   last_name: z.string().min(2).optional(),
-  role: z.enum(["employee", "admin"]).optional(),
+  role: z.enum(["employee", "manager","hr","admin"]).optional(),
   phone: z.string().optional(),
   job_title: z.string().optional(),
   job_description: z.string().optional(),

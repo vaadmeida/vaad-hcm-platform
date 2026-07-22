@@ -2,11 +2,11 @@ import { z } from 'zod'
 
 export const CreateLeaveTypeSchema = z.object({
   name: z.string().min(2),
-  default_days_per_year: z.number().min(2).optional(),
   is_paid: z.boolean().optional(),
   requires_document: z.boolean().optional(),
   carries_over: z.boolean().optional(),
-  max_carryover_days: z.number().optional()
+  default_days_per_year: z.number().nullish(),
+  max_carryover_days: z.number().nullish(),
 })
 
 export const getLeaveSchema = z.object({
@@ -24,6 +24,7 @@ export const getLeaveRequestSchema = z.object({
       "pending",
       "approved",
       "rejected",
+      "cancelled"
     ])
     .optional(),
 });
