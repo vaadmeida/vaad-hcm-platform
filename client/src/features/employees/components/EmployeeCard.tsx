@@ -70,7 +70,7 @@ const EmployeeCard = ({
             Email
           </span>
 
-          <span className="max-w-[180px] truncate text-right">
+          <span className="max-w-45 truncate text-right">
             {employee.email}
           </span>
         </div>
