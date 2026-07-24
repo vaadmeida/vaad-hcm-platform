@@ -33,6 +33,7 @@ type CreateEmployeeType = {
     phone?: string;
     job_title?: string;
     employment_type?: string;
+    employeeCode?: string
 }
 
 const softDeactivate = async (id: string) => {
@@ -61,6 +62,7 @@ export const createEmployee = async ({
     manager_id,
     department_id,
     employment_type,
+    employeeCode,
 }: CreateEmployeeType) => {
 
 
@@ -84,6 +86,10 @@ export const createEmployee = async ({
 
         const hashedpassword = await bcrypt.hash(password, 10);
 
+        const totalEmployees = await prisma.employee.count();
+
+        const employeeCode = `VAAD-${String(totalEmployees + 1).padStart(4, "0")}`;
+
         const employee = await tx.employee.create({
             data: {
                 first_name,
@@ -96,7 +102,8 @@ export const createEmployee = async ({
                 phone,
                 department_id,
                 job_title,
-                employment_type
+                employment_type,
+                employeeCode
             },
         });
 
@@ -114,7 +121,8 @@ export const createEmployee = async ({
                 phone: employee.phone,
                 department_id: employee.department_id,
                 job_title: employee.job_title,
-                employment_type: employee.employment_type
+                employment_type: employee.employment_type,
+                employeeCode: employee.employee_code
             }
         }
     })
@@ -180,7 +188,7 @@ export const getEmployee = async (id: string, user: { id: string; role: string }
             name: `${employee.manager.first_name} ${employee.manager.last_name}`,
         }
         : null;
-        
+
     const department = employee.department
         ? {
             id: employee.department.id,

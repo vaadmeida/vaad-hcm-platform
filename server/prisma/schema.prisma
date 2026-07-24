@@ -31,6 +31,8 @@ model Employee {
   first_name             String             @db.VarChar(100)
   last_name              String             @db.VarChar(100)
   email                  String             @unique @db.VarChar(255)
+  employee_code          String?  @unique @db.VarChar(30)
+  avatar_url             String?
   phone                  String?            @db.VarChar(20)
   job_title              String?            @db.VarChar(150)
   job_description        String?

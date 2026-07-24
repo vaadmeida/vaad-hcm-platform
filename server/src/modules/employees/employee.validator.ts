@@ -12,6 +12,7 @@ export const createEmployeeSchema = z.object({
   phone: z.string().optional(),
   job_title: z.string().optional(),
   employment_type: z.enum(["full-time", "part-time", "contract", "intern"]).optional(),
+  employeeCode: z.string().min(3).optional(),
 });
 
 export const updateEmployeeSchema = z.object({
