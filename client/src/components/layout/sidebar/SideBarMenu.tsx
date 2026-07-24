@@ -1,10 +1,34 @@
+import { useAuthStore } from "@/store/auth.store";
 import SideBarItem from "./SideBarItem";
-import { adminSidebar } from "./sidebar.data";
+import { adminSidebar, employeeSidebar, hrSidebar, managerSidebar } from "./sidebar.data";
 
 const SidebarMenu = () => {
+
+  const user = useAuthStore((state) => state.user)
+
+  let sidebarItems = employeeSidebar;
+
+  switch (user?.role) {
+    case "admin":
+      sidebarItems = adminSidebar;
+      break;
+    case "hr":
+      sidebarItems = hrSidebar;
+      break;
+    case "manager":
+      sidebarItems = managerSidebar;
+      break;
+    case "employee":
+      sidebarItems = employeeSidebar;
+      break;
+    default:
+      break;
+  }
+
+
   return (
-    <nav className="flex-1 space-y-1 p-4">
-      {adminSidebar.map((item) => (
+    <nav className="space-y-1 p-4">
+      {sidebarItems.map((item) => (
         <SideBarItem
           key={item.href}
           item={item}

@@ -34,6 +34,7 @@ export const getLeaveOverview = async () => {
     const response = await api.get("/api/dashboard/leave-overview");
 
     return response.data;
+    
   } catch (error) {
     console.error("Leave Overview API Error:", error);
     throw error;

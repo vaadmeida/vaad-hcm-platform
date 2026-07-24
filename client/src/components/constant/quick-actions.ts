@@ -45,16 +45,16 @@ export const quickActions = {
       color: "action-icon-blue",
     },
     {
-      label: "Create Department",
-      icon: Building2,
-      path: "/hr/departments/new",
-      color: "action-icon-green",
-    },
-    {
       label: "Upload Document",
       icon: FileText,
       path: "/hr/documents/upload",
       color: "action-icon-amber",
+    },
+    {
+      label: "Approve Leave",
+      icon: ClipboardCheck,
+      path: "/manager/leave-requests",
+      color: "action-icon-purple",
     },
   ],
   manager: [

@@ -53,11 +53,11 @@ export const AppRoutes = () => {
             {/*    Hr Route     */}
             <Route element={<ProtectedRoute />}>
                <Route element={<RoleRoute allowedRoles={['hr']} />}>
-                  <Route path="/admin/dashboard" element={<HRdashboard />} />
+                  <Route path="/hr/dashboard" element={<HRdashboard />} />
                </Route>
             </Route>
 
-            {/*    Hr Route     */}
+            {/*  Manager Route     */}
             <Route element={<ProtectedRoute />}>
                <Route element={<RoleRoute allowedRoles={['manager']} />}>
                   <Route path="/manager/dashboard" element={<ManagerDashboard />} />
