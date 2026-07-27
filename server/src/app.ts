@@ -32,6 +32,7 @@ app.use('/api/employees', employeeRouter)
 app.use('/api/leaves', leaveRouter)
 app.use('/api/dashboard' , dashboardRouter)
 app.use('/api/department' , departmentRouter)
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandler)
