@@ -21,20 +21,18 @@ type User = {
 };
 
 
-type CreateEmployeeType = {
+export type CreateEmployeeType = {
     first_name: string;
     last_name: string;
     email: string;
-    password: string;
-    role?: string;
-    hire_date?: Date;
-    manager_id?: string
-    department_id?: string;
+    role?: "employee" | "admin" | "hr" | "manager";
     phone?: string;
     job_title?: string;
-    employment_type?: string;
-    employeeCode?: string
-}
+    hire_date?: Date;
+    manager_id?: string;
+    department_id?: string;
+    employment_type?: "full-time" | "part-time" | "contract" | "intern";
+};
 
 const softDeactivate = async (id: string) => {
     return prisma.employee.update({
@@ -54,15 +52,10 @@ export const createEmployee = async ({
     first_name,
     last_name,
     email,
-    password,
     role = 'employee',
     phone,
     job_title,
     hire_date,
-    manager_id,
-    department_id,
-    employment_type,
-    employeeCode,
 }: CreateEmployeeType) => {
 
 
@@ -84,7 +77,9 @@ export const createEmployee = async ({
             throw new AppError("Invalid email format", 400, "INVALID_EMAIL");
         }
 
-        const hashedpassword = await bcrypt.hash(password, 10);
+        const defaultPassword = "Vaad@123";
+
+        const hashedpassword = await bcrypt.hash(defaultPassword, 10);
 
         const totalEmployees = await prisma.employee.count();
 
@@ -98,12 +93,9 @@ export const createEmployee = async ({
                 password_hash: hashedpassword,
                 role,
                 hire_date: hire_date || new Date(),
-                manager_id: manager_id || null,
                 phone,
-                department_id,
                 job_title,
-                employment_type,
-                employeeCode
+                employee_code: employeeCode
             },
         });
 
@@ -116,12 +108,8 @@ export const createEmployee = async ({
                 last_name: employee.last_name,
                 email: employee.email,
                 hire_date: employee.hire_date,
-                role: employee.role,
-                manager_id: employee.manager_id,
                 phone: employee.phone,
-                department_id: employee.department_id,
                 job_title: employee.job_title,
-                employment_type: employee.employment_type,
                 employeeCode: employee.employee_code
             }
         }
@@ -130,7 +118,7 @@ export const createEmployee = async ({
 }
 
 
-export const getEmployee = async (id: string, user: { id: string; role: string }) => {
+export const getEmployee = async (id: string, user: User) => {
 
     const employee = await prisma.employee.findUnique({
         where: { id },
@@ -211,7 +199,15 @@ export const getEmployee = async (id: string, user: { id: string; role: string }
     };
 }
 
-export const getAllEmployees = async (user: { id: string; role: string }) => {
+export const getAllEmployees = async (
+    user: User,
+    filters: {
+        search?: string;
+        department?: string;
+        status?: string;
+    }) => {
+
+    const { search, department, status } = filters;
 
     const isManager = user.role?.toLowerCase() === "manager";
 
@@ -221,6 +217,46 @@ export const getAllEmployees = async (user: { id: string; role: string }) => {
         },
     };
 
+    if (isManager) {
+        whereClause.manager_id = user.id;
+    }
+
+    if (search) {
+        whereClause.OR = [
+            {
+                first_name: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
+                last_name: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
+                email: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
+                employee_code: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+        ];
+    }
+
+    if (department && department !== "all") {
+        whereClause.department_id = department;
+    }
+
+    if (status && status !== "all") {
+        whereClause.status = status;
+    }
 
     if (isManager) {
         whereClause.manager_id = user.id;
@@ -228,7 +264,6 @@ export const getAllEmployees = async (user: { id: string; role: string }) => {
 
     const employees = await prisma.employee.findMany({
         where: whereClause,
-
         select: {
             id: true,
             first_name: true,

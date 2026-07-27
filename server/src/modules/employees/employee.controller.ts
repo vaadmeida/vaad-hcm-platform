@@ -53,10 +53,8 @@ export const getEmployeeController = async (req: Request, res: Response) => {
     });
 };
 
-export const getAllEmployeesController = async (req: Request, res: Response) => {
-
-    console.log("GET ALL EMPLOYEES HIT");
-
+export const getAllEmployeesController = async (req: Request,res: Response) => {
+    
     const parsed = getAllEmployeesSchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -67,11 +65,13 @@ export const getAllEmployeesController = async (req: Request, res: Response) => 
         });
     }
 
-    const user = req.user
-    console.log("USER:", req.user);
-    if (!user) throw new AppError("Unauthorized", 401, "NO_USER");
+    const user = req.user;
 
-    const employees = await getAllEmployees(user);
+    if (!user) {
+        throw new AppError("Unauthorized", 401, "NO_USER");
+    }
+
+    const employees = await getAllEmployees(user, parsed.data);
 
     return res.status(200).json({
         success: true,
@@ -79,7 +79,6 @@ export const getAllEmployeesController = async (req: Request, res: Response) => 
         data: employees,
     });
 };
-
 
 export const updateEmployeeController = async (
     req: Request,
@@ -119,7 +118,7 @@ export const deactivateEmployeeController = async (req: Request, res: Response) 
     if (typeof id !== "string") {
         throw new AppError("Invalid employee ID", 400, "INVALID_ID");
     }
-    
+
     const result = await deactivateEmployee(id, req.user);
 
     return res.status(200).json({

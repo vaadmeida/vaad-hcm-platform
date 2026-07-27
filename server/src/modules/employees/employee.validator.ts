@@ -4,15 +4,9 @@ export const createEmployeeSchema = z.object({
   first_name: z.string().min(2),
   last_name: z.string().min(2),
   email: z.email(),
-  password: z.string().min(6),
-  role: z.enum(["employee", "admin", "hr", "manager"]).optional(),
-  hire_date: z.string().optional(),
-  manager_id: z.uuid().optional(),
-  department_id: z.uuid().optional(),
   phone: z.string().optional(),
   job_title: z.string().optional(),
-  employment_type: z.enum(["full-time", "part-time", "contract", "intern"]).optional(),
-  employeeCode: z.string().min(3).optional(),
+  hire_date: z.string().optional(),
 });
 
 export const updateEmployeeSchema = z.object({
@@ -39,11 +33,13 @@ export const updateEmployeeSchema = z.object({
 export type UpdateEmployeeDTO = z.infer<typeof updateEmployeeSchema>;
 
 export const getEmployeeSchema = z.object({
-  id: z.string().uuid("Invalid employee ID"),
+  id: z.uuid("Invalid employee ID"),
 });
 
 export const getAllEmployeesSchema = z.object({
   page: z.string().optional(),
   limit: z.string().optional(),
   search: z.string().optional(),
+  department: z.string().optional(),
+  status: z.string().optional(),
 });
