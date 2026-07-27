@@ -57,12 +57,5 @@ export interface CreateEmployeePayload {
   email: string;
   phone?: string;
   job_title?: string;
-  department_id?: string;
-  role: "admin" | "hr" | "manager" | "employee";
-  employment_type:
-    | "full-time"
-    | "part-time"
-    | "contract"
-    | "intern";
   hire_date?: string;
 }

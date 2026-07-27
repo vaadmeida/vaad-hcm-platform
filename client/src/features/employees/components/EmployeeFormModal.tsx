@@ -15,19 +15,10 @@ import { UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useCreateEmployee } from "../hooks/useCreateEmployee";
+import { toast } from "sonner";
+import ButtonLoader from "@/components/common/ButtonLoader";
 
-
-type EmployeeRole =
-    | "admin"
-    | "hr"
-    | "manager"
-    | "employee";
-
-type EmploymentType =
-    | "full-time"
-    | "part-time"
-    | "contract"
-    | "intern";
 
 interface EmployeeForm {
     first_name: string;
@@ -35,26 +26,25 @@ interface EmployeeForm {
     email: string;
     phone: string;
     job_title: string;
-    role: EmployeeRole;
-    employment_type: EmploymentType;
     hire_date: string;
 }
+
 const initialForm: EmployeeForm = {
     first_name: "",
     last_name: "",
     email: "",
     phone: "",
     job_title: "",
-    role: "employee",
-    employment_type: "full-time",
     hire_date: "",
 };
 
 
-const AddEmployeeModal = () => {
+const EmployeeFormModal = () => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState<EmployeeForm>(initialForm);
     const [hireDate, setHireDate] = useState<Date | null>(null);
+
+    const { isPending, mutateAsync } = useCreateEmployee()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm(prev => ({
@@ -63,13 +53,22 @@ const AddEmployeeModal = () => {
         }));
 
     };
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+
+    const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log(form);
-        // POST API HERE
-        setForm(initialForm);
-        setOpen(false);
+        try {
+            await mutateAsync(form)
+            toast.success("Employee created successfully");
+            setForm(initialForm)
+            setHireDate(null)
+            setOpen(false)
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to create employee");
+        }
     };
+
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -109,6 +108,7 @@ const AddEmployeeModal = () => {
                                 onChange={handleChange}
                                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 shadow-sm focus:border-primary focus:ring-1 focus:ring-secondary/20"
                                 placeholder="Enter Last name"
+                                required
                             />
                         </div>
                     </div>
@@ -124,6 +124,7 @@ const AddEmployeeModal = () => {
                                 onChange={handleChange}
                                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 shadow-sm focus:border-primary focus:ring-1 focus:ring-secondary/20"
                                 placeholder="e.g. john.doe@vaad.com"
+                                required
                             />
 
                         </div>
@@ -137,6 +138,7 @@ const AddEmployeeModal = () => {
                                 onChange={handleChange}
                                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 shadow-sm focus:border-primary focus:ring-1 focus:ring-secondary/20"
                                 placeholder="e.g. +234 801 234 5678"
+                                required
                             />
                         </div>
                     </div>
@@ -162,6 +164,7 @@ const AddEmployeeModal = () => {
                                     dropdownMode="select"
                                     placeholderText="Select hire date"
                                     wrapperClassName="w-full"
+                                    required
                                     className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 shadow-sm focus:border-primary focus:ring-1 focus:ring-secondary/20"
                                 />
                             </div>
@@ -176,6 +179,7 @@ const AddEmployeeModal = () => {
                                 onChange={handleChange}
                                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 shadow-sm focus:border-primary focus:ring-1 focus:ring-secondary/20"
                                 placeholder="e.g. Software Engineer"
+                                required
                             />
                         </div>
                     </div>
@@ -190,7 +194,11 @@ const AddEmployeeModal = () => {
                             Cancel
                         </Button>
                         <Button type="submit" className="h-9 gap-2 rounded-md px-3 text-sm text-white cursor-pointer">
-                            Add Employee
+                            {isPending ? (
+                                <ButtonLoader text="Creating..." />
+                            ) : (
+                                "Add Employee"
+                            )}
                         </Button>
                     </div>
                 </form>
@@ -202,4 +210,4 @@ const AddEmployeeModal = () => {
 };
 
 
-export default AddEmployeeModal;
+export default EmployeeFormModal;
