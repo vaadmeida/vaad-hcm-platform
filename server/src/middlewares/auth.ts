@@ -5,9 +5,8 @@ import prisma from "../config/prisma.ts";
 export interface AuthenticatedUser {
   id: string;
   email: string;
-  role: "admin" | "manager" | "employee";
+  role: "admin" | "manager" | "employee" | "hr";
 }
-
 
 export const authenticate = async (req: Request , res: Response, next: NextFunction) => {
 

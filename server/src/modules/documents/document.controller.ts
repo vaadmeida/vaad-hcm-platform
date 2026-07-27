@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { createDocumentTypeSchema, getDocumentDownloadSchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
 import { createDocumentType, getDocumentDownloadUrl, getEmployeeDocuments, getExpiredDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
+import { AppError } from "../../errors/appError.ts";
 
 
 export const createDocumentTypeController = async (req: Request, res: Response) => {
