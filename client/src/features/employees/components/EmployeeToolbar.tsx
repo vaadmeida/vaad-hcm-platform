@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
-import { Download, UserPlus } from "lucide-react"
+import { Download } from "lucide-react"
+import EmployeeFormModal from "./EmployeeFormModal"
 
 const EmployeeToolbar = () => {
   return (
@@ -24,11 +25,7 @@ const EmployeeToolbar = () => {
             <Download className="h-4 w-4" />
             Export
           </Button>
-
-          <Button className="h-9 gap-2 rounded-md px-3 text-sm text-white">
-            <UserPlus className="h-4 w-4" />
-            Add Employee
-          </Button>
+          <EmployeeFormModal/>
         </div>
       </section>
     </div>

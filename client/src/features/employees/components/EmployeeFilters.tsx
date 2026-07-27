@@ -48,6 +48,7 @@ const EmployeeFilters = ({
         <Select
           value={department}
           onValueChange={onDepartmentChange}
+    
         >
           <SelectTrigger className="h-10 w-full sm:w-52 border border-slate-200 bg-white">
             <SelectValue placeholder="All Departments" />

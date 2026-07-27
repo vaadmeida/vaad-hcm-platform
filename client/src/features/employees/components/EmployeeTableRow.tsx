@@ -5,6 +5,8 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import StatusBadge from "@/components/common/StatusBadge";
+import EmployeeActions from "./EmployeeActions";
 
 interface EmployeeTableRowProps {
   employee: Employee;
@@ -63,7 +65,7 @@ const EmployeeTableRow = ({
 
       {/* Status */}
       <td className="px-3 py-2">
-        {employee.status}
+        <StatusBadge status={employee.status}/>
       </td>
 
 
@@ -74,8 +76,8 @@ const EmployeeTableRow = ({
 
 
       {/* Actions */}
-      <td className="px-3 py-2">
-        ...
+      <td className="px-3 py-2 text-center">
+         <EmployeeActions employee={employee}/>
       </td>
 
     </tr>

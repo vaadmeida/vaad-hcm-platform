@@ -13,11 +13,11 @@ const EmployeeTable = ({
         <thead>
           <tr className="border-y border-border bg-muted/10 text-left text-xs font-medium text-muted-foreground">
 
-            <th className="px-4 py-3">
+            <th className="px-4 py-3 pr-2">
               Employee
             </th>
 
-            <th className="px-4 py-3">
+            <th className="px-4 py-3 pl-3">
               Department
             </th>
 
@@ -29,7 +29,7 @@ const EmployeeTable = ({
               Status
             </th>
 
-            <th className="hidden px-4 py-3 xl:table-cell">
+            <th className="hidden px-4 py-3 pl-3 xl:table-cell">
               Manager
             </th>
 
