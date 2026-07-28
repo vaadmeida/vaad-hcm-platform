@@ -1,0 +1,17 @@
+-- AlterTable
+ALTER TABLE "employees" ADD COLUMN     "account_name" VARCHAR(150),
+ADD COLUMN     "account_number" VARCHAR(20),
+ADD COLUMN     "alternate_phone" VARCHAR(20),
+ADD COLUMN     "bank_name" VARCHAR(100),
+ADD COLUMN     "city" VARCHAR(100),
+ADD COLUMN     "date_exited" DATE,
+ADD COLUMN     "date_of_birth" DATE,
+ADD COLUMN     "emergency_contact_name" VARCHAR(150),
+ADD COLUMN     "emergency_contact_number" VARCHAR(20),
+ADD COLUMN     "emergency_contact_relationship" VARCHAR(50),
+ADD COLUMN     "gender" VARCHAR(20),
+ADD COLUMN     "nationality" VARCHAR(100),
+ADD COLUMN     "paye_id" VARCHAR(50),
+ADD COLUMN     "residential_address" TEXT,
+ADD COLUMN     "state_of_residence" VARCHAR(100),
+ALTER COLUMN "probation_end_date" SET DATA TYPE DATE;

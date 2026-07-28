@@ -85,6 +85,18 @@ export const createEmployee = async ({
 
         const employeeCode = `VAAD-${String(totalEmployees + 1).padStart(4, "0")}`;
 
+        if (!hire_date) {
+            throw new AppError(
+                "Hire date is required",
+                400,
+                "HIRE_DATE_REQUIRED"
+            );
+        }
+
+        const probationEndDate = new Date(hire_date);
+
+        probationEndDate.setMonth(probationEndDate.getMonth() + 6)
+
         const employee = await tx.employee.create({
             data: {
                 first_name,
@@ -95,7 +107,8 @@ export const createEmployee = async ({
                 hire_date: hire_date || new Date(),
                 phone,
                 job_title,
-                employee_code: employeeCode
+                employee_code: employeeCode,
+                probation_end_date: probationEndDate
             },
         });
 
@@ -110,7 +123,8 @@ export const createEmployee = async ({
                 hire_date: employee.hire_date,
                 phone: employee.phone,
                 job_title: employee.job_title,
-                employeeCode: employee.employee_code
+                employeeCode: employee.employee_code,
+                probationEndDate: employee.probation_end_date
             }
         }
     })
@@ -119,22 +133,43 @@ export const createEmployee = async ({
 
 
 export const getEmployee = async (id: string, user: User) => {
-
     const employee = await prisma.employee.findUnique({
         where: { id },
         select: {
             id: true,
+            employee_code: true,
+
+            // Personal
             first_name: true,
             last_name: true,
             email: true,
+            gender: true,
+            date_of_birth: true,
+            nationality: true,
             phone: true,
+            alternate_phone: true,
+            residential_address: true,
+            city: true,
+            state_of_residence: true,
+
+            // Emergency
+            emergency_contact_name: true,
+            emergency_contact_relationship: true,
+            emergency_contact_number: true,
+
+            // Employment
             job_title: true,
+            job_description: true,
             role: true,
             status: true,
+            employment_type: true,
             hire_date: true,
+            probation_end_date: true,
+            date_exited: true,
+            work_email: true,
+            owns_personal_computer: true,
             department_id: true,
             manager_id: true,
-            created_at: true,
             department: {
                 select: {
                     id: true,
@@ -148,27 +183,48 @@ export const getEmployee = async (id: string, user: User) => {
                     last_name: true,
                 },
             },
+
+            // Payroll
+            paye_id: true,
+            bank_name: true,
+            account_number: true,
+            account_name: true,
+            created_at: true,
+            updated_at: true,
         },
     });
 
     if (!employee) {
-        throw new AppError("Employee not found", 404, "EMPLOYEE_NOT_FOUND");
+        throw new AppError(
+            "Employee not found",
+            404,
+            "EMPLOYEE_NOT_FOUND"
+        );
     }
 
+    // Authorization
     const isAdmin = user.role === "admin";
+    const isHR = user.role === "hr";
     const isSelf = user.id === id;
     const isManager = user.role === "manager";
 
-    if (!isAdmin && !isSelf) {
-
-        if (isManager && employee.manager_id !== user.id) {
-            throw new AppError("Forbidden", 403, "FORBIDDEN");
-        }
-
-        if (!isManager) {
-            throw new AppError("Forbidden", 403, "FORBIDDEN");
+    if (!isAdmin && !isHR && !isSelf) {
+        if (!isManager || employee.manager_id !== user.id) {
+            throw new AppError(
+                "Forbidden",
+                403,
+                "FORBIDDEN"
+            );
         }
     }
+
+    // Format relationships
+    const department = employee.department
+        ? {
+            id: employee.department.id,
+            name: employee.department.name,
+        }
+        : null;
 
     const manager = employee.manager
         ? {
@@ -177,27 +233,14 @@ export const getEmployee = async (id: string, user: User) => {
         }
         : null;
 
-    const department = employee.department
-        ? {
-            id: employee.department.id,
-            name: employee.department.name,
-        }
-        : null
     return {
-        id: employee.id,
-        first_name: employee.first_name,
-        last_name: employee.last_name,
-        email: employee.email,
-        phone: employee.phone,
-        role: employee.role,
-        status: employee.status,
-        job_title: employee.job_title,
-        hire_date: employee.hire_date,
-        created_at: employee.created_at,
+        ...employee,
+        full_name: `${employee.first_name} ${employee.last_name}`,
         department,
-        manager
+        manager,
     };
-}
+};
+
 
 export const getAllEmployees = async (
     user: User,
@@ -339,19 +382,62 @@ export const getAllEmployees = async (
     }));
 };
 
-export const updateEmployee = async ({ id, data, user }: UpdateEmployeeInput) => {
+export const updateEmployee = async ({
+    id,
+    data,
+    user,
+}: UpdateEmployeeInput) => {
 
-    const employee = await prisma.employee.findUnique({ where: { id } });
+    const employee = await prisma.employee.findUnique({
+        where: { id },
+    });
 
-    if (!employee) throw new AppError("Employee not found", 404, "EMPLOYEE_NOT_FOUND")
+    if (!employee) {
+        throw new AppError(
+            "Employee not found",
+            404,
+            "EMPLOYEE_NOT_FOUND"
+        );
+    }
 
-    const allowedByEmployee = ["phone"];
+    const isAdmin = user.role === "admin";
+    const isHR = user.role === "hr";
+    const isManager = user.role === "manager";
+    const isSelf = user.id === id;
 
-    const allowedByAdmin = [
-        "phone",
+    // ─── Authorization ──────────────────────────────────
+
+    if (!isAdmin && !isHR && !isSelf) {
+        if (!isManager || employee.manager_id !== user.id) {
+            throw new AppError(
+                "You are not allowed to update this employee",
+                403,
+                "FORBIDDEN"
+            );
+        }
+    }
+
+    // ─── Allowed fields ─────────────────────────────────
+
+    const employeeFields = [
         "first_name",
         "last_name",
-        "role",
+        "gender",
+        "date_of_birth",
+        "nationality",
+        "phone",
+        "alternate_phone",
+        "email",
+        "residential_address",
+        "city",
+        "state_of_residence",
+
+        // Emergency contact
+        "emergency_contact_name",
+        "emergency_contact_relationship",
+        "emergency_contact_number",
+
+        // Employment
         "job_title",
         "job_description",
         "department_id",
@@ -360,14 +446,40 @@ export const updateEmployee = async ({ id, data, user }: UpdateEmployeeInput) =>
         "status",
         "employment_type",
         "hire_date",
+        "probation_end_date",
+        "date_exited",
         "owns_personal_computer",
+
+        // Payroll
+        "paye_id",
+        "bank_name",
+        "account_number",
+        "account_name",
     ];
 
-    const allowed = user.role === "admin" ? allowedByAdmin : allowedByEmployee;
+    const selfAllowedFields = [
+        "phone",
+        "alternate_phone",
+        "residential_address",
+        "city",
+        "state_of_residence",
+        "emergency_contact_name",
+        "emergency_contact_relationship",
+        "emergency_contact_number",
+    ];
+
+    const allowedFields =
+        isAdmin || isHR
+            ? employeeFields
+            : selfAllowedFields;
+
+    // ─── Validate fields ─────────────────────────────────
 
     const inputKeys = Object.keys(data);
 
-    const invalidFields = inputKeys.filter((key) => !allowed.includes(key));
+    const invalidFields = inputKeys.filter(
+        (key) => !allowedFields.includes(key)
+    );
 
     if (invalidFields.length > 0) {
         throw new AppError(
@@ -377,21 +489,16 @@ export const updateEmployee = async ({ id, data, user }: UpdateEmployeeInput) =>
         );
     }
 
-    if (user.role !== "admin" && user.id !== id) {
-        throw new AppError(
-            "You can only update your own profile",
-            403,
-            "FORBIDDEN"
-        );
-    }
+    // ─── Update ──────────────────────────────────────────
+    const updatedEmployee = await prisma.employee.update({
+        where: { id },
+        data,
+    });
 
-    const filteredData = Object.fromEntries(Object.entries(data));
+    const { password_hash, ...safeEmployee } = updatedEmployee;
 
-    const updated = await prisma.employee.update({ where: { id }, data: filteredData });
-
-    return updated;
+    return safeEmployee;
 };
-
 
 
 export const deactivateEmployee = async (id: string, user: User) => {

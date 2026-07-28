@@ -28,33 +28,67 @@ enum DepartmentStatus {
 
 model Employee {
   id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // ─── Personal Information ─────────────────────────────
   first_name             String             @db.VarChar(100)
   last_name              String             @db.VarChar(100)
   email                  String             @unique @db.VarChar(255)
-  employee_code          String?  @unique @db.VarChar(30)
-  avatar_url             String?
+  gender                 String?            @db.VarChar(20)
+  date_of_birth          DateTime?          @db.Date
+  nationality            String?            @db.VarChar(100)
   phone                  String?            @db.VarChar(20)
+  alternate_phone        String?            @db.VarChar(20)
+  residential_address    String?
+  city                   String?            @db.VarChar(100)
+  state_of_residence     String?            @db.VarChar(100)
+
+  // ─── Employee Identification ──────────────────────────
+  employee_code          String?            @unique @db.VarChar(30)
+  avatar_url             String?
+
+  // ─── Emergency Contact ────────────────────────────────
+  emergency_contact_name         String?     @db.VarChar(150)
+  emergency_contact_relationship String?     @db.VarChar(50)
+  emergency_contact_number       String?     @db.VarChar(20)
+
+  // ─── Employment Information ───────────────────────────
   job_title              String?            @db.VarChar(150)
   job_description        String?
   department_id          String?            @db.Uuid
   department             Department?        @relation("DepartmentEmployees", fields: [department_id], references: [id])
+
   manager_id             String?            @db.Uuid
   manager                Employee?          @relation("EmployeeManager", fields: [manager_id], references: [id])
   subordinates           Employee[]         @relation("EmployeeManager")
   managedDepartment      Department?        @relation("DepartmentManager")
+
   status                 String             @default("probation") @db.VarChar(20)
   employment_type        String             @default("full-time") @db.VarChar(50)
   hire_date              DateTime?          @db.Date
-  probation_end_date     DateTime?
+  probation_end_date     DateTime?          @db.Date
+  date_exited            DateTime?          @db.Date
   work_email             String?            @db.VarChar(255)
   owns_personal_computer Boolean            @default(false)
+
+  // ─── Payroll & Bank Information ───────────────────────
+  paye_id                String?            @db.VarChar(50)
+  bank_name              String?            @db.VarChar(100)
+  account_number         String?            @db.VarChar(20)
+  account_name           String?            @db.VarChar(150)
+
+  // ─── Authentication & Authorization ───────────────────
   password_hash          String             @db.VarChar(255)
   role                   String             @default("employee") @db.VarChar(20)
+
+  // ─── System ───────────────────────────────────────────
   created_at             DateTime           @default(now())
   updated_at             DateTime           @default(now())
+
+  // ─── Relations ────────────────────────────────────────
   documents              EmployeeDocument[] @relation("EmployeeDocuments")
   uploadedDocuments      EmployeeDocument[] @relation("UploadedDocuments")
   verifiedDocuments      EmployeeDocument[] @relation("VerifiedDocuments")
+
   leaveBalances          LeaveBalance[]
   approvedLeaveRequests  LeaveRequest[]     @relation("ApprovedLeaveRequests")
   leaveRequests          LeaveRequest[]     @relation("EmployeeLeaveRequests")
