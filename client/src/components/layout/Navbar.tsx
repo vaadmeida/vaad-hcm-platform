@@ -1,9 +1,9 @@
 import { Bell, Search } from "lucide-react";
-import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/auth.store";
 import QuickActionDropdown from "../common/QuickActionDropdown";
 import MobileMenu from "./sidebar/MobileMenu";
+import { Breadcrumb } from "../breadcrumb/BreadCrumb";
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -11,21 +11,10 @@ interface NavbarProps {
 }
 
 
-const pageTitles: Record<string, string> = {
-  "/admin/dashboard": "Dashboard",
-  "/employees": "Employees",
-  "/departments": "Departments",
-  "/leave": "Leave Management",
-  "/reports": "Reports",
-  "/settings": "Settings",
-};
 
 const Navbar = ({ setSidebarOpen }: NavbarProps) => {
-  const { pathname } = useLocation();
 
   const user = useAuthStore((state) => state.user);
-
-  const title = pageTitles[pathname] || "Dashboard";
 
   const initials = `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`;
 
@@ -37,8 +26,9 @@ const Navbar = ({ setSidebarOpen }: NavbarProps) => {
           <MobileMenu onClick={() => setSidebarOpen(true)} />
         </div>
 
+
         <h1 className="text-sm font-semibold text-foreground md:text-base">
-          {title}
+           <Breadcrumb/>
         </h1>
       </div>
 

@@ -41,7 +41,7 @@ export const hrSidebar = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
-    href: "/admin/dashboard",
+    href: "/hr/dashboard",
   },
   {
     title: "Employees",
@@ -61,7 +61,7 @@ export const hrSidebar = [
     {
     title: "My Leave",
     icon: CalendarDays,
-    href: "/leave",
+    href: "/my-leave",
   },
   {
     title: "Documents",
@@ -83,7 +83,7 @@ export const managerSidebar = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
-    href: "/admin/dashboard",
+    href: "/manager/dashboard",
   },
   {
     title: "My Team",
@@ -98,7 +98,7 @@ export const managerSidebar = [
   {
     title: "My Leave",
     icon: CalendarDays,
-    href: "/leave",
+    href: "/my-leave",
   },
   {
     title: "Documents",
@@ -115,7 +115,7 @@ export const employeeSidebar = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
-    href: "/admin/dashboard",
+    href: "/employee/dashboard",
   },
   {
     title: "My Leave",
