@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+
 interface EmployeeFiltersProps {
   search: string;
   onSearch: (value: string) => void;
@@ -27,6 +28,9 @@ const EmployeeFilters = ({
   onStatusChange,
   total,
 }: EmployeeFiltersProps) => {
+
+  
+
   return (
     <div className="flex flex-col gap-4 border-b border-border p-4 xl:flex-row xl:items-center xl:justify-between">
 

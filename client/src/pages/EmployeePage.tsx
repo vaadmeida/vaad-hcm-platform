@@ -11,7 +11,11 @@ const EmployeePage = () => {
   const [department, setDepartment] = useState("all");
   const [status, setStatus] = useState("all");
 
-  const { data: employees } = useEmployee();
+  const { data: employees } = useEmployee({
+    search,
+    status,
+    department
+  });
 
   return (
     <div className="space-y-6">
