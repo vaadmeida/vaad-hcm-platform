@@ -17,8 +17,6 @@ const EmployeeByDepartmentChart = ({
     data,
 }: EmployeeDepartmentChartProps) => {
 
-    console.log(data)
-
     return (
         <div className="rounded-xl bg-white p-6 shadow">
             <h2 className="mb-4 text-lg font-semibold">
