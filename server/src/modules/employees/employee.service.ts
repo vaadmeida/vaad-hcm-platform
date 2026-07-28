@@ -246,6 +246,22 @@ export const getAllEmployees = async (
                     contains: search,
                     mode: "insensitive",
                 },
+
+            },
+            {
+                employee_code: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+
+            },
+            {
+                department: {
+                    name: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
             },
         ];
     }

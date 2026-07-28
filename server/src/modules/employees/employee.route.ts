@@ -7,7 +7,7 @@ import { asyncHandler } from '../../utils/asyncHandler.ts'
 
 const employeeRouter = Router()
 
-employeeRouter.post('/', authenticate , requireRoles('admin', "manager" ), asyncHandler(createEmployeeController))
+employeeRouter.post('/', authenticate , requireRoles('admin', "hr" ), asyncHandler(createEmployeeController))
 employeeRouter.get('/', authenticate , requireRoles('admin', "manager" ), asyncHandler(getAllEmployeesController))
 employeeRouter.get('/:id', authenticate, requireRoles('admin', "manager" ),asyncHandler(getEmployeeController))
 employeeRouter.patch('/:id', authenticate, requireRoles('admin'),asyncHandler(updateEmployeeController))
