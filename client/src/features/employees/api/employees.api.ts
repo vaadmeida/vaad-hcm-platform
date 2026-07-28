@@ -1,13 +1,15 @@
 import { api } from "@/lib"
-import type { CreateEmployeePayload, EmployeeListResponse } from "../types/employee.types"
+import type { CreateEmployeePayload, EmployeeFilters, EmployeeListResponse } from "../types/employee.types"
 
 
-export const getEmployees = async (): Promise<EmployeeListResponse> => {
+export const getEmployees = async (filters: EmployeeFilters): Promise<EmployeeListResponse> => {
 
     try {
-        const response = await api.get('/api/employees')
+        const { data } = await api.get('/api/employees',{
+             params: filters
+         })
 
-        return response.data
+        return data
 
     } catch (error) {
         console.error("Employee List API Error:", error);

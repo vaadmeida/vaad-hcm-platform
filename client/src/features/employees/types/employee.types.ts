@@ -59,3 +59,9 @@ export interface CreateEmployeePayload {
   job_title?: string;
   hire_date?: string;
 }
+
+export interface EmployeeFilters {
+  search?: string;
+  department?: string;
+  status?: string;
+}
