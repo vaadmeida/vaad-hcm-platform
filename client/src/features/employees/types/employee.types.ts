@@ -24,6 +24,7 @@ export interface Employee {
     name: string;
   } | null;
 }
+
 export interface EmployeeListResponse {
   success: boolean;
   count: number;
@@ -60,8 +61,20 @@ export interface CreateEmployeePayload {
   hire_date?: string;
 }
 
+export interface CreateEmployeeResponse {
+  success: boolean;
+  message: string;
+  data: Employee;
+}
+
 export interface EmployeeFilters {
   search?: string;
   department?: string;
   status?: string;
 }
+
+export interface EmployeeResponse {
+  success: boolean;
+  data: Employee;
+}
+
