@@ -138,8 +138,7 @@ export const getEmployee = async (id: string, user: User) => {
         select: {
             id: true,
             employee_code: true,
-
-            // Personal
+            // Personal Information
             first_name: true,
             last_name: true,
             email: true,
@@ -151,13 +150,12 @@ export const getEmployee = async (id: string, user: User) => {
             residential_address: true,
             city: true,
             state_of_residence: true,
-
-            // Emergency
+            // Emergency Contact
             emergency_contact_name: true,
             emergency_contact_relationship: true,
             emergency_contact_number: true,
 
-            // Employment
+            // Employment Information
             job_title: true,
             job_description: true,
             role: true,
@@ -168,14 +166,14 @@ export const getEmployee = async (id: string, user: User) => {
             date_exited: true,
             work_email: true,
             owns_personal_computer: true,
-            department_id: true,
-            manager_id: true,
+
             department: {
                 select: {
                     id: true,
                     name: true,
                 },
             },
+
             manager: {
                 select: {
                     id: true,
@@ -183,8 +181,7 @@ export const getEmployee = async (id: string, user: User) => {
                     last_name: true,
                 },
             },
-
-            // Payroll
+            // Payroll & Bank
             paye_id: true,
             bank_name: true,
             account_number: true,
@@ -209,7 +206,7 @@ export const getEmployee = async (id: string, user: User) => {
     const isManager = user.role === "manager";
 
     if (!isAdmin && !isHR && !isSelf) {
-        if (!isManager || employee.manager_id !== user.id) {
+        if (!isManager || employee.manager?.id !== user.id) {
             throw new AppError(
                 "Forbidden",
                 403,
@@ -217,27 +214,62 @@ export const getEmployee = async (id: string, user: User) => {
             );
         }
     }
-
-    // Format relationships
-    const department = employee.department
-        ? {
-            id: employee.department.id,
-            name: employee.department.name,
-        }
-        : null;
-
-    const manager = employee.manager
-        ? {
-            id: employee.manager.id,
-            name: `${employee.manager.first_name} ${employee.manager.last_name}`,
-        }
-        : null;
-
     return {
-        ...employee,
+        id: employee.id,
+        employee_code: employee.employee_code,
         full_name: `${employee.first_name} ${employee.last_name}`,
-        department,
-        manager,
+
+        personal: {
+            first_name: employee.first_name,
+            last_name: employee.last_name,
+            email: employee.email,
+            gender: employee.gender,
+            date_of_birth: employee.date_of_birth,
+            nationality: employee.nationality,
+            phone: employee.phone,
+            alternate_phone: employee.alternate_phone,
+            residential_address: employee.residential_address,
+            city: employee.city,
+            state_of_residence: employee.state_of_residence,
+        },
+
+        employment: {
+            job_title: employee.job_title,
+            job_description: employee.job_description,
+            role: employee.role,
+            status: employee.status,
+            employment_type: employee.employment_type,
+            hire_date: employee.hire_date,
+            probation_end_date: employee.probation_end_date,
+            date_exited: employee.date_exited,
+            work_email: employee.work_email,
+            owns_personal_computer: employee.owns_personal_computer,
+            department: employee.department
+                ? {
+                    id: employee.department.id,
+                    name: employee.department.name,
+                }
+                : null,
+            manager: employee.manager
+                ? {
+                    id: employee.manager.id,
+                    name: `${employee.manager.first_name} ${employee.manager.last_name}`,
+                }
+                : null,
+        },
+        emergency_contact: {
+            name: employee.emergency_contact_name,
+            relationship: employee.emergency_contact_relationship,
+            phone: employee.emergency_contact_number,
+        },
+        payroll: {
+            paye_id: employee.paye_id,
+            bank_name: employee.bank_name,
+            account_number: employee.account_number,
+            account_name: employee.account_name,
+        },
+        created_at: employee.created_at,
+        updated_at: employee.updated_at,
     };
 };
 

@@ -46,6 +46,7 @@ export const getEmployeeController = async (req: Request, res: Response) => {
     }
 
     const employee = await getEmployee(parsed.data.id, user);
+    
 
     return res.status(200).json({
         success: true,
