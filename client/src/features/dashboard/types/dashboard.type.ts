@@ -25,7 +25,7 @@ export interface EmployeeChartResponse {
     data: EmployeesChart[];
 }
 export interface LeaveOverview {
-    eaveStatus: string;
+    leaveStatus: string;
     count: number;
 }
 
