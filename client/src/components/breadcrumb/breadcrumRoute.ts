@@ -14,6 +14,10 @@ export const breadcrumbRoutes = [
     breadcrumbs: [{ label: "Dashboard" }],
   },
   {
+    match: /^\/manager\/dashboard$/,
+    breadcrumbs: [{ label: "Dashboard" }],
+  },
+  {
     match: /^\/employees$/,
     breadcrumbs: [
       { label: "Employees", path: "/employees" },

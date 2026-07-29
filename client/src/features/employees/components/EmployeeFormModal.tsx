@@ -18,6 +18,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useCreateEmployee } from "../hooks/useCreateEmployee";
 import { toast } from "sonner";
 import ButtonLoader from "@/components/common/ButtonLoader";
+import { useAuthStore } from "@/store/auth.store";
 
 
 interface EmployeeForm {
@@ -43,6 +44,8 @@ const EmployeeFormModal = () => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState<EmployeeForm>(initialForm);
     const [hireDate, setHireDate] = useState<Date | null>(null);
+
+    const user = useAuthStore((state) => state.user)
 
     const { isPending, mutateAsync } = useCreateEmployee()
 
@@ -72,10 +75,12 @@ const EmployeeFormModal = () => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="h-9 gap-2 rounded-md px-3 text-sm text-white">
-                    <UserPlus className="h-4 w-4" />
-                    Add Employee
-                </Button>
+            { user?.role !== "manager" && (
+                    <Button className="h-9 gap-2 rounded-md px-3 text-sm text-white">
+                        <UserPlus className="h-4 w-4" />
+                        Add Employee
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="w-[95vw] max-w-xl bg-white max-h-[90vh]">
                 <DialogHeader>

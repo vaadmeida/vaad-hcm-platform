@@ -26,7 +26,6 @@ const Navbar = ({ setSidebarOpen }: NavbarProps) => {
           <MobileMenu onClick={() => setSidebarOpen(true)} />
         </div>
 
-
         <h1 className="text-sm font-semibold text-foreground md:text-base">
            <Breadcrumb/>
         </h1>

@@ -1,21 +1,31 @@
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import EmployeeFormModal from "./EmployeeFormModal"
+import { useAuthStore } from "@/store/auth.store"
+
+
 
 const EmployeeToolbar = () => {
+
+  const user = useAuthStore((state) => state.user)
+
   return (
-      <div>
+    <div>
       {/* Header */}
       <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-            Employees
-          </h1>
+          {
+            user?.role === "manager" ? (<h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              My Team
+            </h1>) : (<h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              Employees
+            </h1>)
+          }
 
           <p className="mt-1 text-sm text-muted-foreground">
             Manage employee records, roles, and organizational structure.
           </p>
-        </div>
+      </div>
 
         <div className="flex items-center gap-2">
           <Button
@@ -25,7 +35,7 @@ const EmployeeToolbar = () => {
             <Download className="h-4 w-4" />
             Export
           </Button>
-          <EmployeeFormModal/>
+          <EmployeeFormModal />
         </div>
       </section>
     </div>

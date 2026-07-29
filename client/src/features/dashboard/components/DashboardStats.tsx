@@ -23,39 +23,44 @@ const DashboardStats = () => {
 
   const stats = data?.data;
 
+
+  const cards = [
+    {
+      title: "Employees",
+      value: stats?.totalEmployees ?? 0,
+      description: "Total registered employees",
+      icon: Users,
+      iconColor: "action-icon-blue",
+    },
+    {
+      title: "Departments",
+      value: stats?.totalDepartments ?? 0,
+      description: "Company departments",
+      icon: Building2,
+      iconColor: "action-icon-amber",
+    },
+    {
+      title: "Active Employees",
+      value: stats?.activeEmployees ?? 0,
+      description: "Currently active staff",
+      icon: Users,
+      iconColor: "action-icon-green",
+    },
+    {
+      title: "Pending Leaves",
+      value: stats?.pendingLeaveRequests ?? 0,
+      description: "Leave requests awaiting approval",
+      icon: FileText,
+      iconColor: "action-icon-purple",
+    },
+  ];
+
+
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <StatsCard
-        title="Employees"
-        value={stats?.totalEmployees ?? 0}
-        description="Total registered employees"
-        icon={Users}
-        iconColor="action-icon-blue"
-      />
-
-      <StatsCard
-        title="Departments"
-        value={stats?.totalDepartments ?? 0}
-        description="Company departments"
-        icon={Building2}
-        iconColor="action-icon-amber"
-      />
-
-      <StatsCard
-        title="Active Employees"
-        value={stats?.activeEmployees ?? 0}
-        description="Currently active staff"
-        icon={Users}
-        iconColor="action-icon-green"
-      />
-
-      <StatsCard
-        title="Pending Leaves"
-        value={stats?.pendingLeaveRequests ?? 0}
-        description="Leave requests awaiting approval"
-        icon={FileText}
-        iconColor="action-icon-purple"
-      />
+       {cards.map((card)=>(
+          <StatsCard key={card.title} {...card}/>
+       ))}
     </div>
   );
 };

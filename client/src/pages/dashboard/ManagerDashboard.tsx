@@ -1,6 +1,6 @@
-import DashboardStats from "@/features/dashboard/components/DashboardStats";
 import EmployeeByDepartmentChart from "@/features/dashboard/components/EmployeeByDepartmentsChart";
 import LeaveOverviewChart from "@/features/dashboard/components/LeaveOverviewChart";
+import ManagerDashboardStats from "@/features/dashboard/components/ManagerDashboardStats";
 import { useEmployeesByDepartment } from "@/features/dashboard/hooks/useEmployeesByDepartment";
 import { useLeaveOverview } from "@/features/dashboard/hooks/useLeaveOverview";
 import { useAuthStore } from "@/store/auth.store";
@@ -30,7 +30,7 @@ const ManagerDashboard = () => {
         </section>
 
         {/* Stats Cards */}
-        <DashboardStats />
+        <ManagerDashboardStats />
 
         {/* Charts */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -42,7 +42,6 @@ const ManagerDashboard = () => {
             data={leaveOverview?.data ?? []}
           />
         </div>
-
 
       </div>
     </div>

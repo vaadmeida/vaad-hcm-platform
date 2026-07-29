@@ -3,6 +3,10 @@ export interface DashboardStats {
     totalDepartments: number,
     activeEmployees: number,
     pendingLeaveRequests: number
+    teamMembers: number
+    activeTeamMembers: number
+    pendingLeaveApprovals: number
+    teamOnLeave: number
 }
 
 export interface DashboardResponse {
@@ -21,7 +25,7 @@ export interface EmployeeChartResponse {
     data: EmployeesChart[];
 }
 export interface LeaveOverview {
-    leaveStatus: string;
+    eaveStatus: string;
     count: number;
 }
 

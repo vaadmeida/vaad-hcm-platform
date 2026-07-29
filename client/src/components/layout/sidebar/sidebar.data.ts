@@ -101,9 +101,9 @@ export const managerSidebar = [
     href: "/my-leave",
   },
   {
-    title: "Documents",
+    title: "My Documents",
     icon: FolderOpen,
-    href: "/documents",
+    href: "/my-documents",
   },
   {
     title: "Settings",
@@ -125,7 +125,7 @@ export const employeeSidebar = [
   {
     title: "My Documents",
     icon: FolderOpen,
-    href: "/documents",
+    href: "/my-documents",
   },
   {
     title: "Settings",

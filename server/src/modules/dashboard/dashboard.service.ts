@@ -67,6 +67,7 @@ export const getHRStats = async () => {
 };
 
 export const getManagerStats = async (managerId: string) => {
+    
     const [
         teamMembers,
         activeTeamMembers,
@@ -88,13 +89,18 @@ export const getManagerStats = async (managerId: string) => {
 
         prisma.leaveRequest.count({
             where: {
-                manager_id: managerId,
+                employee: {
+                    manager_id: managerId,
+                },
                 status: "pending",
             },
         }),
+
         prisma.leaveRequest.count({
             where: {
-                manager_id: managerId,
+                employee: {
+                    manager_id: managerId,
+                },
                 status: "approved",
                 start_date: {
                     lte: new Date(),
