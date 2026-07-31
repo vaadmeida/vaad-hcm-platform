@@ -139,6 +139,7 @@ export const getEmployee = async (id: string, user: User) => {
             id: true,
             employee_code: true,
             // Personal Information
+            avatar_url: true,
             first_name: true,
             last_name: true,
             email: true,
@@ -218,7 +219,7 @@ export const getEmployee = async (id: string, user: User) => {
         id: employee.id,
         employee_code: employee.employee_code,
         full_name: `${employee.first_name} ${employee.last_name}`,
-
+        avatar_url: employee.avatar_url,
         personal: {
             first_name: employee.first_name,
             last_name: employee.last_name,

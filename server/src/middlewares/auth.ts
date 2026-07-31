@@ -3,12 +3,12 @@ import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.ts";
 
 export interface AuthenticatedUser {
-  id: string;
-  email: string;
-  role: "admin" | "manager" | "employee" | "hr";
+    id: string;
+    email: string;
+    role: "admin" | "manager" | "employee" | "hr";
 }
 
-export const authenticate = async (req: Request , res: Response, next: NextFunction) => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
 
     const header = req.headers.authorization;
 
@@ -38,7 +38,7 @@ export const authenticate = async (req: Request , res: Response, next: NextFunct
         req.user = {
             id: employee.id,
             email: employee.email,
-            role: employee.role as "admin" | "manager" | "employee",
+            role: employee.role as "admin" | "manager" | "employee" | "hr",
         };
 
         next();
