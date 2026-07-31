@@ -1,21 +1,21 @@
+import EmployeeEditModal from "@/features/employees/components/EditEmployeeModal/EditEmployeeModal";
 import EmployeeDetailsHeader from "@/features/employees/components/EmployeeDetailsHeader";
+import type { EmployeeDetailsTab } from "@/features/employees/components/EmployeeDetailsTab/EmployeeDetailsTabs";
+import EmployeeDetailsTabs from "@/features/employees/components/EmployeeDetailsTab/EmployeeDetailsTabs";
+import EmployeeOverview from "@/features/employees/components/EmployeeDetailsTab/EmployeeOverview";
 import { useEmployeeDetails } from "@/features/employees/hooks/useEmployeeDetails";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 const EmployeeDetailsPage = () => {
   const { employeeId } = useParams();
 
-  const { data: employee, isLoading , error} = useEmployeeDetails(employeeId)
+  const { data: employee, isLoading } = useEmployeeDetails(employeeId);
 
-  console.log("employeeId:", employeeId);
-  console.log("employee:", employee);
-  console.log("error:", error);
-  console.log(employee);
+  const [activeTab, setActiveTab] =
+    useState<EmployeeDetailsTab>("overview");
 
-
-  const handleEdit = () => {
-    // open Edit Employee modal
-  };
+  const [open, setOpen] = useState(false);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -29,10 +29,34 @@ const EmployeeDetailsPage = () => {
     <div className="space-y-6">
       <EmployeeDetailsHeader
         employee={employee}
-        onEdit={handleEdit}
+        onEdit={() => setOpen(true)}
       />
 
-      {/* Overview / Documents / Activity */}
+      <EmployeeDetailsTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      {activeTab === "overview" && (
+        <EmployeeOverview employee={employee} />
+      )}
+
+      {/*
+      {activeTab === "documents" && (
+        <EmployeeDocuments employee={employee} />
+      )}
+
+      {activeTab === "salary" && (
+        <EmployeeSalaryStructure employee={employee} />
+      )}
+      */}
+
+      {/* Edit Employee Modal */}
+      <EmployeeEditModal
+        employee={employee}
+        open={open}
+        onOpenChange={setOpen}
+      />
     </div>
   );
 };
