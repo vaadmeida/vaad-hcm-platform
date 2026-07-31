@@ -11,14 +11,15 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
 api.interceptors.response.use((response) => response,(error: AxiosError) => {
-    
+  
     if (error.response?.status === 401) {
-      localStorage.removeItem("accessToken");
+      useAuthStore.getState().logout();
 
       window.location.href = "/";
     }
 
-    return Promise.reject(error);
+     return Promise.reject(error);
   }
 );
