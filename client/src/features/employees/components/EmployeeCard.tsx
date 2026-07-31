@@ -1,12 +1,12 @@
-import type { Employee } from "../types/employee.types";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import type { EmployeeListItem } from "../types/employee.types";
 
 interface EmployeeCardProps {
-  employee: Employee;
+  employee: EmployeeListItem;
 }
 
 const EmployeeCard = ({
@@ -20,7 +20,7 @@ const EmployeeCard = ({
 
         <Avatar className="h-12 w-12">
           <AvatarImage
-            src={employee.avatar_url ?? ""}
+            src={employee.first_name ?? ""}
             alt={`${employee.first_name} ${employee.last_name}`}
           />
 
