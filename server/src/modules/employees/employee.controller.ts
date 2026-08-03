@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createEmployee, deactivateEmployee, getAllEmployees, getEmployee, updateEmployee } from "./employee.service.ts"
+import { createEmployee, deactivateEmployee, getAllEmployees, getEmployee, getManagers, updateEmployee } from "./employee.service.ts"
 import { AppError } from "../../errors/appError.ts";
 import { createEmployeeSchema, getAllEmployeesSchema, getEmployeeSchema, updateEmployeeSchema } from "./employee.validator.ts";
 
@@ -129,4 +129,13 @@ export const deactivateEmployeeController = async (req: Request, res: Response) 
     });
 }
 
+export const getManagersController = async (req: Request, res: Response) => {
+    
+    const managers = await getManagers(req.user!);
 
+    return res.status(200).json({
+        success: true,
+        data: managers,
+    });
+    
+}

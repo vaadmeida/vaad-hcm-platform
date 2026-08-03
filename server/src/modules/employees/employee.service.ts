@@ -15,11 +15,10 @@ type UpdateEmployeeInput = {
     };
 };
 
-type User = {
-    id: string;
-    role: string;
+export type User = {
+  id: string;
+  role: "admin" | "hr" | "manager" | "employee";
 };
-
 
 export type CreateEmployeeType = {
     first_name: string;
@@ -421,6 +420,12 @@ export const updateEmployee = async ({
     user,
 }: UpdateEmployeeInput) => {
 
+    console.log("AUTH USER:", {
+    id: user.id,
+    role: user.role,
+});
+
+
     const employee = await prisma.employee.findUnique({
         where: { id },
     });
@@ -433,6 +438,10 @@ export const updateEmployee = async ({
         );
     }
 
+    console.log("TARGET EMPLOYEE:", {
+    id,
+    manager_id: employee.manager_id,
+});
     const isAdmin = user.role === "admin";
     const isHR = user.role === "hr";
     const isManager = user.role === "manager";
@@ -471,6 +480,7 @@ export const updateEmployee = async ({
         "emergency_contact_number",
 
         // Employment
+        "role",
         "job_title",
         "job_description",
         "department_id",
@@ -571,3 +581,28 @@ export const deactivateEmployee = async (id: string, user: User) => {
 }
 
 
+
+export const getManagers = async (user: User) => {
+
+    if (user.role !== "admin" && user.role !== "hr") {
+        throw new AppError(
+            "You do not have permission to access this resource.",
+            403,
+            "FORBIDDEN");
+    }
+
+    const managers = await prisma.employee.findMany({
+        where: {
+            role: "manager",
+        },
+        select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            job_title: true,
+            role: true,
+        },
+    });
+
+    return managers;
+};
