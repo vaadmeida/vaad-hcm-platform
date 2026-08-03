@@ -8,14 +8,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import type { Employee } from "../../types/employee.types";
+import type { Manager, UpdateEmployeeDTO } from "../../types/employee.types";
+import type { Department } from "@/features/departments/types/departments.types";
 
 interface EmploymentInfoProps {
-  employee: Employee;
+  form: UpdateEmployeeDTO;
+
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  handleSelectChange: (name: string, value: string) => void;
+  departments: Department[];
+  managers: Manager[];
 }
 
-const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
-  const { employment } = employee;
+const EmploymentInfo = ({
+  form,
+  handleChange,
+  handleSelectChange,
+  departments,
+  managers
+}: EmploymentInfoProps) => {
 
   return (
     <div className="w-full min-w-0">
@@ -27,7 +39,9 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
           <Input
             id="job_title"
-            defaultValue={employment.job_title ?? ""}
+            name="job_title"
+            value={form.job_title ?? ""}
+            onChange={handleChange}
             placeholder="Enter job title"
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -35,41 +49,42 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
         {/* Department */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="department">Department</Label>
+          <Label htmlFor="department_id">Department</Label>
 
-          <Select defaultValue={employment.department?.id ?? ""}>
+          <Select
+            value={form.department_id ?? ""}
+            onValueChange={(value) =>
+              handleSelectChange("department_id", value)
+            }
+          >
             <SelectTrigger
-              id="department"
+              id="department_id"
               className="w-full rounded-sm border-border text-sm"
             >
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="research">
-                Research & Innovation
-              </SelectItem>
-
-              <SelectItem value="technology">
-                Technology
-              </SelectItem>
-
-              <SelectItem value="marketing">
-                Marketing
-              </SelectItem>
-
-              <SelectItem value="human-resources">
-                Human Resources
-              </SelectItem>
+              {departments.map((department) => (
+                <SelectItem key={department.id} value={department.id}>
+                  {department.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+
         </div>
 
         {/* Role */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="role">Role</Label>
 
-          <Select defaultValue={employment.role ?? ""}>
+          <Select
+            value={form.role ?? "employee"}
+            onValueChange={(value) =>
+              handleSelectChange("role", value)
+            }
+          >
             <SelectTrigger
               id="role"
               className="w-full rounded-sm border-border text-sm"
@@ -83,6 +98,7 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
               <SelectItem value="hr">HR</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
             </SelectContent>
+
           </Select>
         </div>
 
@@ -90,7 +106,12 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
         <div className="min-w-0 space-y-2">
           <Label htmlFor="employment_type">Employment Type</Label>
 
-          <Select defaultValue={employment.employment_type ?? ""}>
+          <Select
+            value={form.employment_type ?? "full-time"}
+            onValueChange={(value) =>
+              handleSelectChange("employment_type", value)
+            }
+          >
             <SelectTrigger
               id="employment_type"
               className="w-full rounded-sm border-border text-sm"
@@ -102,7 +123,7 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
               <SelectItem value="full-time">Full-time</SelectItem>
               <SelectItem value="part-time">Part-time</SelectItem>
               <SelectItem value="contract">Contract</SelectItem>
-              <SelectItem value="internship">Internship</SelectItem>
+              <SelectItem value="intern">Intern</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -111,7 +132,12 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
         <div className="min-w-0 space-y-2">
           <Label htmlFor="status">Employment Status</Label>
 
-          <Select defaultValue={employment.status ?? ""}>
+          <Select
+            value={form.status ?? "probation"}
+            onValueChange={(value) =>
+              handleSelectChange("status", value)
+            }
+          >
             <SelectTrigger
               id="status"
               className="w-full rounded-sm border-border text-sm"
@@ -122,8 +148,7 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="probation">Probation</SelectItem>
-              <SelectItem value="on_leave">On Leave</SelectItem>
-              <SelectItem value="terminated">Terminated</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -134,12 +159,10 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
           <Input
             id="hire_date"
+            name="hire_date"
             type="date"
-            defaultValue={
-              employment.hire_date
-                ? employment.hire_date.slice(0, 10)
-                : ""
-            }
+            value={form.hire_date ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />
         </div>
@@ -152,35 +175,38 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
           <Input
             id="probation_end_date"
+            name="probation_end_date"
             type="date"
-            defaultValue={
-              employment.probation_end_date
-                ? employment.probation_end_date.slice(0, 10)
-                : ""
-            }
+            value={form.probation_end_date ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />
         </div>
 
         {/* Manager */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="manager">Manager</Label>
+          <Label htmlFor="manager_id">Manager</Label>
 
-          <Select defaultValue={employment.manager?.id ?? ""}>
+          <Select
+            value={form.manager_id ?? ""}
+            onValueChange={(value) =>
+              handleSelectChange("manager_id", value)
+            }
+          >
             <SelectTrigger
-              id="manager"
+              id="manager_id"
               className="w-full rounded-sm border-border text-sm"
             >
               <SelectValue placeholder="Select manager" />
             </SelectTrigger>
 
             <SelectContent>
-              {/* Replace these with API managers later */}
-              {employment.manager && (
-                <SelectItem value={employment.manager.id}>
-                  {employment.manager.name}
+              {managers.map((manager) => (
+                <SelectItem key={manager.id} value={manager.id}>
+                  {manager.first_name} {manager.last_name}
+                  {manager.job_title ? ` — ${manager.job_title}` : ""}
                 </SelectItem>
-              )}
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -191,8 +217,10 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
           <Input
             id="work_email"
+            name="work_email"
             type="email"
-            defaultValue={employment.work_email ?? ""}
+            value={form.work_email ?? ""}
+            onChange={handleChange}
             placeholder="employee@vaadhr.com"
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -205,9 +233,13 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
           </Label>
 
           <Select
-            defaultValue={
-              employment.owns_personal_computer ? "yes" : "no"
-            }
+            value={form.owns_personal_computer ? "yes" : "no"}
+            onValueChange={(value) => {
+              handleSelectChange(
+                "owns_personal_computer",
+                value
+              );
+            }}
           >
             <SelectTrigger
               id="owns_personal_computer"
@@ -229,12 +261,10 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
           <Input
             id="date_exited"
+            name="date_exited"
             type="date"
-            defaultValue={
-              employment.date_exited
-                ? employment.date_exited.slice(0, 10)
-                : ""
-            }
+            value={form.date_exited ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />
         </div>
@@ -245,7 +275,9 @@ const EmploymentInfo = ({ employee }: EmploymentInfoProps) => {
 
           <textarea
             id="job_description"
-            defaultValue={employment.job_description ?? ""}
+            name="job_description"
+            value={form.job_description ?? ""}
+            onChange={handleChange}
             placeholder="Enter job description"
             rows={4}
             className="

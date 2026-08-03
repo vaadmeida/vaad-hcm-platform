@@ -12,10 +12,10 @@ import {
   UserX,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { Employee } from "../types/employee.types";
+import type { EmployeeListItem } from "../types/employee.types";
 
 interface EmployeeActionsProps {
-  employee: Employee;
+  employee: EmployeeListItem;
 }
 
 const EmployeeActions = ({ employee }: EmployeeActionsProps) => {

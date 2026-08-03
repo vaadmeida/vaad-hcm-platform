@@ -53,6 +53,7 @@ const EmployeeDetailsPage = () => {
 
       {/* Edit Employee Modal */}
       <EmployeeEditModal
+        key={employee.id}
         employee={employee}
         open={open}
         onOpenChange={setOpen}

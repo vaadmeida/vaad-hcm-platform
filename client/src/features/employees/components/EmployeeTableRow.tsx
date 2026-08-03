@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import type { Employee } from "../types/employee.types";
+import type { EmployeeListItem } from "../types/employee.types";
 import {
   Avatar,
   AvatarFallback,
@@ -9,7 +9,7 @@ import StatusBadge from "@/components/common/StatusBadge";
 import EmployeeActions from "./EmployeeActions";
 
 interface EmployeeTableRowProps {
-  employee: Employee;
+  employee: EmployeeListItem;
 }
 
 const EmployeeTableRow = ({

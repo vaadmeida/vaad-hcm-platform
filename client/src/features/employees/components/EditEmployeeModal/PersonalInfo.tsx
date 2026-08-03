@@ -1,14 +1,16 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Employee } from "../../types/employee.types";
+import type { UpdateEmployeeDTO } from "../../types/employee.types";
 
 
-interface PersonalInfoProps {
-  employee: Employee;
+interface formInfoProps {
+  form: UpdateEmployeeDTO;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
 }
 
-const PersonalInfo = ({ employee }: PersonalInfoProps) => {
-  const { personal } = employee;
+const formInfo = ({ form, handleChange }: formInfoProps) => {
 
   return (
     <div className="w-full min-w-0">
@@ -20,7 +22,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Input
             id="first_name"
             placeholder="Enter first name"
-            defaultValue={personal.first_name ?? ""}
+            defaultValue={form.first_name ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -30,7 +33,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Label htmlFor="last_name">Last Name</Label>
           <Input
             id="last_name"
-            defaultValue={personal.last_name ?? ""}
+            defaultValue={form.last_name ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -41,7 +45,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Input
             id="email"
             type="email"
-            defaultValue={personal.email ?? ""}
+            defaultValue={form.email ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -51,7 +56,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Label htmlFor="phone">Phone</Label>
           <Input
             id="phone"
-            defaultValue={personal.phone ?? ""}
+            defaultValue={form.phone ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -61,7 +67,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Label htmlFor="alternate_phone">Alternate Phone</Label>
           <Input
             id="alternate_phone"
-            defaultValue={personal.alternate_phone ?? ""}
+            defaultValue={form.alternate_phone ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -71,7 +78,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Label htmlFor="gender">Gender</Label>
           <Input
             id="gender"
-            defaultValue={personal.gender ?? ""}
+            defaultValue={form.gender ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -83,8 +91,8 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
             id="date_of_birth"
             type="date"
             defaultValue={
-              personal.date_of_birth
-                ? personal.date_of_birth.slice(0, 10)
+              form.date_of_birth
+                ? form.date_of_birth.slice(0, 10)
                 : ""
             }
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
@@ -96,7 +104,7 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Label htmlFor="nationality">Nationality</Label>
           <Input
             id="nationality"
-            defaultValue={personal.nationality ?? ""}
+            defaultValue={form.nationality ?? ""}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -106,7 +114,7 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           <Label htmlFor="city">City</Label>
           <Input
             id="city"
-            defaultValue={personal.city ?? ""}
+            defaultValue={form.city ?? ""}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -118,7 +126,7 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           </Label>
           <Input
             id="state_of_residence"
-            defaultValue={personal.state_of_residence ?? ""}
+            defaultValue={form.state_of_residence ?? ""}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -130,7 +138,7 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
           </Label>
           <Input
             id="residential_address"
-            defaultValue={personal.residential_address ?? ""}
+            defaultValue={form.residential_address ?? ""}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -139,4 +147,4 @@ const PersonalInfo = ({ employee }: PersonalInfoProps) => {
   );
 };
 
-export default PersonalInfo;
+export default formInfo;

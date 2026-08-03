@@ -1,7 +1,7 @@
-import type { Employee } from "../types/employee.types";
+import type { EmployeeListItem } from "../types/employee.types";
 import EmployeeTableRow from "./EmployeeTableRow";
 interface EmployeeTableProps {
-  employees: Employee[];
+  employees: EmployeeListItem[];
 }
 
 const EmployeeTable = ({

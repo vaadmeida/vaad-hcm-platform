@@ -1,3 +1,20 @@
+export type EmployeeRole =
+    | "employee"
+    | "manager"
+    | "hr"
+    | "admin";
+
+export type EmployeeStatus =
+    | "active"
+    | "inactive"
+    | "probation";
+
+export type EmploymentType =
+    | "full-time"
+    | "part-time"
+    | "contract"
+    | "intern";
+
 export interface Employee {
   id: string;
   employee_code: string | null;
@@ -19,9 +36,9 @@ export interface Employee {
   employment: {
     job_title: string | null;
     job_description: string | null;
-    role: string;
-    status: string;
-    employment_type: string;
+    role: EmployeeRole;
+    status: EmployeeStatus;
+    employment_type: EmploymentType;
     hire_date: string | null;
     probation_end_date: string | null;
     date_exited: string | null;
@@ -55,12 +72,13 @@ export interface EmployeeListItem {
   id: string;
   first_name: string;
   last_name: string;
+  avatar_url?: string | null;
   email: string;
   phone: string | null;
-  role: string;
-  status: string;
+  role: EmployeeRole;
+  status: EmployeeStatus;
   job_title: string | null;
-  employment_type: string;
+  employment_type: EmploymentType;
   hire_date: string;
   created_at: string;
   department: {
@@ -126,3 +144,65 @@ export interface EmployeeResponse {
   data: Employee;
 }
 
+export interface UpdateEmployeeDTO {
+    first_name?: string;
+    last_name?: string;
+
+    gender?: string;
+    date_of_birth?: string;
+    nationality?: string;
+
+    phone?: string;
+    alternate_phone?: string;
+    email?: string;
+
+    residential_address?: string;
+    city?: string;
+    state_of_residence?: string;
+
+    emergency_contact_name?: string;
+    emergency_contact_relationship?: string;
+    emergency_contact_number?: string;
+
+    role?: "employee" | "manager" | "hr" | "admin";
+
+    job_title?: string;
+    job_description?: string;
+
+    department_id?: string;
+    manager_id?: string;
+
+    work_email?: string;
+
+    status?: "active" | "inactive" | "probation" | "terminated";
+
+    employment_type?:
+        | "full-time"
+        | "part-time"
+        | "contract"
+        | "intern";
+
+    hire_date?: string;
+    probation_end_date?: string;
+    date_exited?: string;
+
+    owns_personal_computer?: boolean;
+
+    paye_id?: string;
+    bank_name?: string;
+    account_number?: string;
+    account_name?: string;
+}
+
+export interface Manager {
+  id: string;
+  first_name: string;
+  last_name: string;
+  job_title: string | null;
+  role: "manager";
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}

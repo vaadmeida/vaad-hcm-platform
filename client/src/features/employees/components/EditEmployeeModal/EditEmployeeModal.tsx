@@ -20,11 +20,17 @@ import {
     UserRound,
 } from "lucide-react";
 
-import type { Employee } from "../../types/employee.types";
-import PersonalInfo from "./PersoanlInfo";
+import ButtonLoader from "@/components/common/ButtonLoader";
+import type { Employee, UpdateEmployeeDTO } from "../../types/employee.types";
+import PersonalInfo from "./PersonalInfo";
 import EmergencyInfo from "./EmergencyInfo";
 import EmploymentInfo from "./EmploymentInfo";
 import PayrollAndBank from "./PayrollAndBank";
+import { useState } from "react";
+import { useUpdateEmployee } from "../../hooks/useUpdateEmployee";
+import { toast } from "sonner";
+import { useDepartments } from "@/features/departments/hooks/useDepartments";
+import { useManagers } from "../../hooks/useManagers";
 
 interface EmployeeEditModalProps {
     employee: Employee;
@@ -47,21 +53,165 @@ const tabTriggerClass = `
   sm:h-12 sm:w-auto sm:justify-start sm:px-0 sm:text-sm
 `;
 
+const mapEmployeeToForm = (
+    employee: Employee
+): UpdateEmployeeDTO => ({
+    first_name: employee.personal.first_name ?? "",
+    last_name: employee.personal.last_name ?? "",
+    email: employee.personal.email ?? "",
+    gender: employee.personal.gender ?? "",
+    date_of_birth: employee.personal.date_of_birth ?? "",
+    nationality: employee.personal.nationality ?? "",
+    phone: employee.personal.phone ?? "",
+    alternate_phone: employee.personal.alternate_phone ?? "",
+    residential_address: employee.personal.residential_address ?? "",
+    city: employee.personal.city ?? "",
+    state_of_residence: employee.personal.state_of_residence ?? "",
+    emergency_contact_name: employee.emergency_contact?.name ?? "",
+    emergency_contact_relationship:
+        employee.emergency_contact?.relationship ?? "",
+    emergency_contact_number:
+        employee.emergency_contact?.phone ?? "",
+
+    role: employee.employment.role ?? "employee",
+    job_title: employee.employment.job_title ?? "",
+    job_description: employee.employment.job_description ?? "",
+    department_id: employee.employment.department?.id ?? "",
+    manager_id: employee.employment.manager?.id ?? "",
+    work_email: employee.employment.work_email ?? "",
+    status: employee.employment.status ?? "probation",
+    employment_type: employee.employment.employment_type ?? "full-time",
+    hire_date: employee.employment.hire_date ?? "",
+    probation_end_date: employee.employment.probation_end_date ?? "",
+    date_exited: employee.employment.date_exited ?? "",
+    owns_personal_computer:
+        employee.employment.owns_personal_computer ?? false,
+
+    paye_id: employee.payroll?.paye_id ?? "",
+    bank_name: employee.payroll?.bank_name ?? "",
+    account_number: employee.payroll?.account_number ?? "",
+    account_name: employee.payroll?.account_name ?? "",
+});
+
+
+const initialForm: UpdateEmployeeDTO = {
+    first_name: "",
+    last_name: "",
+    email: "",
+    gender: "",
+    date_of_birth: "",
+    nationality: "",
+    phone: "",
+    alternate_phone: "",
+    residential_address: "",
+    city: "",
+    state_of_residence: "",
+    emergency_contact_name: "",
+    emergency_contact_relationship: "",
+    emergency_contact_number: "",
+    role: "employee",
+    job_title: "",
+    job_description: "",
+    department_id: "",
+    manager_id: "",
+    work_email: "",
+    status: "probation",
+    employment_type: "full-time",
+    hire_date: "",
+    probation_end_date: "",
+    date_exited: "",
+    owns_personal_computer: false,
+    paye_id: "",
+    bank_name: "",
+    account_number: "",
+    account_name: "",
+};
+
+
 const EmployeeEditModal = ({
     employee,
     open,
     onOpenChange,
 }: EmployeeEditModalProps) => {
+
+
+    const [form, setForm] = useState<UpdateEmployeeDTO>(
+        mapEmployeeToForm(employee)
+    );
+    const [activeTab, setActiveTab] = useState<"personal" | "employment" | "emergency" | "account">("personal");
+
+    const { data: departments = [] } = useDepartments();
+
+    const { data: managers = [] } = useManagers();
+
+    const { isPending, mutateAsync } = useUpdateEmployee()
+    const handleChange = (
+        e: React.ChangeEvent<
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >
+    ) => {
+        const { name, value } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSelectChange = (name: string, value: string) => {
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSubmit = async (
+        e: React.MouseEvent<HTMLButtonElement>
+    ) => {
+        e.preventDefault();
+
+        console.log("UPDATE PAYLOAD:", form);
+
+        try {
+            await mutateAsync({
+                employeeId: employee.id,
+                payload: form,
+            });
+
+            onOpenChange(false);
+            setForm(initialForm);
+
+            toast.success("Employee updated successfully");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update employee");
+        }
+    };
+
+    const handleOpenChange = (value: boolean) => {
+        console.log("OPEN:", value);
+
+        if (value) {
+            const mappedForm = mapEmployeeToForm(employee);
+
+            console.log("EMPLOYEE:", employee);
+            console.log("MAPPED FORM:", mappedForm);
+
+            setForm(mappedForm);
+        }
+
+        onOpenChange(value);
+    };
+
+    
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
                 className="
-          flex max-h-[90vh] flex-col gap-0
-          overflow-hidden border border-gray-200
-          bg-white p-0 shadow-xl
-          sm:max-w-3xl
-        "
-            >
+                        flex max-h-[90vh] flex-col gap-0
+                        overflow-hidden border border-gray-200
+                        bg-white p-0 shadow-xl
+                        sm:max-w-3xl">
                 {/* Header */}
                 <DialogHeader className="border-b border-gray-200 px-4 py-5 sm:px-6">
                     <div className="flex items-start gap-3">
@@ -83,6 +233,12 @@ const EmployeeEditModal = ({
 
                 {/* Content */}
                 <Tabs
+                    value={activeTab}
+                    onValueChange={(value) =>
+                        setActiveTab(
+                            value as "personal" | "employment" | "emergency" | "account"
+                        )
+                    }
                     defaultValue="personal"
                     className="flex min-h-0 flex-1 flex-col"
                 >
@@ -90,11 +246,10 @@ const EmployeeEditModal = ({
                     <div className="border-b border-gray-200 px-4 sm:px-6">
                         <TabsList
                             className="
-                grid h-auto w-full grid-cols-2
-                rounded-none bg-transparent p-0
-                sm:flex sm:grid-cols-none sm:justify-start sm:gap-7
-              "
-                        >
+                                    grid h-auto w-full grid-cols-2
+                                    rounded-none bg-transparent p-0
+                                    sm:flex sm:grid-cols-none sm:justify-start sm:gap-7
+                                       ">
                             <TabsTrigger value="personal" className={tabTriggerClass}>
                                 <UserRound className="h-4 w-4 shrink-0" />
                                 Personal
@@ -131,7 +286,8 @@ const EmployeeEditModal = ({
                                 </p>
                             </div>
 
-                            <PersonalInfo employee={employee} />
+                            <PersonalInfo handleChange={handleChange} form={form}
+                            />
                         </TabsContent>
 
                         {/* Employment */}
@@ -149,7 +305,9 @@ const EmployeeEditModal = ({
                                 </p>
                             </div>
 
-                            <EmploymentInfo employee={employee} />
+                            <EmploymentInfo form={form}
+                                handleChange={handleChange} handleSelectChange={handleSelectChange}
+                                departments={departments} managers={managers} />
                         </TabsContent>
 
                         {/* Emergency */}
@@ -167,7 +325,7 @@ const EmployeeEditModal = ({
                                 </p>
                             </div>
 
-                            <EmergencyInfo employee={employee} />
+                            <EmergencyInfo form={form} handleChange={handleChange} />
                         </TabsContent>
 
                         {/* Payroll */}
@@ -181,7 +339,7 @@ const EmployeeEditModal = ({
                                     Manage payroll identification and employee banking details.
                                 </p>
                             </div>
-                            <PayrollAndBank employee={employee} />
+                            <PayrollAndBank form={form} handleChange={handleChange} />
                         </TabsContent>
                     </div>
 
@@ -195,6 +353,7 @@ const EmployeeEditModal = ({
                             <button
                                 type="button"
                                 onClick={() => onOpenChange(false)}
+
                                 className="
                                     rounded-md border border-gray-300 bg-white
                                     px-4 py-2 text-sm font-medium text-gray-700
@@ -206,6 +365,7 @@ const EmployeeEditModal = ({
 
                             <button
                                 type="button"
+                                onClick={handleSubmit}
                                 className="
                                         rounded-md bg-[#1078A9]
                                         px-4 py-2 text-sm font-medium text-white
@@ -215,7 +375,7 @@ const EmployeeEditModal = ({
                                         focus:ring-[#1078A9]/30
                                         "
                             >
-                                Save Changes
+                                {isPending ? <ButtonLoader text="Saving....." /> : "Save Changes"}
                             </button>
                         </div>
                     </div>

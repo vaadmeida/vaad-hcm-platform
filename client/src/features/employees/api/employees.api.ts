@@ -1,5 +1,6 @@
 import { api } from "@/lib"
-import type { CreateEmployeePayload, CreateEmployeeResponse, Employee, EmployeeFilters, EmployeeListResponse, EmployeeResponse } from "../types/employee.types"
+import type { ApiResponse, CreateEmployeePayload, CreateEmployeeResponse, Employee, EmployeeFilters, EmployeeListResponse, EmployeeResponse, Manager, UpdateEmployeeDTO } from "../types/employee.types"
+import axios from "axios"
 
 
 export const getEmployees = async (filters: EmployeeFilters): Promise<EmployeeListResponse> => {
@@ -42,3 +43,33 @@ export const getEmployeeById = async (employeeId: string): Promise<Employee> => 
     }
 
 }
+
+export const updateEmployee = async (employeeId: string, payload: Partial<UpdateEmployeeDTO>): Promise<Employee> => {
+
+    try {
+        const response = await api.patch<EmployeeResponse>(`/api/employees/${employeeId}`, payload);
+        return response.data.data;
+    }catch (error) {
+    if (axios.isAxiosError(error)) {
+        console.log("STATUS:", error.response?.status);
+        console.log(
+            "VALIDATION ERRORS:",
+            JSON.stringify(
+                error.response?.data?.errors,
+                null,
+                2
+            )
+        );
+    }
+
+    throw error;
+}
+}
+
+export const getManagers = async (): Promise<Manager[]> => {
+  const response = await api.get<ApiResponse<Manager[]>>(
+    "/api/employees/managers"
+  );
+
+  return response.data.data;
+};
