@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import { createDepartmentSchema } from "./department.validator.ts"
-import { createDepartment } from "./department.service.ts";
+import { createDepartment, getDepartmentById, getDepartments } from "./department.service.ts";
 
 export const createDepartmentController = async (req: Request, res: Response) => {
 
@@ -15,12 +15,30 @@ export const createDepartmentController = async (req: Request, res: Response) =>
     });
 
 }
-export const getDepartmentByIdController = () => {
+export const getDepartmentByIdController = async (req: Request, res: Response) => {
 
-}
-export const getDepartmentsController = () => {
+    const id = req.params.id as string;
+  const department = await getDepartmentById(id, req.user!);
 
+  return res.status(200).json({
+    success: true,
+    message: "Department retrieved successfully.",
+    data: department,
+  });
 }
+
+export const getDepartmentController = async (req: Request,res: Response) => {
+
+     const departments = await getDepartments(req.user!);
+
+    return res.status(200).json({
+        success: true,
+        message: "Departments retrieved successfully.",
+        data: departments,
+    });
+
+};
+
 export const updateDepartmentController = () => {
 
 }

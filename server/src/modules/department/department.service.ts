@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.ts"
 import { AppError } from "../../errors/appError.ts";
+import { User } from "../employees/employee.service.ts";
 import { CreateDepartmentDto } from "./department.validator.ts"
 
 export const createDepartment = async (data: CreateDepartmentDto) => {
@@ -29,13 +30,46 @@ export const createDepartment = async (data: CreateDepartmentDto) => {
 
 }
 
-export const getDepartmentById = () => {
+export const getDepartmentById = async (id: string , user: User) => {
+
+
+    if (user.role !== "admin" && user.role !== "hr") {
+        throw new AppError(
+            "You do not have permission to access this resource.",
+            403,
+            "FORBIDDEN");
+    }
+
+     const department = await prisma.department.findUnique({
+        where: {
+            id: id
+        }
+    })
+
+    if (!department) {
+        throw new AppError(
+            "Department not found.",
+            404,
+            "DEPARTMENT_NOT_FOUND");
+    }
+
+    return department;
+}
+export const getDepartments = async (user: User) => {
+
+    if (user.role !== "admin" && user.role !== "hr") {
+        throw new AppError(
+            "You do not have permission to access this resource.",
+            403,
+            "FORBIDDEN");
+    }
+
+    const departments = await prisma.department.findMany();
+
+    return departments;
 
 }
-export const getDepartments = () => {
-
-}
-export const updateDepartment = () => {
+export const updateDepartment = async () => {
 
 }
 export const assignDepartmentManager = () => {
