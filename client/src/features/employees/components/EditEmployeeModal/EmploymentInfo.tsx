@@ -16,7 +16,7 @@ interface EmploymentInfoProps {
 
   handleChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-  handleSelectChange: (name: string, value: string) => void;
+  handleSelectChange: ( name: keyof UpdateEmployeeDTO,value: string | boolean) => void;
   departments: Department[];
   managers: Manager[];
 }
@@ -149,6 +149,7 @@ const EmploymentInfo = ({
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="probation">Probation</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="terminated">Terminated</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -161,7 +162,7 @@ const EmploymentInfo = ({
             id="hire_date"
             name="hire_date"
             type="date"
-            value={form.hire_date ?? ""}
+           value={form.hire_date?.slice(0, 10) ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />
@@ -177,7 +178,7 @@ const EmploymentInfo = ({
             id="probation_end_date"
             name="probation_end_date"
             type="date"
-            value={form.probation_end_date ?? ""}
+            value={form.probation_end_date?.slice(0, 10) ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />
@@ -237,7 +238,7 @@ const EmploymentInfo = ({
             onValueChange={(value) => {
               handleSelectChange(
                 "owns_personal_computer",
-                value
+                value === "yes"
               );
             }}
           >
@@ -263,7 +264,7 @@ const EmploymentInfo = ({
             id="date_exited"
             name="date_exited"
             type="date"
-            value={form.date_exited ?? ""}
+            value={form.date_exited?.slice(0, 10) ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />

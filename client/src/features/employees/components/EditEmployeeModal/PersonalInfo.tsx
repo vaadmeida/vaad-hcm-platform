@@ -21,8 +21,9 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="first_name">First Name</Label>
           <Input
             id="first_name"
+            name="first_name"
             placeholder="Enter first name"
-            defaultValue={form.first_name ?? ""}
+            value={form.first_name ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -33,7 +34,9 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="last_name">Last Name</Label>
           <Input
             id="last_name"
-            defaultValue={form.last_name ?? ""}
+            name="last_name"
+            placeholder="Enter last name"
+            value={form.last_name ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -45,7 +48,9 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Input
             id="email"
             type="email"
-            defaultValue={form.email ?? ""}
+            name="email"
+            placeholder="Enter email"
+            value={form.email ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -56,7 +61,9 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="phone">Phone</Label>
           <Input
             id="phone"
-            defaultValue={form.phone ?? ""}
+            name="phone"
+            placeholder="Enter phone number"
+            value={form.phone ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -67,7 +74,9 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="alternate_phone">Alternate Phone</Label>
           <Input
             id="alternate_phone"
-            defaultValue={form.alternate_phone ?? ""}
+            name="alternate_phone"
+            placeholder="Enter alternate phone number"
+            value={form.alternate_phone ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -78,7 +87,9 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="gender">Gender</Label>
           <Input
             id="gender"
-            defaultValue={form.gender ?? ""}
+            name="gender"
+            placeholder="Enter gender"
+            value={form.gender ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
@@ -90,11 +101,10 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Input
             id="date_of_birth"
             type="date"
-            defaultValue={
-              form.date_of_birth
-                ? form.date_of_birth.slice(0, 10)
-                : ""
-            }
+            name="date_of_birth"
+            placeholder="Enter date of birth"
+            value={form.date_of_birth?.slice(0, 10)}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -104,7 +114,10 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="nationality">Nationality</Label>
           <Input
             id="nationality"
-            defaultValue={form.nationality ?? ""}
+            name="nationality"
+            placeholder="Enter nationality"
+            value={form.nationality ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -114,7 +127,10 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="city">City</Label>
           <Input
             id="city"
-            defaultValue={form.city ?? ""}
+            name="city"
+            placeholder="Enter city"
+            value={form.city ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -126,7 +142,10 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           </Label>
           <Input
             id="state_of_residence"
-            defaultValue={form.state_of_residence ?? ""}
+            name="state_of_residence"
+            placeholder="Enter state of residence"
+            value={form.state_of_residence ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
@@ -138,7 +157,10 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           </Label>
           <Input
             id="residential_address"
-            defaultValue={form.residential_address ?? ""}
+            name="residential_address"
+            placeholder="Enter residential address"
+            value={form.residential_address ?? ""}
+            onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>

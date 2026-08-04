@@ -93,41 +93,6 @@ const mapEmployeeToForm = (
     account_name: employee.payroll?.account_name ?? "",
 });
 
-
-const initialForm: UpdateEmployeeDTO = {
-    first_name: "",
-    last_name: "",
-    email: "",
-    gender: "",
-    date_of_birth: "",
-    nationality: "",
-    phone: "",
-    alternate_phone: "",
-    residential_address: "",
-    city: "",
-    state_of_residence: "",
-    emergency_contact_name: "",
-    emergency_contact_relationship: "",
-    emergency_contact_number: "",
-    role: "employee",
-    job_title: "",
-    job_description: "",
-    department_id: "",
-    manager_id: "",
-    work_email: "",
-    status: "probation",
-    employment_type: "full-time",
-    hire_date: "",
-    probation_end_date: "",
-    date_exited: "",
-    owns_personal_computer: false,
-    paye_id: "",
-    bank_name: "",
-    account_number: "",
-    account_name: "",
-};
-
-
 const EmployeeEditModal = ({
     employee,
     open,
@@ -135,11 +100,9 @@ const EmployeeEditModal = ({
 }: EmployeeEditModalProps) => {
 
 
-    const [form, setForm] = useState<UpdateEmployeeDTO>(
-        mapEmployeeToForm(employee)
-    );
+    const [form, setForm] = useState<UpdateEmployeeDTO>(mapEmployeeToForm(employee));
     const [activeTab, setActiveTab] = useState<"personal" | "employment" | "emergency" | "account">("personal");
-
+    
     const { data: departments = [] } = useDepartments();
 
     const { data: managers = [] } = useManagers();
@@ -158,11 +121,17 @@ const EmployeeEditModal = ({
         }));
     };
 
-    const handleSelectChange = (name: string, value: string) => {
+    const handleSelectChange = (name: keyof UpdateEmployeeDTO, value: string | boolean) => {
         setForm((prev) => ({
             ...prev,
             [name]: value,
         }));
+    };
+
+    const payload = {
+        ...form,
+        department_id: form.department_id || undefined,
+        manager_id: form.manager_id || undefined,
     };
 
     const handleSubmit = async (
@@ -170,18 +139,17 @@ const EmployeeEditModal = ({
     ) => {
         e.preventDefault();
 
-        console.log("UPDATE PAYLOAD:", form);
+        console.log("UPDATE PAYLOAD:", payload);
 
         try {
             await mutateAsync({
                 employeeId: employee.id,
-                payload: form,
+                payload
             });
 
             onOpenChange(false);
-            setForm(initialForm);
 
-            toast.success("Employee updated successfully");
+            toast.success(`${employee.full_name}'s details updated successfully!`);
         } catch (error) {
             console.error(error);
             toast.error("Failed to update employee");
@@ -189,21 +157,14 @@ const EmployeeEditModal = ({
     };
 
     const handleOpenChange = (value: boolean) => {
-        console.log("OPEN:", value);
-
         if (value) {
-            const mappedForm = mapEmployeeToForm(employee);
-
-            console.log("EMPLOYEE:", employee);
-            console.log("MAPPED FORM:", mappedForm);
-
-            setForm(mappedForm);
+            setForm(mapEmployeeToForm(employee));
+            setActiveTab("personal");
         }
 
         onOpenChange(value);
     };
 
-    
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
