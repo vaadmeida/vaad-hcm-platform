@@ -16,8 +16,8 @@ type UpdateEmployeeInput = {
 };
 
 export type User = {
-  id: string;
-  role: "admin" | "hr" | "manager" | "employee";
+    id: string;
+    role: "admin" | "hr" | "manager" | "employee";
 };
 
 export type CreateEmployeeType = {
@@ -421,9 +421,9 @@ export const updateEmployee = async ({
 }: UpdateEmployeeInput) => {
 
     console.log("AUTH USER:", {
-    id: user.id,
-    role: user.role,
-});
+        id: user.id,
+        role: user.role,
+    });
 
 
     const employee = await prisma.employee.findUnique({
@@ -439,9 +439,9 @@ export const updateEmployee = async ({
     }
 
     console.log("TARGET EMPLOYEE:", {
-    id,
-    manager_id: employee.manager_id,
-});
+        id,
+        manager_id: employee.manager_id,
+    });
     const isAdmin = user.role === "admin";
     const isHR = user.role === "hr";
     const isManager = user.role === "manager";
@@ -563,10 +563,11 @@ export const deactivateEmployee = async (id: string, user: User) => {
         throw new AppError("Already inactive", 400, "ALREADY_INACTIVE");
     }
 
-    const isAdmin = user.role = 'admin'
-    const isManager = user.role = 'manager'
+    const isAdmin = user.role === "admin";
+      const isHR = user.role === "hr";
+    const isManager = user.role === "manager";
 
-    if (isAdmin) {
+    if (isAdmin || isHR) {
         return await softDeactivate(id)
     }
 
@@ -580,6 +581,60 @@ export const deactivateEmployee = async (id: string, user: User) => {
     throw new AppError("Forbidden", 403, "FORBIDDEN");
 }
 
+export const terminateEmployee = async (id: string, user: User) => {
+  const employee = await prisma.employee.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      manager_id: true,
+      status: true,
+    },
+  });
+
+  if (!employee) {
+    throw new AppError(
+      "Employee not found",
+      404,
+      "EMPLOYEE_NOT_FOUND"
+    );
+  }
+
+  if (employee.status === "terminated") {
+    throw new AppError(
+      "Employee already terminated",
+      400,
+      "ALREADY_TERMINATED"
+    );
+  }
+
+  const isAdmin = user.role === "admin";
+  const isHR = user.role === "hr";
+  const isManager = user.role === "manager";
+
+  if (isAdmin || isHR) {
+    return await prisma.employee.update({
+      where: { id },
+      data: {
+        status: "terminated",
+      },
+    });
+  }
+
+  if (isManager) {
+    if (employee.manager_id !== user.id) {
+      throw new AppError("Forbidden", 403, "FORBIDDEN");
+    }
+
+    return await prisma.employee.update({
+      where: { id },
+      data: {
+        status: "terminated",
+      },
+    });
+  }
+
+    throw new AppError("Forbidden", 403, "FORBIDDEN");
+};
 
 
 export const getManagers = async (user: User) => {

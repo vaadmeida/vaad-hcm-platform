@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { createEmployee, deactivateEmployee, getAllEmployees, getEmployee, getManagers, updateEmployee } from "./employee.service.ts"
+import { NextFunction, Request, Response } from "express";
+import { createEmployee, deactivateEmployee, getAllEmployees, getEmployee, getManagers, terminateEmployee, updateEmployee } from "./employee.service.ts"
 import { AppError } from "../../errors/appError.ts";
 import { createEmployeeSchema, getAllEmployeesSchema, getEmployeeSchema, updateEmployeeSchema } from "./employee.validator.ts";
 
@@ -46,7 +46,7 @@ export const getEmployeeController = async (req: Request, res: Response) => {
     }
 
     const employee = await getEmployee(parsed.data.id, user);
-    
+
 
     return res.status(200).json({
         success: true,
@@ -54,8 +54,8 @@ export const getEmployeeController = async (req: Request, res: Response) => {
     });
 };
 
-export const getAllEmployeesController = async (req: Request,res: Response) => {
-    
+export const getAllEmployeesController = async (req: Request, res: Response) => {
+
     const parsed = getAllEmployeesSchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -129,13 +129,45 @@ export const deactivateEmployeeController = async (req: Request, res: Response) 
     });
 }
 
+export const terminateEmployeeController = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+
+        if (!req.user) {
+            throw new AppError("Unauthorized", 401, "NO_USER");
+        }
+
+        const { id } = req.params;
+
+        if (typeof id !== "string") {
+            throw new AppError("Invalid employee ID", 400, "INVALID_ID");
+        }
+
+        if (!req.user) {
+            throw new AppError("Unauthorized", 401, "NO_USER");
+        }
+        const employee = await terminateEmployee(id,req.user!);
+
+        return res.status(200).json({
+            success: true,
+            message: "Employee terminated successfully",
+            data: employee,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const getManagersController = async (req: Request, res: Response) => {
-    
+
     const managers = await getManagers(req.user!);
 
     return res.status(200).json({
         success: true,
         data: managers,
     });
-    
+
 }
