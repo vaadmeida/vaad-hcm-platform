@@ -1,33 +1,85 @@
 import {
   CalendarDays,
+  ChevronDown,
   Mail,
   MapPin,
   Pencil,
   Phone,
 } from "lucide-react";
-import type { Employee } from "../types/employee.types";
+import type { Employee, EmployeeStatus } from "../types/employee.types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
+import TerminateEmployeeDialog from "./EmployeeDetailsTab/TerminateEmployeeDialog";
+
 
 interface EmployeeDetailsHeaderProps {
   employee: Employee;
   onEdit: () => void;
 }
 
+const statusStyles = {
+  active: "border-green-200 bg-green-50 text-green-700",
+  probation: "border-blue-200 bg-blue-50 text-blue-700",
+  inactive: "border-gray-200 bg-gray-50 text-gray-600",
+  terminated: "border-red-200 bg-red-50 text-red-700",
+};
+
+
+const statusOptions = [
+  {
+    value: "active",
+    label: "Active",
+    dotClass: "bg-green-500",
+  },
+  {
+    value: "probation",
+    label: "Probation",
+    dotClass: "bg-blue-500",
+  },
+  {
+    value: "inactive",
+    label: "Inactive",
+    dotClass: "bg-gray-500",
+  },
+  {
+    value: "terminated",
+    label: "Terminated",
+    dotClass: "bg-red-500",
+  },
+];
+
 const EmployeeDetailsHeader = ({
   employee,
   onEdit,
 }: EmployeeDetailsHeaderProps) => {
+
+
+  const [status, setStatus] = useState<EmployeeStatus>(employee.employment.status);
+  const [showTerminateDialog, setShowTerminateDialog] = useState(false);
+  
+
   const fullName = employee.full_name;
 
-  const initials = `${employee.personal.first_name?.[0] ?? ""}${
-    employee.personal.last_name?.[0] ?? ""
-  }`.toUpperCase();
+  const initials = `${employee.personal.first_name?.[0] ?? ""}${employee.personal.last_name?.[0] ?? ""}`.toUpperCase();
 
   const hireDate = employee.employment.hire_date
     ? new Date(employee.employment.hire_date).toLocaleDateString()
     : "—";
 
-  const status = employee.employment.status || "Unknown";
+  const handleStatusChange = (value: string) => {
+    if (value === "terminated") {
+      setShowTerminateDialog(true);
+      return;
+    }
 
+    setStatus(value as EmployeeStatus);
+  };
   return (
     <div className="rounded-md border border-gray-200 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -126,22 +178,31 @@ const EmployeeDetailsHeader = ({
         {/* Status + Edit */}
         <div className="flex w-full shrink-0 items-center gap-3 lg:w-auto lg:pt-1">
           {/* Status */}
-          <span
-            className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-medium capitalize whitespace-nowrap ${
-              status === "active"
-                ? "border-green-200 bg-green-50 text-green-700"
-                : status === "probation"
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
-                  : "border-gray-200 bg-gray-50 text-gray-600"
-            }`}
+          <Select
+            value={status}
+            onValueChange={handleStatusChange}
           >
-            {status === "active" && (
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" />
-            )}
+            <SelectTrigger
+              className={`inline-flex h-8 w-auto min-w-25 shrink-0 justify-center gap-1.5 rounded-full border px-3 text-xs font-medium capitalize whitespace-nowrap ${statusStyles[status as keyof typeof statusStyles]
+                }`}
+            >
+              <SelectValue />
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            </SelectTrigger>
 
-            {status}
-          </span>
-
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${option.dotClass}`}
+                    />
+                    <span>{option.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {/* Edit */}
           <button
             type="button"
@@ -153,6 +214,15 @@ const EmployeeDetailsHeader = ({
           </button>
         </div>
       </div>
+      <TerminateEmployeeDialog
+        open={showTerminateDialog}
+        employeeName={employee.full_name}
+        onOpenChange={setShowTerminateDialog}
+        onConfirm={() => {
+          setStatus("terminated");
+          setShowTerminateDialog(false);
+        }}
+      />
     </div>
   );
 };
