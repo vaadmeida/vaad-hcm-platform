@@ -49,27 +49,56 @@ export const updateEmployee = async (employeeId: string, payload: Partial<Update
     try {
         const response = await api.patch<EmployeeResponse>(`/api/employees/${employeeId}`, payload);
         return response.data.data;
-    }catch (error) {
-    if (axios.isAxiosError(error)) {
-        console.log("STATUS:", error.response?.status);
-        console.log(
-            "VALIDATION ERRORS:",
-            JSON.stringify(
-                error.response?.data?.errors,
-                null,
-                2
-            )
-        );
-    }
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.log("STATUS:", error.response?.status);
+            console.log(
+                "VALIDATION ERRORS:",
+                JSON.stringify(
+                    error.response?.data?.errors,
+                    null,
+                    2
+                )
+            );
+        }
 
-    throw error;
-}
+        throw error;
+    }
 }
 
 export const getManagers = async (): Promise<Manager[]> => {
-  const response = await api.get<ApiResponse<Manager[]>>(
-    "/api/employees/managers"
-  );
+    const response = await api.get<ApiResponse<Manager[]>>(
+        "/api/employees/managers"
+    );
 
-  return response.data.data;
+    return response.data.data;
+};
+
+export const deactivateEmployee = async (employeeId: string): Promise<EmployeeResponse> => {
+    try {
+
+        const { data } = await api.patch<EmployeeResponse>(
+            `/api/employees/${employeeId}/deactivate`
+            );
+
+        return data;
+
+    } catch (error) {
+        console.error("Deactivate Employee API Error:", error);
+        throw error;
+    }
+};
+
+export const terminateEmployee = async (employeeId: string): Promise<EmployeeResponse> => {
+    
+    try {
+        const { data } = await api.patch<EmployeeResponse>(
+            `/api/employees/${employeeId}/terminate`
+        );
+
+        return data;
+    } catch (error) {
+        console.error("Terminate Employee API Error:", error);
+        throw error;
+    }
 };

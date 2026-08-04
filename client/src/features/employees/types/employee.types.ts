@@ -7,7 +7,8 @@ export type EmployeeRole =
 export type EmployeeStatus =
     | "active"
     | "inactive"
-    | "probation";
+    | "probation"
+    | "terminated";
 
 export type EmploymentType =
     | "full-time"
@@ -43,7 +44,7 @@ export interface Employee {
     probation_end_date: string | null;
     date_exited: string | null;
     work_email: string | null;
-    owns_personal_computer: boolean;
+    owns_personal_computer?: boolean;
     department: {
       id: string;
       name: string;
