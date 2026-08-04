@@ -19,6 +19,14 @@ interface EmployeeFiltersProps {
   total: number;
 }
 
+const statusWidths = {
+  all: "w-[155px]",
+  active: "w-[90px]",
+  probation: "w-[120px]",
+  inactive: "w-[115px]",
+  terminated: "w-[125px]",
+} as const;
+
 const EmployeeFilters = ({
   search,
   onSearch,
@@ -29,7 +37,7 @@ const EmployeeFilters = ({
   total,
 }: EmployeeFiltersProps) => {
 
-  
+
 
   return (
     <div className="flex flex-col gap-4 border-b border-border p-4 xl:flex-row xl:items-center xl:justify-between">
@@ -52,7 +60,7 @@ const EmployeeFilters = ({
         <Select
           value={department}
           onValueChange={onDepartmentChange}
-    
+
         >
           <SelectTrigger className="h-10 w-full sm:w-52 border border-slate-200 bg-white">
             <SelectValue placeholder="All Departments" />
@@ -82,39 +90,29 @@ const EmployeeFilters = ({
           </SelectContent>
         </Select>
 
-        {/* Status */}
         <Select
           value={status}
           onValueChange={onStatusChange}
         >
-          <SelectTrigger className="h-10 w-full sm:w-52 border border-slate-200 bg-white">
-            <SelectValue placeholder="All Status" />
+          <SelectTrigger
+            className={`h-8 ${statusWidths[status as keyof typeof statusWidths]} border border-slate-200 bg-white`}
+          >
+            <SelectValue placeholder="Current Employees" />
           </SelectTrigger>
 
           <SelectContent
             side="bottom"
             sideOffset={4}
-            align="start"
+            align="center"
             className="border border-gray-200"
           >
-            <SelectItem value="all">
-              All Status
-            </SelectItem>
-
-            <SelectItem value="active">
-              Active
-            </SelectItem>
-
-            <SelectItem value="probation">
-              Probation
-            </SelectItem>
-
-            <SelectItem value="inactive">
-              Inactive
-            </SelectItem>
+            <SelectItem value="all">Current Employees</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="probation">Probation</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="terminated">Terminated</SelectItem>
           </SelectContent>
         </Select>
-
       </div>
 
       <p className="shrink-0 text-sm text-muted-foreground">

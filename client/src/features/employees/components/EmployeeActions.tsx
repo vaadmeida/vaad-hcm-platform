@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { EmployeeListItem } from "../types/employee.types";
+import { useDeactivateEmployee } from "@/features/employees/hooks/useDeactivateEmployee";
+import { toast } from "sonner";
 
 interface EmployeeActionsProps {
   employee: EmployeeListItem;
@@ -20,6 +22,20 @@ interface EmployeeActionsProps {
 
 const EmployeeActions = ({ employee }: EmployeeActionsProps) => {
   const navigate = useNavigate();
+  const { mutateAsync: deactivate, isPending } = useDeactivateEmployee();
+
+  const handleDeactivate = async () => {
+  try {
+    await deactivate(employee.id);
+
+    toast.success(
+      `${employee.first_name} ${employee.last_name} has been deactivated`
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to deactivate employee");
+  }
+};
 
   return (
     <DropdownMenu>
@@ -47,16 +63,20 @@ const EmployeeActions = ({ employee }: EmployeeActionsProps) => {
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => navigate(`/employees/${employee.id}/edit`)}
+          onClick={() => navigate(`/employees/${employee.id}`)}
           className="cursor-pointer"
         >
           <Pencil className="mr-2 h-4 w-4 text-blue-600" />
           Edit Details
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+        <DropdownMenuItem
+          onClick={handleDeactivate}
+          disabled={isPending}
+          className="cursor-pointer text-red-600 focus:text-red-600"
+        >
           <UserX className="mr-2 h-4 w-4" />
-          Deactivate
+            {isPending ? "Deactivating..." : "Deactivate"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

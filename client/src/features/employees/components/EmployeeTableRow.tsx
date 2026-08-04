@@ -76,7 +76,8 @@ const EmployeeTableRow = ({
 
 
       {/* Actions */}
-      <td className="px-3 py-2 text-center">
+      <td className="px-3 py-2 text-center"
+        onClick={(e) => e.stopPropagation()}>
          <EmployeeActions employee={employee}/>
       </td>
 
