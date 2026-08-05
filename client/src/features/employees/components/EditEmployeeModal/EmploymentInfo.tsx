@@ -149,7 +149,6 @@ const EmploymentInfo = ({
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="probation">Probation</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="terminated">Terminated</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -18,7 +18,7 @@ interface TerminateEmployeeDialogProps {
     employeeName: string;
     onOpenChange: (open: boolean) => void;
     onConfirm: () => void;
-    isLoading?: boolean;
+    isPending?: boolean;
 }
 
 const TerminateEmployeeDialog = ({
@@ -26,7 +26,7 @@ const TerminateEmployeeDialog = ({
     employeeName,
     onOpenChange,
     onConfirm,
-    isLoading = false,
+    isPending
 }: TerminateEmployeeDialogProps) => {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,7 +54,7 @@ const TerminateEmployeeDialog = ({
                         type="button"
                         variant="outline"
                         onClick={() => onOpenChange(false)}
-                        disabled={isLoading}
+                        disabled={isPending}
                         className="min-w-[100px] border-[#1078A9] text-[#1078A9] hover:bg-[#1078A9]/5"
                     >
                         Cancel
@@ -63,10 +63,10 @@ const TerminateEmployeeDialog = ({
                     <Button
                         type="button"
                         onClick={onConfirm}
-                        disabled={isLoading}
+                        disabled={isPending}
                         className="min-w-[100px] bg-red-600 text-white hover:bg-red-700"
                     >
-                        {isLoading ? "Terminating..." : "Terminate"}
+                        {isPending ? "Terminating..." : "Terminate"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

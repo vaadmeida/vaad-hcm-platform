@@ -4,6 +4,7 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import type { EmployeeListItem } from "../types/employee.types";
+import { Link } from "react-router-dom";
 
 interface EmployeeCardProps {
   employee: EmployeeListItem;
@@ -13,7 +14,9 @@ const EmployeeCard = ({
   employee,
 }: EmployeeCardProps) => {
   return (
-    <div className="rounded-lg border border-border bg-white p-4 shadow-sm">
+    <Link to={`/employees/${employee.id}`}>
+  
+    <div className="rounded-lg border border-border bg-white p-4 shadow-sm my-3 hover:shadow-md transition-shadow duration-300">
 
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -88,6 +91,7 @@ const EmployeeCard = ({
       </div>
 
     </div>
+      </Link>
   );
 };
 

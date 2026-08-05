@@ -22,6 +22,7 @@ interface EmployeeActionsProps {
 
 const EmployeeActions = ({ employee }: EmployeeActionsProps) => {
   const navigate = useNavigate();
+  
   const { mutateAsync: deactivate, isPending } = useDeactivateEmployee();
 
   const handleDeactivate = async () => {

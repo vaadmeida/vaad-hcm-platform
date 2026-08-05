@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import TerminateEmployeeDialog from "./EmployeeDetailsTab/TerminateEmployeeDialog";
+import { useTerminateEmployee } from "../hooks/useTerminateEmployee";
+import { toast } from "sonner";
+import { useDeactivateEmployee } from "../hooks/useDeactivateEmployee";
+import { useUpdateEmployee } from "../hooks/useUpdateEmployee";
 
 
 interface EmployeeDetailsHeaderProps {
@@ -62,7 +66,9 @@ const EmployeeDetailsHeader = ({
 
   const [status, setStatus] = useState<EmployeeStatus>(employee.employment.status);
   const [showTerminateDialog, setShowTerminateDialog] = useState(false);
-  
+  const { mutateAsync: updateEmployee, isPending: isUpdating } = useUpdateEmployee();
+  const { mutateAsync: terminate, isPending: isTerminating } = useTerminateEmployee();
+  const { mutateAsync: inactive, isPending: isDeactivating } = useDeactivateEmployee();
 
   const fullName = employee.full_name;
 
@@ -72,14 +78,49 @@ const EmployeeDetailsHeader = ({
     ? new Date(employee.employment.hire_date).toLocaleDateString()
     : "—";
 
-  const handleStatusChange = (value: string) => {
+  const handleStatusChange = async (value: string) => {
     if (value === "terminated") {
       setShowTerminateDialog(true);
       return;
     }
 
-    setStatus(value as EmployeeStatus);
+    try {
+      if (value === "inactive") {
+        await inactive(employee.id);
+      } else if (value === "active" || value === "probation") {
+        await updateEmployee({
+          employeeId: employee.id,
+          payload: {
+            status: value as EmployeeStatus,
+          },
+        });
+      }
+
+      setStatus(value as EmployeeStatus);
+
+      toast.success(
+        `${employee.personal.first_name} ${employee.personal.last_name}'s status updated`
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update employee status");
+    }
   };
+  const handleTerminate = async () => {
+    try {
+      await terminate(employee.id);
+      setStatus("terminated");
+      setShowTerminateDialog(false);
+      toast.success(
+        `${employee.personal.first_name} ${employee.personal.last_name} has been terminated`
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to terminate employee");
+    }
+  };
+
+
   return (
     <div className="rounded-md border border-gray-200 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -181,6 +222,7 @@ const EmployeeDetailsHeader = ({
           <Select
             value={status}
             onValueChange={handleStatusChange}
+            disabled={isDeactivating || isUpdating || isTerminating}
           >
             <SelectTrigger
               className={`inline-flex h-8 w-auto min-w-25 shrink-0 justify-center gap-1.5 rounded-full border px-3 text-xs font-medium capitalize whitespace-nowrap ${statusStyles[status as keyof typeof statusStyles]
@@ -194,9 +236,7 @@ const EmployeeDetailsHeader = ({
               {statusOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${option.dotClass}`}
-                    />
+                    <span className={`h-1.5 w-1.5 rounded-full ${option.dotClass}`} />
                     <span>{option.label}</span>
                   </div>
                 </SelectItem>
@@ -218,10 +258,8 @@ const EmployeeDetailsHeader = ({
         open={showTerminateDialog}
         employeeName={employee.full_name}
         onOpenChange={setShowTerminateDialog}
-        onConfirm={() => {
-          setStatus("terminated");
-          setShowTerminateDialog(false);
-        }}
+        onConfirm={() => { handleTerminate(); }}
+        isPending={isTerminating}
       />
     </div>
   );
