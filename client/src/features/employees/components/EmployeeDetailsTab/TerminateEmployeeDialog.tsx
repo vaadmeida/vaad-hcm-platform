@@ -30,7 +30,7 @@ const TerminateEmployeeDialog = ({
 }: TerminateEmployeeDialogProps) => {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[420px] rounded-xl border border-gray-200 bg-white p-6">
+            <DialogContent className="max-w-105 rounded-xl border border-gray-200 bg-white p-6">
                 <DialogHeader className="items-center text-center">
                     <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
                         <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -55,7 +55,7 @@ const TerminateEmployeeDialog = ({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={isPending}
-                        className="min-w-[100px] border-[#1078A9] text-[#1078A9] hover:bg-[#1078A9]/5"
+                        className="min-w-25 border-primary text-secondary hover:bg-secondary/5"
                     >
                         Cancel
                     </Button>
@@ -64,7 +64,7 @@ const TerminateEmployeeDialog = ({
                         type="button"
                         onClick={onConfirm}
                         disabled={isPending}
-                        className="min-w-[100px] bg-red-600 text-white hover:bg-red-700"
+                        className="min-w-25 bg-red-600 text-white hover:bg-red-700"
                     >
                         {isPending ? "Terminating..." : "Terminate"}
                     </Button>
