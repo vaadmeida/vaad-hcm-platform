@@ -420,12 +420,6 @@ export const updateEmployee = async ({
     user,
 }: UpdateEmployeeInput) => {
 
-    console.log("AUTH USER:", {
-        id: user.id,
-        role: user.role,
-    });
-
-
     const employee = await prisma.employee.findUnique({
         where: { id },
     });
