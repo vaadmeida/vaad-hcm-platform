@@ -10,6 +10,7 @@ const departmentRouter  = Router()
 departmentRouter.post('/',  authenticate , requireRoles('admin'), asyncHandler(createDepartmentController))
 departmentRouter.get('/',  authenticate , requireRoles('admin'), asyncHandler(getDepartmentController))
 departmentRouter.get('/:id',  authenticate , requireRoles('admin'), asyncHandler(getDepartmentByIdController))
+
 //departmentRouter.put('/:id',  authenticate , requireRoles('admin'), asyncHandler(updateDepartmentController))
 //departmentRouter.delete('/:id',  authenticate , requireRoles('admin'), asyncHandler(deactiveDepartmentController))
 

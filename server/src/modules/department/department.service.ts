@@ -30,7 +30,7 @@ export const createDepartment = async (data: CreateDepartmentDto) => {
 
 }
 
-export const getDepartmentById = async (id: string , user: User) => {
+export const getDepartmentById = async (id: string, user: User) => {
 
 
     if (user.role !== "admin" && user.role !== "hr") {
@@ -40,11 +40,27 @@ export const getDepartmentById = async (id: string , user: User) => {
             "FORBIDDEN");
     }
 
-     const department = await prisma.department.findUnique({
+    const department = await prisma.department.findUnique({
         where: {
-            id: id
-        }
-    })
+            id,
+        },
+        include: {
+            manager: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                },
+            },
+
+            employees: {
+                select: {
+                    id: true,
+                },
+            },
+        },
+    });
 
     if (!department) {
         throw new AppError(
@@ -53,8 +69,14 @@ export const getDepartmentById = async (id: string , user: User) => {
             "DEPARTMENT_NOT_FOUND");
     }
 
-    return department;
+    const { employees, ...departmentData } = department;
+
+    return {
+        ...departmentData,
+        employee_count: department.employees.length,
+    };
 }
+
 export const getDepartments = async (user: User) => {
 
     if (user.role !== "admin" && user.role !== "hr") {
@@ -64,14 +86,47 @@ export const getDepartments = async (user: User) => {
             "FORBIDDEN");
     }
 
-    const departments = await prisma.department.findMany();
+    const departments = await prisma.department.findMany({
+        include: {
+            manager: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                },
+            },
+            _count: {
+                select: {
+                    employees: {
+                        where:{
+                            status: {
+                                not: "terminated"
+                            }
+                        }
+                    }
+                },
+            },
+        },
+    });
 
-    return departments;
+    const formattedDepartments = departments.map(
+          ({ _count, ...department }) => ({
+            ...department,
+            employee_count: _count.employees,
+        })
+    );
+
+
+    return formattedDepartments;
 
 }
+
+
 export const updateDepartment = async () => {
 
 }
+
 export const assignDepartmentManager = () => {
 
 }

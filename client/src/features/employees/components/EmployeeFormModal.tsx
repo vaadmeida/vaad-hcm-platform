@@ -39,7 +39,6 @@ const initialForm: EmployeeForm = {
     hire_date: "",
 };
 
-
 const EmployeeFormModal = () => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState<EmployeeForm>(initialForm);
