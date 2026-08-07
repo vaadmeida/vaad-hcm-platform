@@ -13,8 +13,10 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use((response) => response,(error: AxiosError) => {
-  
-    if (error.response?.status === 401) {
+
+     const isLoginRequest = error.config?.url?.includes("/auth/login");
+
+    if (error.response?.status === 401 &&  !isLoginRequest ) {
       useAuthStore.getState().logout();
 
       window.location.href = "/";

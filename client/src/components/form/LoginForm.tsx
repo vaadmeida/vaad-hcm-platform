@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { loginSchema, type LoginFormData } from "@/features/auth/validations/login.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogin } from "@/features/auth/hooks/useLogin";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDashboardRoute } from "@/utils/getDashboardRoute";
 import ButtonLoader from "../common/ButtonLoader";
@@ -26,8 +26,10 @@ const LoginForm = () => {
         },
     })
 
+
+
     const navigate = useNavigate();
-    const { mutate, isPending  } = useLogin();
+    const { mutate, isPending } = useLogin();
 
     const onSubmit = (data: LoginFormData) => {
         mutate(data, {
@@ -36,7 +38,13 @@ const LoginForm = () => {
             },
         });
     };
+    useEffect(() => {
+        console.log("✅ LoginForm mounted");
 
+        return () => {
+            console.log("❌ LoginForm unmounted");
+        };
+    }, []);
 
     return (
         <Card className="w-full max-w-md rounded-lg border-0 shadow-none">
