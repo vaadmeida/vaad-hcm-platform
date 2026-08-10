@@ -1,7 +1,7 @@
 import prisma from "../../config/prisma.ts"
 import { AppError } from "../../errors/appError.ts";
 import { User } from "../employees/employee.service.ts";
-import { CreateDepartmentDto } from "./department.validator.ts"
+import { AssignDepartmentManagerDto, CreateDepartmentDto, UpdateDepartmentDto } from "./department.validator.ts"
 
 export const createDepartment = async (data: CreateDepartmentDto) => {
 
@@ -99,7 +99,7 @@ export const getDepartments = async (user: User) => {
             _count: {
                 select: {
                     employees: {
-                        where:{
+                        where: {
                             status: {
                                 not: "terminated"
                             }
@@ -111,7 +111,7 @@ export const getDepartments = async (user: User) => {
     });
 
     const formattedDepartments = departments.map(
-          ({ _count, ...department }) => ({
+        ({ _count, ...department }) => ({
             ...department,
             employee_count: _count.employees,
         })
@@ -122,14 +122,170 @@ export const getDepartments = async (user: User) => {
 
 }
 
+type UpdateDepartmentInput = {
+    id: string;
+    data: Partial<UpdateDepartmentDto>;
+    user: User
+};
 
-export const updateDepartment = async () => {
+
+export const updateDepartment = async ({
+    id,
+    data,
+    user
+}: UpdateDepartmentInput) => {
+
+    const department = await prisma.department.findUnique({
+        where: { id }
+    })
+
+    if (!department) {
+        throw new AppError(
+            "Department not found",
+            404,
+            "DEPARTMENT_NOT_FOUND"
+        );
+    }
+
+    const isAdmin = user.role === "admin";
+
+    if (!isAdmin) {
+        throw new AppError(
+            "You are not allowed to update departments",
+            403,
+            "FORBIDDEN"
+        )
+    }
+
+
+    const updatedDepartment = await prisma.department.update({
+        where: { id },
+        data,
+    });
+
+    return updatedDepartment;
 
 }
+type AssignDepartmentManagerInput = {
+    id: string;
+    data: AssignDepartmentManagerDto;
+    user: User;
+};
 
-export const assignDepartmentManager = () => {
+export const assignDepartmentManager = async ({
+    id,
+    data,
+    user,
+}: AssignDepartmentManagerInput) => {
 
-}
-export const deactiveDepartment = () => {
+    const { manager_id } = data;
+
+    // 1. Check department exists
+    const department = await prisma.department.findUnique({
+        where: { id },
+    });
+
+    if (!department) {
+        throw new AppError(
+            "Department not found",
+            404,
+            "DEPARTMENT_NOT_FOUND"
+        );
+    }
+
+    // 2. Check authorization
+    if (user.role !== "admin") {
+        throw new AppError(
+            "You are not allowed to assign department managers",
+            403,
+            "FORBIDDEN"
+        );
+    }
+
+    // 3. Check employee exists and is active
+    const employee = await prisma.employee.findUnique({
+        where: { id: manager_id },
+    });
+
+    if (!employee) {
+        throw new AppError(
+            "Employee not found",
+            404,
+            "EMPLOYEE_NOT_FOUND"
+        );
+    }
+
+    if (employee.status !== "active") {
+        throw new AppError(
+            "Only active employees can be assigned as department managers",
+            400,
+            "EMPLOYEE_NOT_ACTIVE"
+        );
+    }
+
+    if (employee.role !== "manager") {
+        throw new AppError(
+            "Only employees with manager role can be assigned as department managers",
+            400,
+            "INVALID_MANAGER"
+        );
+    }
+
+    // 4. Check if employee already manages another department
+    const existingDepartment = await prisma.department.findFirst({
+        where: {
+            manager_id,
+            NOT: {
+                id,
+            },
+        },
+    });
+
+    if (existingDepartment) {
+        throw new AppError(
+            "This employee is already managing another department",
+            409,
+            "ALREADY_DEPARTMENT_MANAGER"
+        );
+    }
+
+    // 5. Assign manager
+    const updatedDepartment = await prisma.department.update({
+        where: { id },
+        data: {
+            manager_id,
+        },
+        select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            manager_id: true,
+            created_at: true,
+            updated_at: true,
+
+            manager: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    job_title: true,
+                    role: true,
+                    status: true,
+                },
+            },
+        },
+    });
+
+    // 6. TODO: Notify employee
+
+    // 7. TODO: Write audit log
+
+    return updatedDepartment;
+};
+
+
+export const teamMembers = () => {
 
 }

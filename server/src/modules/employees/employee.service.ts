@@ -9,10 +9,7 @@ import { seedLeaveBalance } from "../leave/leave.service.ts";
 type UpdateEmployeeInput = {
     id: string;
     data: Partial<UpdateEmployeeDTO>;
-    user: {
-        id: string;
-        role: string;
-    };
+    user: User
 };
 
 export type User = {
@@ -432,10 +429,7 @@ export const updateEmployee = async ({
         );
     }
 
-    console.log("TARGET EMPLOYEE:", {
-        id,
-        manager_id: employee.manager_id,
-    });
+
     const isAdmin = user.role === "admin";
     const isHR = user.role === "hr";
     const isManager = user.role === "manager";
