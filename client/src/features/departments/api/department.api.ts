@@ -14,12 +14,14 @@ export const getDepartments = async (): Promise<Department[]> => {
 
 };
 
-export const getDepartmentById = async (id: string): Promise<Department> => {
+export const getDepartmentById = async (departmentId: string): Promise<Department> => {
   try {
     const response = await api.get<ApiResponse<Department>>(
-      `/api/departments/${id}`
+      `/api/departments/${departmentId}`
     );
+    
     return response.data.data;
+   
   } catch (error) {
     console.error("Get Department By ID API Error:", error);
     throw error;
