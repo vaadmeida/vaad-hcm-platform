@@ -24,6 +24,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import { useAuthStore } from "@/store/auth.store";
 import { getDashboardRoute } from "@/utils/getDashboardRoute";
 import MyDocumentsPage from "@/pages/MyDocumentsPage";
+import DepartmentDetailsPage from "@/pages/DepartmentDetailsPage";
 
 export const AppRoutes = () => {
    const token = useAuthStore((state) => state.token);
@@ -61,6 +62,7 @@ export const AppRoutes = () => {
                   <Route path="/employees" element={<EmployeePage />} />
                   <Route path="/employees/:employeeId" element={<EmployeeDetailsPage />} />
                   <Route path="/leave" element={<LeavePage />} />
+                  <Route path="/departments/:departmentId" element={<DepartmentDetailsPage/>}/>
                </Route>
 
                {/* HR + MANAGER + EMPLOYEE */}
