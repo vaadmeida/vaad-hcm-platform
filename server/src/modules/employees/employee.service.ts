@@ -2,7 +2,7 @@ import prisma from "../../config/prisma.ts"
 import bcrypt from 'bcrypt'
 import { AppError } from "../../errors/appError.ts";
 import validator from 'validator'
-import { Prisma } from "@prisma/client";
+import { ActivityAction, Prisma } from "@prisma/client";
 import { UpdateEmployeeDTO } from "./employee.validator.ts";
 import { seedLeaveBalance } from "../leave/leave.service.ts";
 
@@ -521,12 +521,83 @@ export const updateEmployee = async ({
     }
 
     // ─── Update ──────────────────────────────────────────
-    const updatedEmployee = await prisma.employee.update({
-        where: { id },
-        data,
+
+    const isDepartmentChange =
+        data.department_id !== undefined &&
+        data.department_id !== employee.department_id;
+
+    const isDepartmentRemoved =
+        employee.department_id &&
+        data.department_id === null;
+
+    const result = await prisma.$transaction(async (tx) => {
+        const updatedEmployee = await tx.employee.update({
+            where: { id },
+            data,
+        });
+
+        let action: ActivityAction = "UPDATED";
+
+        let description =
+            `Employee ${updatedEmployee.first_name} ${updatedEmployee.last_name} was updated`;
+
+        const performer = await tx.employee.findUnique({
+                where: {
+                    id: user.id,
+                },
+                select: {
+                    first_name: true,
+                    last_name: true,
+                },
+            });
+
+
+        if (isDepartmentChange && updatedEmployee.department_id) {
+            const department = await tx.department.findUnique({
+                where: {
+                    id: updatedEmployee.department_id,
+                },
+                select: {
+                    name: true,
+                },
+            });
+
+
+
+            action = "DEPARTMENT_ASSIGNED";
+
+        
+
+            description =
+                `${performer?.first_name} ${performer?.last_name} assigned ` +
+                `${updatedEmployee.first_name} ${updatedEmployee.last_name} ` +
+                `to ${department?.name ?? "a department"}`;
+        }
+
+        if (isDepartmentRemoved) {
+            action = "DEPARTMENT_REMOVED";
+
+            description =
+                `${performer?.first_name} ${performer?.last_name} removed ` +
+                `${updatedEmployee.first_name} ${updatedEmployee.last_name} ` +
+                `from their department`;
+        }
+
+        await tx.activityLog.create({
+            data: {
+                action,
+                entity_type: "EMPLOYEE",
+                entity_id: updatedEmployee.id,
+                description,
+                performed_by: user.id,
+                department_id: updatedEmployee.department_id,
+            },
+        });
+
+        return updatedEmployee;
     });
 
-    const { password_hash, ...safeEmployee } = updatedEmployee;
+    const { password_hash, ...safeEmployee } = result;
 
     return safeEmployee;
 };
@@ -552,7 +623,7 @@ export const deactivateEmployee = async (id: string, user: User) => {
     }
 
     const isAdmin = user.role === "admin";
-      const isHR = user.role === "hr";
+    const isHR = user.role === "hr";
     const isManager = user.role === "manager";
 
     if (isAdmin || isHR) {
@@ -570,56 +641,56 @@ export const deactivateEmployee = async (id: string, user: User) => {
 }
 
 export const terminateEmployee = async (id: string, user: User) => {
-  const employee = await prisma.employee.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      manager_id: true,
-      status: true,
-    },
-  });
-
-  if (!employee) {
-    throw new AppError(
-      "Employee not found",
-      404,
-      "EMPLOYEE_NOT_FOUND"
-    );
-  }
-
-  if (employee.status === "terminated") {
-    throw new AppError(
-      "Employee already terminated",
-      400,
-      "ALREADY_TERMINATED"
-    );
-  }
-
-  const isAdmin = user.role === "admin";
-  const isHR = user.role === "hr";
-  const isManager = user.role === "manager";
-
-  if (isAdmin || isHR) {
-    return await prisma.employee.update({
-      where: { id },
-      data: {
-        status: "terminated",
-      },
+    const employee = await prisma.employee.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            manager_id: true,
+            status: true,
+        },
     });
-  }
 
-  if (isManager) {
-    if (employee.manager_id !== user.id) {
-      throw new AppError("Forbidden", 403, "FORBIDDEN");
+    if (!employee) {
+        throw new AppError(
+            "Employee not found",
+            404,
+            "EMPLOYEE_NOT_FOUND"
+        );
     }
 
-    return await prisma.employee.update({
-      where: { id },
-      data: {
-        status: "terminated",
-      },
-    });
-  }
+    if (employee.status === "terminated") {
+        throw new AppError(
+            "Employee already terminated",
+            400,
+            "ALREADY_TERMINATED"
+        );
+    }
+
+    const isAdmin = user.role === "admin";
+    const isHR = user.role === "hr";
+    const isManager = user.role === "manager";
+
+    if (isAdmin || isHR) {
+        return await prisma.employee.update({
+            where: { id },
+            data: {
+                status: "terminated",
+            },
+        });
+    }
+
+    if (isManager) {
+        if (employee.manager_id !== user.id) {
+            throw new AppError("Forbidden", 403, "FORBIDDEN");
+        }
+
+        return await prisma.employee.update({
+            where: { id },
+            data: {
+                status: "terminated",
+            },
+        });
+    }
 
     throw new AppError("Forbidden", 403, "FORBIDDEN");
 };
