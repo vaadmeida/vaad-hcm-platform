@@ -18,6 +18,8 @@ model Department {
   created_at  DateTime         @default(now())
   updated_at  DateTime         @updatedAt
 
+  activity_logs ActivityLog[]
+
   @@map("departments")
 }
 
@@ -27,71 +29,74 @@ enum DepartmentStatus {
 }
 
 model Employee {
-  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
   // ─── Personal Information ─────────────────────────────
-  first_name             String             @db.VarChar(100)
-  last_name              String             @db.VarChar(100)
-  email                  String             @unique @db.VarChar(255)
-  gender                 String?            @db.VarChar(20)
-  date_of_birth          DateTime?          @db.Date
-  nationality            String?            @db.VarChar(100)
-  phone                  String?            @db.VarChar(20)
-  alternate_phone        String?            @db.VarChar(20)
-  residential_address    String?
-  city                   String?            @db.VarChar(100)
-  state_of_residence     String?            @db.VarChar(100)
+  first_name          String    @db.VarChar(100)
+  last_name           String    @db.VarChar(100)
+  email               String    @unique @db.VarChar(255)
+  gender              String?   @db.VarChar(20)
+  date_of_birth       DateTime? @db.Date
+  nationality         String?   @db.VarChar(100)
+  phone               String?   @db.VarChar(20)
+  alternate_phone     String?   @db.VarChar(20)
+  residential_address String?
+  city                String?   @db.VarChar(100)
+  state_of_residence  String?   @db.VarChar(100)
 
   // ─── Employee Identification ──────────────────────────
-  employee_code          String?            @unique @db.VarChar(30)
-  avatar_url             String?
+  employee_code String? @unique @db.VarChar(30)
+  avatar_url    String?
 
   // ─── Emergency Contact ────────────────────────────────
-  emergency_contact_name         String?     @db.VarChar(150)
-  emergency_contact_relationship String?     @db.VarChar(50)
-  emergency_contact_number       String?     @db.VarChar(20)
+  emergency_contact_name         String? @db.VarChar(150)
+  emergency_contact_relationship String? @db.VarChar(50)
+  emergency_contact_number       String? @db.VarChar(20)
 
   // ─── Employment Information ───────────────────────────
-  job_title              String?            @db.VarChar(150)
-  job_description        String?
-  department_id          String?            @db.Uuid
-  department             Department?        @relation("DepartmentEmployees", fields: [department_id], references: [id])
+  job_title       String?     @db.VarChar(150)
+  job_description String?
+  department_id   String?     @db.Uuid
+  department      Department? @relation("DepartmentEmployees", fields: [department_id], references: [id])
 
-  manager_id             String?            @db.Uuid
-  manager                Employee?          @relation("EmployeeManager", fields: [manager_id], references: [id])
-  subordinates           Employee[]         @relation("EmployeeManager")
-  managedDepartment      Department?        @relation("DepartmentManager")
+  manager_id        String?     @db.Uuid
+  manager           Employee?   @relation("EmployeeManager", fields: [manager_id], references: [id])
+  subordinates      Employee[]  @relation("EmployeeManager")
+  managedDepartment Department? @relation("DepartmentManager")
 
-  status                 String             @default("probation") @db.VarChar(20)
-  employment_type        String             @default("full-time") @db.VarChar(50)
-  hire_date              DateTime?          @db.Date
-  probation_end_date     DateTime?          @db.Date
-  date_exited            DateTime?          @db.Date
-  work_email             String?            @db.VarChar(255)
-  owns_personal_computer Boolean            @default(false)
+  status                 String    @default("probation") @db.VarChar(20)
+  employment_type        String    @default("full-time") @db.VarChar(50)
+  hire_date              DateTime? @db.Date
+  probation_end_date     DateTime? @db.Date
+  date_exited            DateTime? @db.Date
+  work_email             String?   @db.VarChar(255)
+  owns_personal_computer Boolean   @default(false)
 
   // ─── Payroll & Bank Information ───────────────────────
-  paye_id                String?            @db.VarChar(50)
-  bank_name              String?            @db.VarChar(100)
-  account_number         String?            @db.VarChar(20)
-  account_name           String?            @db.VarChar(150)
+  paye_id        String? @db.VarChar(50)
+  bank_name      String? @db.VarChar(100)
+  account_number String? @db.VarChar(20)
+  account_name   String? @db.VarChar(150)
 
   // ─── Authentication & Authorization ───────────────────
-  password_hash          String             @db.VarChar(255)
-  role                   String             @default("employee") @db.VarChar(20)
+  password_hash String @db.VarChar(255)
+  role          String @default("employee") @db.VarChar(20)
 
   // ─── System ───────────────────────────────────────────
-  created_at             DateTime           @default(now())
-  updated_at             DateTime           @default(now())
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
 
   // ─── Relations ────────────────────────────────────────
-  documents              EmployeeDocument[] @relation("EmployeeDocuments")
-  uploadedDocuments      EmployeeDocument[] @relation("UploadedDocuments")
-  verifiedDocuments      EmployeeDocument[] @relation("VerifiedDocuments")
+  documents         EmployeeDocument[] @relation("EmployeeDocuments")
+  uploadedDocuments EmployeeDocument[] @relation("UploadedDocuments")
+  verifiedDocuments EmployeeDocument[] @relation("VerifiedDocuments")
 
-  leaveBalances          LeaveBalance[]
-  approvedLeaveRequests  LeaveRequest[]     @relation("ApprovedLeaveRequests")
-  leaveRequests          LeaveRequest[]     @relation("EmployeeLeaveRequests")
+  leaveBalances         LeaveBalance[]
+  approvedLeaveRequests LeaveRequest[] @relation("ApprovedLeaveRequests")
+  leaveRequests         LeaveRequest[] @relation("EmployeeLeaveRequests")
+
+  activity_logs ActivityLog[]
+  notifications Notification[]
 
   @@map("employees")
 }
@@ -198,4 +203,84 @@ enum DocumentCategory {
   other
 
   @@map("document_category")
+}
+
+enum ActivityEntity {
+  DEPARTMENT
+  EMPLOYEE
+  LEAVE
+  DOCUMENT
+  ATTENDANCE
+  PAYSLIP
+  AUTH
+}
+
+enum ActivityAction {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+
+  DEPARTMENT_ASSIGNED
+  DEPARTMENT_REMOVED
+  MANAGER_ASSIGNED
+  MANAGER_REMOVED
+
+  EMPLOYEE_ADDED
+  EMPLOYEE_REMOVED
+
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  LEAVE_CANCELLED
+
+  LOGIN
+  LOGOUT
+}
+
+enum NotificationType {
+  LEAVE
+  DOCUMENT
+  ATTENDANCE
+  PAYSLIP
+  DEPARTMENT
+  EMPLOYEE
+  SYSTEM
+}
+
+model ActivityLog {
+  id          String         @id @default(uuid())
+  action      ActivityAction
+  entity_type ActivityEntity
+  entity_id   String
+  description String
+
+  performed_by  String  @db.Uuid
+  department_id String? @db.Uuid
+
+  created_at DateTime @default(now())
+
+  user Employee @relation(fields: [performed_by], references: [id])
+
+  department Department? @relation(fields: [department_id], references: [id])
+
+  @@index([entity_type, entity_id])
+  @@index([performed_by])
+  @@index([department_id])
+  @@index([created_at])
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  user_id    String           @db.Uuid
+  title      String
+  message    String
+  type       NotificationType
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+  read_at    DateTime?
+
+  user Employee @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, is_read])
+  @@index([created_at])
 }
