@@ -41,3 +41,7 @@ Thumbs.db
 # Misc
 # =========================
 coverage/
+
+# =========================
+# Database backup
+server/hr_platform_backup.dump
