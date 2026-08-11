@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import { assignDepartmentManagerSchema, createDepartmentSchema, updateDepartmentSchema } from "./department.validator.ts"
-import { assignDepartmentManager, createDepartment, getDepartmentById, getDepartments, updateDepartment } from "./department.service.ts";
+import { assignDepartmentManager, createDepartment, getDepartmentById, getDepartments, getDepartmentStats, removeDepartmentManager, removeDepartmentManager as removeDepartmentManagerService, teamMembers, teamRecentActivities, updateDepartment } from "./department.service.ts";
+import { AppError } from "../../errors/appError.ts";
 
 export const createDepartmentController = async (req: Request, res: Response) => {
 
@@ -77,7 +78,7 @@ export const assignDepartmentManagerController = async (req: Request, res: Respo
         });
     }
 
-    const updated  = await assignDepartmentManager({
+    const updated = await assignDepartmentManager({
         id: req.params.id as string,
         user: req.user!,
         data: parsed.data
@@ -90,6 +91,79 @@ export const assignDepartmentManagerController = async (req: Request, res: Respo
     });
 
 }
-export const teamMembersController = () => {
+export const teamMembersController = async (req: Request, res: Response) => {
+
+    const departmentId = req.params.id as string;
+
+    if (!departmentId) {
+        throw new AppError(
+            "Department ID is required",
+            400,
+            "BAD_REQUEST"
+        );
+    }
+
+    const employees = await teamMembers(departmentId)
+
+    return res.status(200).json({
+        success: true,
+        message: "Team members retrieved successfully.",
+        data: employees,
+    });
+
+
+}
+
+
+
+export const removeDepartmentManagerController = async (req: Request, res: Response) => {
+
+    console.log("PARAMS:", req.params);
+    console.log("DEPARTMENT ID:", req.params.departmentId);
+
+    const { departmentId } = req.params
+
+    if (Array.isArray(departmentId)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid department ID.",
+        });
+    }
+
+    await removeDepartmentManager(departmentId, req.user!)
+
+    return res.status(200).json({
+        success: true,
+        message: "Manager Removed successfully.",
+    });
+
+}
+
+export const teamRecentActivitiesController = async (req: Request, res: Response) => {
+
+    const { departmentId } = req.params
+
+    const recentAct = await teamRecentActivities(departmentId as string)
+
+
+    return res.status(200).json({
+        success: true,
+        message: "Team recent activities retrieved successfully.",
+        data: recentAct,
+    });
+}
+
+export const getDepartmentStatsController = async (req: Request, res: Response) => {
+
+
+    const { departmentId } = req.params
+
+    const departmentStats = await getDepartmentStats(departmentId as string)
+
+        return res.status(200).json({
+        success: true,
+        message: "Team recent activities retrieved successfully.",
+        data: departmentStats,
+    });
 
 }

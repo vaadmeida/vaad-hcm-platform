@@ -35,7 +35,7 @@ export type UpdateDepartmentDto = z.infer<typeof updateDepartmentSchema>;
 
 export const assignDepartmentManagerSchema = z
   .object({
-    manager_id: z.string().uuid("Invalid manager ID"),
+    manager_id: z.uuid("Invalid manager ID"),
   })
   .strict();
 
