@@ -286,6 +286,186 @@ export const assignDepartmentManager = async ({
 };
 
 
-export const teamMembers = () => {
 
-}
+export const teamMembers = async (departmentId: string) => {
+
+
+    const department = await prisma.department.findUnique({
+        where: {
+            id: departmentId,
+        },
+        include: {
+            manager: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    job_title: true,
+                    avatar_url: true,
+                },
+            },
+            employees: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    job_title: true,
+                    avatar_url: true,
+                    status: true,
+                },
+            },
+        },
+    });
+
+    if (!department) {
+        throw new AppError(
+            "Department not found.",
+            404,
+            "DEPARTMENT_NOT_FOUND"
+        );
+    }
+
+    return {
+        manager: department.manager,
+        members: department.employees.filter((employee) => (employee.id !== department.manager_id)),
+    };
+};
+
+
+export const removeDepartmentManager = async (
+    departmentId: string,
+    user: User
+) => {
+
+    console.log("SERVICE DEPARTMENT ID:", departmentId);
+
+    if (user.role !== "admin" && user.role !== "hr") {
+        throw new AppError(
+            "You do not have permission to perform this action.",
+            403,
+            "FORBIDDEN"
+        );
+    }
+
+    const department = await prisma.department.findUnique({
+        where: {
+            id: departmentId,
+        },
+    });
+
+    if (!department) {
+        throw new AppError(
+            "Department not found.",
+            404,
+            "DEPARTMENT_NOT_FOUND"
+        );
+    }
+
+    if (!department.manager_id) {
+        throw new AppError(
+            "This department has no manager assigned.",
+            400,
+            "NO_MANAGER_ASSIGNED"
+        );
+    }
+
+    return prisma.department.update({
+        where: {
+            id: departmentId,
+        },
+        data: {
+            manager_id: null,
+        },
+    });
+};
+
+export const teamRecentActivities = async (departmentId: string) => {
+    const activities = await prisma.activityLog.findMany({
+        where: {
+            department_id: departmentId,
+        },
+        orderBy: {
+            created_at: "desc",
+        },
+        take: 10,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                },
+            },
+        },
+    });
+
+    return activities;
+};
+
+export const getDepartmentStats = async (departmentId: string) => {
+
+    const employees = await prisma.employee.findMany({
+        where: {
+            department_id: departmentId,
+            status: {
+                not: "terminated",
+            },
+        },
+        select: {
+            id: true,
+            status: true,
+            leaveRequests: {
+                where: {
+                    status: "approved",
+                    start_date: {
+                        lte: new Date(),
+                    },
+                    end_date: {
+                        gte: new Date(),
+                    },
+                },
+                select: {
+                    id: true,
+                },
+            },
+        },
+    });
+
+    const total = employees.length;
+
+    const onLeave = employees.filter(
+        (employee) => employee.leaveRequests.length > 0
+    ).length;
+
+    const active = employees.filter(
+        (employee) =>
+            employee.status === "active" &&
+            employee.leaveRequests.length === 0
+    ).length;
+
+    const inactive = total - active - onLeave
+
+    return {
+        total,
+        active: {
+            count: active,
+            percentage: total
+                ? Math.round((active / total) * 100)
+                : 0,
+        },
+
+        onLeave: {
+            count: onLeave,
+            percentage: total
+                ? Math.round((onLeave / total) * 100)
+                : 0,
+        },
+        inactive: {
+            count: inactive,
+            percentage: total
+                ? Math.round((inactive / total) * 100)
+                : 0,
+        }
+
+    };
+};
