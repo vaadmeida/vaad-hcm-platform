@@ -19,15 +19,9 @@ interface Department {
   manager_id?: string | null;
 }
 
-interface Manager {
-  id: string;
-  first_name: string;
-  last_name: string;
-}
 
 interface EditDepartmentModalProps {
   department: Department;
-  managers: Manager[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: {
@@ -49,7 +43,6 @@ const mapDepartmentToForm = (department?: Department) => ({
 
 const EditDepartmentModal = ({
   department,
-  managers,
   open,
   onOpenChange,
   onSubmit,
@@ -94,7 +87,7 @@ const EditDepartmentModal = ({
     onOpenChange(value);
   };
 
-  
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg border border-gray-200 bg-white p-0 shadow-xl">
@@ -190,7 +183,7 @@ const EditDepartmentModal = ({
                           focus:border-primary
                           focus:ring-2 focus:ring-ring/10">
                   <option value="">No Manager</option>
-                  {(availableManagers || managers).map((manager) => (
+                   {(availableManagers).map((manager) => (
                     <option key={manager.id} value={manager.id}>
                       {manager.first_name} {manager.last_name}
                     </option>
