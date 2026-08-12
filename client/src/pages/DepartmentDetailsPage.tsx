@@ -33,8 +33,7 @@ const DepartmentDetailsPage = () => {
             <EditDepartementModal
                 open={open}
                 onOpenChange={setOpen}
-                department={department}
-             
+                department={department}  
             />
 
 
