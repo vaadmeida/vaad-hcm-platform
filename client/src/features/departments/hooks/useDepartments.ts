@@ -6,5 +6,6 @@ export const useDepartments = () => {
   return useQuery<Department[]>({
     queryKey: ["departments"],
     queryFn: getDepartments,
+    
   });
 };
