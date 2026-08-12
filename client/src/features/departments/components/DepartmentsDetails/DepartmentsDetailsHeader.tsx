@@ -7,6 +7,9 @@ import {
 
 import type { Department } from "../../types/departments.types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { useUpdateDepartment } from "../../hooks/useUpdateDepartment";
+import { toast } from "sonner";
 
 
 
@@ -37,19 +40,34 @@ const DepartmentsDetailsHeader = ({
     department,
     onEdit,
 }: DepartmentsDetailsHeaderProps) => {
-//    const [status, setStatus] = useState(department.status);
+    const [status, setStatus] = useState(department.status);
 
-   // const handleStatusChange = async (value: string) => {
-     //   const newStatus = value as "active" | "inactive";
 
- //       setStatus(newStatus);
+    const { mutateAsync: updateDepartment } = useUpdateDepartment();
 
-     //   await updateDepartment({
-       //     id: departmentId,
-         //   status: newStatus,
-       // });
-   // };
-    
+    const handleStatusChange = async (value: string) => {
+        const newStatus = value as "active" | "inactive";
+
+        setStatus(newStatus);
+
+        try {
+
+            await updateDepartment({
+                departmentId: department.id,
+                payload: {
+                    status: newStatus
+                },
+            });
+
+            toast.success(`${department.name} status updated successfully`)
+
+        } catch (error) {
+            console.error(error);
+            toast.error(` Failed to Update ${department.name}`)
+        }
+
+    };
+
     const initials = department.name
         .split(" ")
         .map((word) => word[0])
@@ -128,7 +146,7 @@ const DepartmentsDetailsHeader = ({
                     {/* Status */}
                     <Select
                         value={status}
-                    //  onValueChange={handleStatusChange}
+                        onValueChange={handleStatusChange}
                     >
                         <SelectTrigger
                             className={`inline-flex h-8 w-auto min-w-25 shrink-0 justify-center gap-1.5 rounded-full border px-3 text-xs font-medium capitalize whitespace-nowrap ${statusStyles[status as keyof typeof statusStyles]

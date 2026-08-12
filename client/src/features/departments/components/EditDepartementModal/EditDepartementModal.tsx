@@ -10,6 +10,11 @@ import { useManagers } from "@/features/employees/hooks/useManagers";
 
 import { Building2 } from "lucide-react";
 import { useState } from "react";
+import { useUpdateDepartment } from "../../hooks/useUpdateDepartment";
+import type { UpdateDepartmentDto } from "../../types/departments.types";
+import { toast } from "sonner";
+import { useAssignDepartmentManager } from "../../hooks/useAssignManager";
+import { useRemoveDepartmentManager } from "../../hooks/useRemoveManager";
 
 interface Department {
   id: string;
@@ -45,8 +50,6 @@ const EditDepartmentModal = ({
   department,
   open,
   onOpenChange,
-  onSubmit,
-  isPending = false,
 }: EditDepartmentModalProps) => {
   const [form, setForm] = useState(() =>
     mapDepartmentToForm(department)
@@ -54,6 +57,11 @@ const EditDepartmentModal = ({
 
   const { data: availableManagers = [] } = useManagers();
 
+  const { isPending, mutateAsync } = useUpdateDepartment()
+
+  const { mutateAsync: assignManager } = useAssignDepartmentManager();
+
+  const { mutateAsync: removeManager } = useRemoveDepartmentManager();
 
   const handleChange = (e: React.ChangeEvent<
     HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -65,19 +73,57 @@ const EditDepartmentModal = ({
     }));
   };
 
+  const payload: UpdateDepartmentDto = {
+    name: form.name,
+    description: form.description,
+    status: form.status,
+  };
+
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
-    await onSubmit?.({
-      name: form.name,
-      description: form.description.trim() || null,
-      status: form.status,
-      manager_id: form.manager_id || null,
-    });
+    try {
+      await mutateAsync({
+        departmentId: department.id,
+        payload,
+      });
 
-    onOpenChange(false);
+      const originalManagerId = department.manager_id ?? "";
+      const newManagerId = form.manager_id ?? "";
+
+      console.log("MANAGER CHANGE:", {
+        originalManagerId,
+        newManagerId,
+      });
+
+      // Manager changed
+      if (newManagerId !== originalManagerId) {
+        // A manager was selected
+        if (newManagerId) {
+          await assignManager({
+            departmentId: department.id,
+            payload: {
+              manager_id: newManagerId,
+            },
+          });
+        }
+
+        // Manager was removed
+        else if (originalManagerId) {
+          await removeManager({ departmentId: department.id });
+        }
+      }
+
+      onOpenChange(false);
+
+      toast.success(
+        `${department.name}'s details updated successfully!`
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update department");
+    }
   };
-
 
   const handleOpenChange = (value: boolean) => {
     if (value) {
@@ -85,6 +131,7 @@ const EditDepartmentModal = ({
     }
 
     onOpenChange(value);
+
   };
 
 
@@ -183,7 +230,7 @@ const EditDepartmentModal = ({
                           focus:border-primary
                           focus:ring-2 focus:ring-ring/10">
                   <option value="">No Manager</option>
-                   {(availableManagers).map((manager) => (
+                  {(availableManagers).map((manager) => (
                     <option key={manager.id} value={manager.id}>
                       {manager.first_name} {manager.last_name}
                     </option>

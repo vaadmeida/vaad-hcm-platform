@@ -139,8 +139,6 @@ const EmployeeEditModal = ({
     ) => {
         e.preventDefault();
 
-        console.log("UPDATE PAYLOAD:", payload);
-
         try {
             await mutateAsync({
                 employeeId: employee.id,
