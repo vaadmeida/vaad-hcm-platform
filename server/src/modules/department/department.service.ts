@@ -302,6 +302,7 @@ export const teamMembers = async (departmentId: string) => {
                     last_name: true,
                     job_title: true,
                     avatar_url: true,
+                    status: true
                 },
             },
             employees: {

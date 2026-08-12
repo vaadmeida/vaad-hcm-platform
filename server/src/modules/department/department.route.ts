@@ -13,7 +13,7 @@ departmentRouter.get('/:id/employees',  authenticate , requireRoles('admin'), as
 departmentRouter.get('/:id',  authenticate , requireRoles('admin', "hr"), asyncHandler(getDepartmentByIdController))
 departmentRouter.patch('/:id',  authenticate , requireRoles('admin'), asyncHandler(updateDepartmentController))
 departmentRouter.patch('/:id/manager',  authenticate , requireRoles('admin'), asyncHandler(assignDepartmentManagerController))
-departmentRouter.get('/:departmentId/recent-activity',  authenticate , requireRoles('admin'), asyncHandler(teamRecentActivitiesController))
+departmentRouter.get('/:departmentId/activities',  authenticate , requireRoles('admin'), asyncHandler(teamRecentActivitiesController))
 departmentRouter.get('/:departmentId/stats',  authenticate , requireRoles('admin'), asyncHandler(getDepartmentStatsController))
 departmentRouter.delete('/:departmentId/manager',  authenticate , requireRoles('admin'), asyncHandler(removeDepartmentManagerController))
 
