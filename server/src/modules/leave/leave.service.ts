@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "../../config/prisma.ts";
 import { AppError } from "../../errors/appError.ts";
 import { calculateWorkingDays } from "../../utils/date.utils.ts";
+import { User } from "../employees/employee.service.ts";
 
 type CreateLeaveTypes = {
     name: string;
@@ -577,4 +578,293 @@ export const cancelRequest = async (requestId: string, employeeId: string) => {
         return cancelledRequest
 
     })
-} 
+}
+
+
+export const getAdminLeaveStats = async () => {
+    const today = new Date();
+
+    const [
+        totalRequests,
+        pendingRequests,
+        approvedLeaves,
+        currentlyOnLeave,
+    ] = await Promise.all([
+        prisma.leaveRequest.count(),
+
+        prisma.leaveRequest.count({
+            where: {
+                status: "pending",
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                status: "approved",
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                status: "approved",
+                start_date: {
+                    lte: today,
+                },
+                end_date: {
+                    gte: today,
+                },
+            },
+        }),
+    ]);
+
+    return {
+        totalRequests,
+        pendingRequests,
+        approvedLeaves,
+        currentlyOnLeave,
+    };
+};
+
+export const getManagerLeaveStats = async (managerId: string) => {
+    const today = new Date();
+
+    const [totalRequests, pendingRequests, approvedRequests, currentlyOnLeave] = await Promise.all([
+        prisma.leaveRequest.count({
+            where: {
+                employee: {
+                    department: {
+                        manager_id: managerId,
+                    },
+                },
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                status: "pending",
+                employee: {
+                    department: {
+                        manager_id: managerId,
+                    },
+                },
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                status: "approved",
+                employee: {
+                    department: {
+                        manager_id: managerId,
+                    },
+                },
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                status: "approved",
+                start_date: {
+                    lte: today,
+                },
+                end_date: {
+                    gte: today,
+                },
+                employee: {
+                    department: {
+                        manager_id: managerId,
+                    },
+                },
+            },
+        }),
+    ]);
+
+    return {
+        totalRequests,
+        pendingRequests,
+        approvedRequests,
+        currentlyOnLeave,
+    };
+};
+export const getEmployeeLeaveStats = async (employeeId: string) => {
+    const today = new Date();
+
+    const [
+        totalRequests,
+        pendingRequests,
+        approvedLeaves,
+        rejectedLeaves,
+        currentlyOnLeave,
+    ] = await Promise.all([
+        prisma.leaveRequest.count({
+            where: {
+                employee_id: employeeId,
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                employee_id: employeeId,
+                status: "pending",
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                employee_id: employeeId,
+                status: "approved",
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                employee_id: employeeId,
+                status: "rejected",
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: {
+                employee_id: employeeId,
+                status: "approved",
+                start_date: {
+                    lte: today,
+                },
+                end_date: {
+                    gte: today,
+                },
+            },
+        }),
+    ]);
+
+    return {
+        totalRequests,
+        pendingRequests,
+        approvedLeaves,
+        rejectedLeaves,
+        currentlyOnLeave,
+    };
+};
+
+export const getUpcomingLeave = async (user: any) => {
+    const today = new Date();
+
+    const thirtyDaysFromNow = new Date(today);
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    let roleFilter = {};
+
+    if (user.role === "admin" || user.role === "hr") {
+        roleFilter = {};
+    } else if (user.role === "manager") {
+        roleFilter = {
+            employee: {
+                department: {
+                    manager_id: user.id,
+                },
+            },
+        };
+    } else if (user.role === "employee") {
+        roleFilter = {
+            employee: {
+                id: user.id,
+            },
+        };
+    }
+
+    const upcomingLeave = await prisma.leaveRequest.findMany({
+        where: {
+            status: "approved",
+            start_date: {
+                gte: today,
+                lte: thirtyDaysFromNow,
+            },
+            ...roleFilter,
+        },
+        select: {
+            id: true,
+            start_date: true,
+            end_date: true,
+            total_days: true,
+            status: true,
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                },
+            },
+            leaveType: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+        },
+        orderBy: {
+            start_date: "asc",
+        },
+        take: 5
+    });
+
+    return upcomingLeave;
+};
+
+export const getRecentLeaveRequest = async (user: any) => {
+    let roleFilter = {};
+
+    if (user.role === "admin" || user.role === "hr") {
+        roleFilter = {};
+    } else if (user.role === "manager") {
+        roleFilter = {
+            employee: {
+                department: {
+                    manager_id: user.id,
+                },
+            },
+        };
+    } else if (user.role === "employee") {
+        roleFilter = {
+            employee: {
+                id: user.id,
+            },
+        };
+    }
+
+    const recentRequests = await prisma.leaveRequest.findMany({
+        where: {
+            ...roleFilter,
+        },
+        select: {
+            id: true,
+            start_date: true,
+            end_date: true,
+            total_days: true,
+            status: true,
+            created_at: true,
+
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                },
+            },
+
+            leaveType: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+        },
+        orderBy: {
+            created_at: "desc",
+        },
+        take: 5,
+    });
+
+    return recentRequests;
+};
