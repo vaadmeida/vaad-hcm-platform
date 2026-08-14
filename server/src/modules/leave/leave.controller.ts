@@ -1,8 +1,10 @@
 import { Request, Response } from "express"
 import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema } from "./leave.validator.ts"
 import { AppError } from "../../errors/appError.ts";
-import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAllLeaveTypes, getLeaveRequests, getLeaveTypes, getMyLeaveBalance, submitLeaveRequests } from "./leave.service.ts";
+import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveTypes, getEmployeeLeaveStats, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getUpcomingLeave, submitLeaveRequests } from "./leave.service.ts";
 import z from "zod";
+import { LeaveStats } from "./leave.types.ts";
+
 
 
 export const createLeaveTypesController = async (req: Request, res: Response) => {
@@ -256,3 +258,67 @@ export const cancelRequestController = async (req: Request, res: Response) => {
     });
 }
 
+export const getLeaveStats = async (req: Request, res: Response) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Authentication required.",
+        });
+    }
+
+    const { role, id } = req.user;
+
+    let stats: LeaveStats;
+
+    switch (role) {
+        case "admin":
+        case "hr":
+            stats = await getAdminLeaveStats();
+            break;
+
+        case "manager":
+            stats = await getManagerLeaveStats(id);
+            break;
+
+        case "employee":
+            stats = await getEmployeeLeaveStats(id);
+            break;
+
+        default:
+            return res.status(403).json({
+                success: false,
+                message: "You do not have permission to access this dashboard.",
+            });
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Leave statistics retrieved successfully.",
+        data: stats,
+    });
+};
+
+export const getUpcomingLeaveRequestController = async (req: Request, res: Response) =>{
+
+
+    const upcomingRequests = await getUpcomingLeave(req.user)
+
+    return res.status(200).json({
+        success: true,
+        message: "Upcoming Leave Requests retrieved successfully.",
+        data: upcomingRequests,
+    });
+
+}
+export const getRecentLeaveRequestController = async (req: Request, res: Response) =>{
+
+
+    const recentRequests = await getRecentLeaveRequest(req.user)
+
+    return res.status(200).json({
+        success: true,
+        message: "Recent Leave Requests retrieved successfully.",
+        data: recentRequests,
+    });
+
+}
