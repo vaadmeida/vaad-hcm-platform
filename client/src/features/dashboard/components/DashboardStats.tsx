@@ -15,6 +15,7 @@ const DashboardStats = () => {
       />
     );
   }
+  
   if (isLoading) {
     return <SkeletonLoader />
   }

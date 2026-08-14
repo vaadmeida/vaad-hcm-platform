@@ -14,6 +14,7 @@ export interface DashboardResponse {
     message: string;
     data: DashboardStats;
 }
+
 export interface EmployeesChart {
     department: string;
     employees: number;
