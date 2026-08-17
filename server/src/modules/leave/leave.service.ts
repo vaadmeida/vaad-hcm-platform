@@ -221,6 +221,7 @@ export const getLeaveRequests = async ({
             status: true,
             approved_at: true,
             created_at: true,
+
             employee: {
                 select: {
                     id: true,
@@ -237,28 +238,29 @@ export const getLeaveRequests = async ({
                 },
             },
         },
+
         orderBy: {
             created_at: "desc",
         },
     });
 
-
     return leaveRequests.map((request) => ({
         id: request.id,
         start_date: request.start_date,
         end_date: request.end_date,
-        total_days: request.total_days,
+        total_days: Number(request.total_days),
         reason: request.reason,
         status: request.status,
         approved_at: request.approved_at,
         created_at: request.created_at,
+
         employee: {
             id: request.employee.id,
             name: `${request.employee.first_name} ${request.employee.last_name}`,
             email: request.employee.email,
         },
 
-        leave_type: {
+        leaveType: {
             id: request.leaveType.id,
             name: request.leaveType.name,
         },
@@ -364,6 +366,7 @@ export const submitLeaveRequests = async (
                 "DATE_OVERLAP"
             );
         }
+
         const request = await tx.leaveRequest.create({
             data: {
                 employee_id: employeeId,
@@ -373,6 +376,23 @@ export const submitLeaveRequests = async (
                 total_days: totalDays,
                 reason: data.reason,
                 status: "pending",
+            },
+            include: {
+                employee: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true,
+                        email: true,
+                        avatar_url: true,
+                    },
+                },
+                leaveType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
             },
         });
 
@@ -772,7 +792,7 @@ export const getUpcomingLeave = async (user: any) => {
         };
     }
 
-    const upcomingLeave = await prisma.leaveRequest.findMany({
+    const upcomingLeaves = await prisma.leaveRequest.findMany({
         where: {
             status: "approved",
             start_date: {
@@ -808,7 +828,13 @@ export const getUpcomingLeave = async (user: any) => {
         take: 5
     });
 
-    return upcomingLeave;
+    const formattedUpcomingRequest = upcomingLeaves.map((request) => ({
+        ...request,
+        total_days: Number(request.total_days),
+    }));
+
+    return formattedUpcomingRequest
+
 };
 
 export const getRecentLeaveRequest = async (user: any) => {
@@ -866,5 +892,11 @@ export const getRecentLeaveRequest = async (user: any) => {
         take: 5,
     });
 
-    return recentRequests;
+    const formattedRequests = recentRequests.map((request) => ({
+        ...request,
+        total_days: Number(request.total_days),
+    }));
+
+
+    return formattedRequests;
 };
