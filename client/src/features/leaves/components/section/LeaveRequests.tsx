@@ -9,7 +9,17 @@ const LeaveRequests = () => {
   const [status, setStatus] = useState("all");
   const [leaveType, setLeaveType] = useState("all");
 
-  const { data: requests } = useGetLeaveRequests()
+  const { data: requests } = useGetLeaveRequests({
+    search: search || undefined,
+    status: status === "all" ? undefined : status || undefined,
+    leave_type_id: leaveType === "all" ? undefined : leaveType || undefined,
+  });
+
+  const total = requests?.data?.length ?? 0;
+  const pending = requests?.data.filter((request) => request.status === "pending").length ?? 0;
+  const approved = requests?.data.filter((request) => request.status === "approved").length ?? 0;
+  const rejected = requests?.data.filter((request) => request.status === "rejected").length ?? 0;
+
 
   return (
     <div>
@@ -24,10 +34,10 @@ const LeaveRequests = () => {
           onStatusChange={setStatus}
           leaveType={leaveType}
           onLeaveTypeChange={setLeaveType}
-          total={8}
-          pending={4}
-          approved={3}
-          rejected={1}
+          total={total}
+          pending={pending}
+          approved={approved}
+          rejected={rejected}
         />
 
         {/* Tablet + Desktop */}
