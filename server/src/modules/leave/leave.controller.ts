@@ -145,6 +145,7 @@ export const getLeaveRequestsController = async (req: Request, res: Response) =>
     });
 
 };
+
 export const submitLeaveRequestsController = async (req: Request, res: Response) => {
 
     const parsed = submitRequestSchema.safeParse(req.body)

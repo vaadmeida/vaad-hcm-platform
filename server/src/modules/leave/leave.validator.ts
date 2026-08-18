@@ -24,10 +24,13 @@ export const getLeaveRequestSchema = z.object({
       "pending",
       "approved",
       "rejected",
-      "cancelled"
+      "cancelled",
     ])
     .optional(),
+  search: z.string().trim().optional(),
+  leave_type_id: z.uuid("Invalid leave type ID").optional(),
 });
+
 
 export const submitRequestSchema = z.object({
   leave_type_id: z.uuid(),
@@ -55,5 +58,5 @@ export const approveOrRejectSchema = z.discriminatedUnion("action", [
 ]);
 
 export const cancelLeaveRequestParamsSchema = z.object({
-    id: z.uuid("Invalid leave request ID"),
+  id: z.uuid("Invalid leave request ID"),
 });

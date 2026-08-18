@@ -17,14 +17,13 @@ type CreateLeaveTypes = {
     max_carryover_days?: number | null;
 };
 
-type GetLeaveRequestsInput = {
-    user: {
-        id: string;
-        role: "admin" | "manager" | "employee";
-    };
+interface GetLeaveRequestsInput {
+    user: User;
     status?: string;
     employee_id?: string;
-};
+    search?: string;
+    leave_type_id?: string;
+}
 
 type SubmitLeaveRequestType = {
     leave_type_id: string
@@ -163,9 +162,11 @@ export const getLeaveRequests = async ({
     user,
     status,
     employee_id,
+    search,
+    leave_type_id,
 }: GetLeaveRequestsInput) => {
 
-    const isAdmin = user.role === "admin";
+
     const isManager = user.role === "manager";
     const isEmployee = user.role === "employee";
 
@@ -199,19 +200,56 @@ export const getLeaveRequests = async ({
         }
     }
 
+    const effectiveEmployeeId = isEmployee
+        ? user.id
+        : employee_id;
+
+    const employeeFilter = {
+        ...(isManager && !effectiveEmployeeId && {
+            manager_id: user.id,
+        }),
+
+        ...(search && {
+            OR: [
+                {
+                    first_name: {
+                        contains: search,
+                        mode: "insensitive" as const,
+                    },
+                },
+                {
+                    last_name: {
+                        contains: search,
+                        mode: "insensitive" as const,
+                    },
+                },
+                {
+                    email: {
+                        contains: search,
+                        mode: "insensitive" as const,
+                    },
+                },
+            ],
+        }),
+    };
 
     const leaveRequests = await prisma.leaveRequest.findMany({
         where: {
             ...(status && { status }),
-            ...(employee_id && { employee_id }),
-            ...(isManager && !employee_id
-                ? {
-                    employee: {
-                        manager_id: user.id,
-                    },
-                }
-                : {}),
+
+            ...(effectiveEmployeeId && {
+                employee_id: effectiveEmployeeId,
+            }),
+
+            ...(leave_type_id && {
+                leave_type_id,
+            }),
+
+            ...(Object.keys(employeeFilter).length > 0 && {
+                employee: employeeFilter,
+            }),
         },
+
         select: {
             id: true,
             start_date: true,
@@ -243,7 +281,7 @@ export const getLeaveRequests = async ({
             created_at: "desc",
         },
     });
-
+    
     return leaveRequests.map((request) => ({
         id: request.id,
         start_date: request.start_date,
