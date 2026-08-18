@@ -19,16 +19,16 @@ const LeaveRequestTable = ({
               Employee
             </th>
 
-            <th className="px-4 py-3">
+            <th className="px-4 py-3 ">
               Leave Type
             </th>
 
 
-            <th className="hidden px-4 py-3 lg:table-cell">
+            <th className="hidden px-4 py-3 xl:table-cell">
               Start – End
             </th>
 
-            <th className="px-4 py-3">
+            <th className=" hidden px-4 py-3 xl:table-cell">
               Status
             </th>
 
