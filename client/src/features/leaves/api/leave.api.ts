@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { LeaveRequestResponse, LeaveStatsResponse, RecentLeaveRequestsResponse } from "../types/leave.types";
+import type { LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, RecentLeaveRequestsResponse } from "../types/leave.types";
 
 export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
   try {
@@ -34,12 +34,14 @@ export const getRecentLeavesRequests = async (): Promise<RecentLeaveRequestsResp
     throw error;
   }
 }
-export const getLeaveRequests = async (): Promise<LeaveRequestResponse> => {
+
+export const getLeaveRequests = async (filters?: LeaveRequestFilters): Promise<LeaveRequestResponse> => {
   try {
-    const response = await api.get<LeaveRequestResponse>('/api/leaves/request')
+    const response = await api.get<LeaveRequestResponse>(
+      "/api/leaves/request", {params: filters});
     return response.data;
   } catch (error) {
-    console.error("Getting upcoming leaves API Error:", error);
+    console.error("Getting leave requests API Error:", error);
     throw error;
   }
-}
+};

@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { getLeaveRequests } from "../api/leave.api";
 
-export const useGetLeaveRequests = () => {
+import type { LeaveRequestFilters } from "../types/leave.types";
+
+export const useGetLeaveRequests = (filters: LeaveRequestFilters) => {
   return useQuery({
-    queryKey: ["get-leave-requests"],
-    queryFn: getLeaveRequests,
+    queryKey: ["get-leave-requests", filters],
+    queryFn: () => getLeaveRequests(filters),
   });
 };
