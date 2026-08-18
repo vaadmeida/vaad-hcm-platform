@@ -133,15 +133,10 @@ export const getAllLeaveTypes = async () => {
 }
 
 
-export const getMyLeaveBalance = async (loggedInUserId: string, employeeId: string) => {
-
-    if (loggedInUserId !== employeeId) {
-        throw new AppError("Forbidden", 403, "FORBIDDEN");
-    }
-
+export const getMyLeaveBalance = async (userId: string) => {
     const balances = await prisma.leaveBalance.findMany({
         where: {
-            employee_id: employeeId,
+            employee_id: userId,
         },
         include: {
             leaveType: true,
@@ -158,6 +153,7 @@ export const getMyLeaveBalance = async (loggedInUserId: string, employeeId: stri
 
     return balances;
 };
+
 export const getLeaveRequests = async ({
     user,
     status,
@@ -281,7 +277,7 @@ export const getLeaveRequests = async ({
             created_at: "desc",
         },
     });
-    
+
     return leaveRequests.map((request) => ({
         id: request.id,
         start_date: request.start_date,
