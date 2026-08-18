@@ -68,3 +68,9 @@ export interface LeaveRequestResponse {
   message: string;
   data: LeaveRequest[];
 }
+
+export interface LeaveRequestFilters {
+  search?: string;
+  status?: string;
+  leave_type_id?: string;
+}
