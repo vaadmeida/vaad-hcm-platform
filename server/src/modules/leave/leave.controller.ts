@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
-import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema } from "./leave.validator.ts"
+import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, employeeIdParamsSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema } from "./leave.validator.ts"
 import { AppError } from "../../errors/appError.ts";
-import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveTypes, getEmployeeLeaveStats, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getUpcomingLeave, submitLeaveRequests } from "./leave.service.ts";
+import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, getUpcomingLeave, submitLeaveRequests } from "./leave.service.ts";
 import z from "zod";
 import { LeaveStats } from "./leave.types.ts";
 
@@ -77,8 +77,96 @@ export const getMyLeaveBalanceController = async (
     req: Request,
     res: Response
 ) => {
+    if (!req.user) {
+        throw new AppError(
+            "Unauthorized",
+            401,
+            "UNAUTHORIZED"
+        );
+    }
 
-    const parsed = getLeaveBalanceParamsSchema.safeParse(req.params);
+    const userId = req.user.id;
+
+    const result = await getMyLeaveBalance(userId);
+
+    return res.status(200).json({
+        success: true,
+        data: result,
+    });
+};
+
+
+export const getTeamLeaveBalancesController = async (req: Request, res: Response) => {
+
+
+    if (!req.user) {
+        throw new AppError(
+            "Unauthorized",
+            401,
+            "UNAUTHORIZED"
+        );
+    }
+
+    const userId = req.user.id;
+
+    const teamBalances = await getTeamLeaveBalances(userId)
+
+
+
+    return res.status(200).json({
+        success: true,
+        data: teamBalances,
+    });
+
+}
+
+
+
+export const getAllLeaveBalancesController = async (
+    req: Request,
+    res: Response
+) => {
+    if (!req.user) {
+        throw new AppError(
+            "Unauthorized",
+            401,
+            "UNAUTHORIZED"
+        );
+    }
+
+    const search =
+        typeof req.query.search === "string"
+            ? req.query.search.trim()
+            : undefined;
+
+    const departmentId =
+        typeof req.query.departmentId === "string"
+            ? req.query.departmentId
+            : undefined;
+
+    const leaveTypeId =
+        typeof req.query.leaveTypeId === "string"
+            ? req.query.leaveTypeId
+            : undefined;
+
+    const result = await getAllLeaveBalances(
+        search,
+        departmentId,
+        leaveTypeId
+    );
+
+    return res.status(200).json({
+        success: true,
+        data: result,
+    });
+};
+
+export const getEmployeeLeaveBalanceController = async (
+    req: Request,
+    res: Response
+) => {
+
+    const parsed = employeeIdParamsSchema.safeParse(req.params);
 
     if (!parsed.success) {
         throw new AppError(
@@ -97,19 +185,16 @@ export const getMyLeaveBalanceController = async (
         );
     }
 
-    const loggedInUserId = req.user.id;
-    const targetEmployeeId = parsed.data.id
+    const { id } = parsed.data;
 
-    const result = await getMyLeaveBalance(
-        loggedInUserId,
-        targetEmployeeId
-    );
+    const balances = await getEmployeeLeaveBalance(id);
 
     return res.status(200).json({
         success: true,
-        data: result,
+        data: balances,
     });
 };
+
 export const getLeaveRequestsController = async (req: Request, res: Response) => {
 
     const parsed = getLeaveRequestSchema.safeParse(req.query);
@@ -299,7 +384,7 @@ export const getLeaveStats = async (req: Request, res: Response) => {
     });
 };
 
-export const getUpcomingLeaveRequestController = async (req: Request, res: Response) =>{
+export const getUpcomingLeaveRequestController = async (req: Request, res: Response) => {
 
 
     const upcomingRequests = await getUpcomingLeave(req.user)
@@ -311,7 +396,7 @@ export const getUpcomingLeaveRequestController = async (req: Request, res: Respo
     });
 
 }
-export const getRecentLeaveRequestController = async (req: Request, res: Response) =>{
+export const getRecentLeaveRequestController = async (req: Request, res: Response) => {
 
 
     const recentRequests = await getRecentLeaveRequest(req.user)
