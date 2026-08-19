@@ -58,11 +58,6 @@ export const hrSidebar = [
     icon: CalendarDays,
     href: "/leave",
   },
-    {
-    title: "My Leave",
-    icon: CalendarDays,
-    href: "/my-leave",
-  },
   {
     title: "Documents",
     icon: FolderOpen,
@@ -94,11 +89,6 @@ export const managerSidebar = [
     title: "Team Leave",
     icon: CalendarDays,
     href: "/leave",
-  },
-  {
-    title: "My Leave",
-    icon: CalendarDays,
-    href: "/my-leave",
   },
   {
     title: "My Documents",
