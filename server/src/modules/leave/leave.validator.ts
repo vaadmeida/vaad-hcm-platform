@@ -16,6 +16,10 @@ export const getLeaveSchema = z.object({
 export const getLeaveBalanceParamsSchema = z.object({
   id: z.uuid("Invalid employee ID"),
 });
+export const employeeIdParamsSchema = z.object({
+    id: z.string().min(1),
+});
+
 
 export const getLeaveRequestSchema = z.object({
   employee_id: z.uuid("Invalid employee ID").optional(),

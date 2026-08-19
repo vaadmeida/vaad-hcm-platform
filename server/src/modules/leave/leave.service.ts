@@ -132,7 +132,6 @@ export const getAllLeaveTypes = async () => {
     return leaveTypes
 }
 
-
 export const getMyLeaveBalance = async (userId: string) => {
     const balances = await prisma.leaveBalance.findMany({
         where: {
@@ -140,6 +139,13 @@ export const getMyLeaveBalance = async (userId: string) => {
         },
         include: {
             leaveType: true,
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                },
+            },
         },
     });
 
@@ -151,7 +157,329 @@ export const getMyLeaveBalance = async (userId: string) => {
         );
     }
 
-    return balances;
+    const employee = balances[0].employee;
+
+    const formattedBalances = balances.map((balance) => {
+
+        const allocated = Number(balance.entitled_days);
+        const used = Number(balance.used_days);
+        const pending = Number(balance.pending_days);
+        const remaining = Math.max(allocated - used, 0);
+        const usagePercentage = allocated > 0 ? Math.round((used / allocated) * 100) : 0;
+
+        return {
+            id: balance.id,
+            year: balance.year,
+            leaveType: {
+                id: balance.leaveType.id,
+                name: balance.leaveType.name,
+            },
+            allocated,
+            used,
+            pending,
+            remaining,
+            usage_percentage: usagePercentage,
+        };
+    });
+
+    return {
+        employee,
+        balances: formattedBalances,
+    };
+};
+
+
+export const getTeamLeaveBalances = async (userId: string) => {
+    const balances = await prisma.leaveBalance.findMany({
+        where: {
+            employee: {
+                manager_id: userId,
+                status: "active",
+            },
+        },
+        include: {
+            leaveType: true,
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    department: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    if (balances.length === 0) {
+        throw new AppError(
+            "Leave balance not found",
+            404,
+            "LEAVE_BALANCE_NOT_FOUND"
+        );
+    }
+
+    const employees = new Map<
+        string,
+        {
+            employee: {
+                id: string;
+                first_name: string;
+                last_name: string;
+                department: {
+                    name: string;
+                } | null;
+            };
+            total_used: number;
+            leave_types: {
+                id: string;
+                name: string;
+                used_days: number;
+            }[];
+            balances: {
+                id: string;
+                year: number;
+                entitled_days: number;
+                used_days: number;
+                pending_days: number;
+                remaining_days: number;
+                leaveType: {
+                    id: string;
+                    name: string;
+                };
+            }[];
+        }
+    >();
+
+    for (const balance of balances) {
+        const employeeId = balance.employee.id;
+
+        if (!employees.has(employeeId)) {
+            employees.set(employeeId, {
+                employee: balance.employee,
+                total_used: 0,
+                leave_types: [],
+                balances: [],
+            });
+        }
+
+        const employee = employees.get(employeeId)!;
+
+        const entitledDays = Number(balance.entitled_days);
+        const usedDays = Number(balance.used_days);
+        const pendingDays = Number(balance.pending_days);
+
+        employee.total_used += usedDays;
+
+        if (usedDays > 0) {
+            employee.leave_types.push({
+                id: balance.leaveType.id,
+                name: balance.leaveType.name,
+                used_days: usedDays,
+            });
+        }
+
+        employee.balances.push({
+            id: balance.id,
+            year: balance.year,
+            entitled_days: entitledDays,
+            used_days: usedDays,
+            pending_days: pendingDays,
+            remaining_days: Math.max(
+                entitledDays - usedDays - pendingDays,
+                0
+            ),
+            leaveType: {
+                id: balance.leaveType.id,
+                name: balance.leaveType.name,
+            },
+        });
+    }
+
+    return Array.from(employees.values()).map((employee) => ({
+        ...employee,
+        active_types_used: employee.leave_types.length,
+    }));
+};
+
+
+
+export const getAllLeaveBalances = async (
+    search?: string,
+    departmentId?: string,
+    leaveTypeId?: string
+) => {
+    const balances = await prisma.leaveBalance.findMany({
+        where: {
+            employee: {
+                status: "active",
+
+                ...(search && {
+                    OR: [
+                        {
+                            first_name: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
+                        {
+                            last_name: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
+                    ],
+                }),
+
+                ...(departmentId && {
+                    department_id: departmentId,
+                }),
+            },
+
+            ...(leaveTypeId && {
+                leave_type_id: leaveTypeId,
+            }),
+        },
+
+        include: {
+            leaveType: true,
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    department: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+    if (balances.length === 0) {
+        throw new AppError(
+            "Leave balance not found",
+            404,
+            "LEAVE_BALANCE_NOT_FOUND"
+        );
+    }
+
+    const employees = new Map<
+        string,
+        {
+            employee: {
+                id: string;
+                first_name: string;
+                last_name: string;
+                department: {
+                    name: string;
+                } | null;
+            };
+            total_used: number;
+            leave_types_used: string[];
+        }
+    >();
+
+    for (const balance of balances) {
+        const employeeId = balance.employee.id;
+
+        if (!employees.has(employeeId)) {
+            employees.set(employeeId, {
+                employee: balance.employee,
+                total_used: 0,
+                leave_types_used: [],
+            });
+        }
+
+        const employee = employees.get(employeeId)!;
+
+        const usedDays = Number(balance.used_days);
+
+        employee.total_used += usedDays;
+
+        if (
+            usedDays > 0 &&
+            !employee.leave_types_used.includes(balance.leaveType.name)
+        ) {
+            employee.leave_types_used.push(balance.leaveType.name);
+        }
+    }
+
+    return Array.from(employees.values()).map((employee) => ({
+        employee: employee.employee,
+
+        total_used: employee.total_used,
+
+        active_types_used: employee.leave_types_used.length,
+
+        leave_types_used: employee.leave_types_used,
+    }));
+};
+
+export const getEmployeeLeaveBalance = async (employeeId: string) => {
+    const balances = await prisma.leaveBalance.findMany({
+        where: {
+            employee_id: employeeId,
+        },
+        include: {
+            leaveType: true,
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                },
+            },
+        },
+    });
+
+    if (balances.length === 0) {
+        throw new AppError(
+            "Leave balance not found",
+            404,
+            "LEAVE_BALANCE_NOT_FOUND"
+        );
+    }
+
+    const employee = balances[0].employee;
+
+    const formattedBalances = balances.map((balance) => {
+        const allocated = Number(balance.entitled_days);
+        const used = Number(balance.used_days);
+        const pending = Number(balance.pending_days);
+
+        const remaining = Math.max(allocated - used - pending, 0);
+
+        const usagePercentage =
+            allocated > 0
+                ? Math.round((used / allocated) * 100)
+                : 0;
+
+        return {
+            id: balance.id,
+            year: balance.year,
+
+            leaveType: {
+                id: balance.leaveType.id,
+                name: balance.leaveType.name,
+            },
+
+            allocated,
+            used,
+            pending,
+            remaining,
+            usage_percentage: usagePercentage,
+        };
+    });
+
+    return {
+        employee,
+        balances: formattedBalances,
+    };
 };
 
 export const getLeaveRequests = async ({
