@@ -1,6 +1,6 @@
 import { FileText, LayoutDashboard, Settings, Wallet } from "lucide-react";
 
-export type LeaveTabsTypes = 'Overview' | 'Requests' | 'Balances' | 'Leave Types'
+export type LeaveTabsTypes = 'Overview' | 'Requests' | 'Balances' | 'Leave Types' | 'My Leaves'
 
 
 interface LeaveTabsProps {
@@ -27,6 +27,11 @@ const tabs = [
     {
         id: "Leave Types" as const,
         label: "Leave Types",
+        icon: Settings,
+    },
+    {
+        id: "My Leaves" as const,
+        label: "My Leaves",
         icon: Settings,
     },
 ];

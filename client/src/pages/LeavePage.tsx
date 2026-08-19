@@ -1,10 +1,11 @@
 import LeaveTabs, { type LeaveTabsTypes } from "@/features/leaves/components/LeaveTabs"
 import { LeaveToolbar } from "@/features/leaves/components/LeaveToolbar"
-import LeaveBalance from "@/features/leaves/components/section/LeaveBalance"
-import LeaveOverview from "@/features/leaves/components/section/LeaveOverview"
-import LeaveRequests from "@/features/leaves/components/section/LeaveRequests"
-import LeaveTypes from "@/features/leaves/components/section/LeaveTypes"
+import LeaveBalance from "@/features/leaves/components/section/leavebalance/LeaveBalance"
+import LeaveOverview from "@/features/leaves/components/section/overview/LeaveOverview"
+import LeaveRequests from "@/features/leaves/components/section/leave request/LeaveRequests"
+import LeaveTypes from "@/features/leaves/components/section/leavetypes/LeaveTypes"
 import { useState } from "react"
+import MyLeavePage from "./MyLeavePage"
 
 const LeavePage = () => {
 
@@ -38,6 +39,11 @@ const LeavePage = () => {
       {
         activeTab === 'Leave Types' && (
           <LeaveTypes />
+        )
+      }
+      {
+        activeTab === 'Leave Types' && (
+          <MyLeavePage />
         )
       }
 
