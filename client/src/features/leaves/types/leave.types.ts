@@ -74,3 +74,55 @@ export interface LeaveRequestFilters {
   status?: string;
   leave_type_id?: string;
 }
+export interface LeaveBalanceFilters {
+  search?: string;
+  departmentId?: string;
+  leaveTypeId?: string;
+  page?: number;
+}
+export interface LeaveBalanceEmployee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  department: {
+    name: string;
+  } | null;
+}
+
+export interface LeaveBalanceItem {
+  employee: LeaveBalanceEmployee;
+  total_used: number;
+  active_types_used: number;
+  leave_types_used: string[];
+}
+
+export interface LeaveBalanceResponse {
+  success: boolean;
+  data: LeaveBalanceItem[];
+}
+
+export interface EmployeeLeaveBalance {
+  id: string;
+  year: number;
+  leaveType: {
+    id: string;
+    name: string;
+  };
+  allocated: number;
+  used: number;
+  pending: number;
+  remaining: number;
+  usage_percentage: number;
+}
+
+export interface EmployeeLeaveBalanceResponse {
+  success: boolean;
+  data: {
+    employee: {
+      id: string;
+      first_name: string;
+      last_name: string;
+    };
+    balances: EmployeeLeaveBalance[];
+  };
+}

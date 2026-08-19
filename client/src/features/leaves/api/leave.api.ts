@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, RecentLeaveRequestsResponse } from "../types/leave.types";
+import type { EmployeeLeaveBalanceResponse, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, RecentLeaveRequestsResponse } from "../types/leave.types";
 
 export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
   try {
@@ -38,10 +38,60 @@ export const getRecentLeavesRequests = async (): Promise<RecentLeaveRequestsResp
 export const getLeaveRequests = async (filters?: LeaveRequestFilters): Promise<LeaveRequestResponse> => {
   try {
     const response = await api.get<LeaveRequestResponse>(
-      "/api/leaves/request", {params: filters});
+      "/api/leaves/request", { params: filters });
     return response.data;
   } catch (error) {
     console.error("Getting leave requests API Error:", error);
+    throw error;
+  }
+};
+
+
+
+export const getAllLeaveBalance = async (filters?: LeaveBalanceFilters): Promise<LeaveBalanceItem[]> => {
+  try {
+    const response = await api.get<LeaveBalanceResponse>("/api/leaves/balance/all",
+      {
+        params: filters,
+      }
+    );
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Getting leave balances API Error:", error);
+    throw error;
+  }
+};
+
+export const getTeamLeaveBalance = async (
+  filters?: LeaveBalanceFilters
+): Promise<LeaveBalanceItem[]> => {
+  try {
+    const response = await api.get<LeaveBalanceResponse>(
+      "/api/leaves/team-balance",
+      {
+        params: filters,
+      }
+    );
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Getting team leave balances API Error:", error);
+    throw error;
+  }
+};
+
+export const getEmployeeLeaveBalance = async (
+  employeeId: string
+): Promise<EmployeeLeaveBalanceResponse> => {
+  try {
+    const response = await api.get<EmployeeLeaveBalanceResponse>(
+      `/api/leaves/balance/${employeeId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Getting employee leave balance API Error:", error);
     throw error;
   }
 };
