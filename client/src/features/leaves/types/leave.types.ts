@@ -87,6 +87,7 @@ export interface LeaveBalanceEmployee {
   department: {
     name: string;
   } | null;
+  avatar_url: string | null;
 }
 
 export interface LeaveBalanceItem {
@@ -118,11 +119,99 @@ export interface EmployeeLeaveBalance {
 export interface EmployeeLeaveBalanceResponse {
   success: boolean;
   data: {
-    employee: {
+    employee: LeaveBalanceEmployee;
+    balances: LeaveBalance[];
+  };
+}
+
+export interface LeaveType {
+  id: string;
+  name: string;
+  default_days_per_year: number | null;
+  requires_document: boolean;
+  is_paid: boolean;
+  carries_over: boolean;
+  max_carryover_days: number;
+  created_at: string;
+}
+
+export interface LeaveTypesResponse {
+  success: boolean;
+  count: number;
+  data: LeaveType[];
+}
+
+export interface CreateLeaveTypePayload {
+  name: string;
+  default_days_per_year: number | null;
+  requires_document: boolean;
+  is_paid: boolean;
+  carries_over: boolean;
+  max_carryover_days: number;
+}
+
+
+export interface CreateLeaveTypeResponse {
+  success: boolean;
+  message: string;
+  data: LeaveType;
+}
+export interface LeaveBalanceLeaveType {
+  id: string;
+  name: string;
+}
+
+export interface LeaveBalance {
+  id: string;
+  year: number;
+  leaveType: LeaveBalanceLeaveType;
+  allocated: number;
+  used: number;
+  pending: number;
+  remaining: number;
+  usage_percentage: number;
+}
+
+export interface SubmitLeaveRequestType {
+  leave_type_id: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+  document_url?: string;
+}
+
+export interface SubmitLeaveRequestResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    employee_id: string;
+    leave_type_id: string;
+    start_date: string;
+    end_date: string;
+    total_days: number;
+    reason?: string | null;
+    document_url?: string | null;
+    status: string;
+    created_at: string;
+    employee?: {
       id: string;
       first_name: string;
       last_name: string;
+      email: string;
+      avatar_url?: string | null;
     };
-    balances: EmployeeLeaveBalance[];
+    leaveType?: {
+      id: string;
+      name: string;
+    };
   };
+}
+
+export interface LeaveApiError {
+  success: boolean;
+  status: number;
+  code: string;
+  message: string;
+  detail: string | null;
 }
