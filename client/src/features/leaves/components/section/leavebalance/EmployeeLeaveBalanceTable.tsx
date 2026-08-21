@@ -1,4 +1,5 @@
-import type { EmployeeLeaveBalance } from "../../../types/leave.types";
+import type { EmployeeLeaveBalance } from "@/features/leaves/types/leave.types";
+
 
 interface EmployeeLeaveBalanceTableProps {
   balances: EmployeeLeaveBalance[];

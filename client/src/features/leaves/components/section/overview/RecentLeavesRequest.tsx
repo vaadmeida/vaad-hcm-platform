@@ -1,6 +1,7 @@
 import ErrorState from "@/components/common/ErrorState";
 import SkeletonLoader from "@/components/common/SkeletonLoader";
-import { useRecentLeaveRequests } from "../../../hooks/useRecentLeaves";
+import { useRecentLeaveRequests } from "@/features/leaves/hooks/useRecentLeaves";
+
 import { Check, X } from "lucide-react";
 
 const RecentLeavesRequest = () => {
