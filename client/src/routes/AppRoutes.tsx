@@ -15,10 +15,8 @@ import EmployeePage from "@/pages/EmployeePage";
 import EmployeeDetailsPage from "@/pages/EmployeeDetailsPage";
 import DepartmentPage from "@/pages/DepartmentPage";
 import LeavePage from "@/pages/LeavePage";
-import MyLeavePage from "@/pages/MyLeavePage";
 import DocumentPage from "@/pages/DocumentPage";
 
-import ReportPage from "@/pages/ReportPage";
 import SettingsPage from "@/pages/SettingsPage";
 
 import { useAuthStore } from "@/store/auth.store";
@@ -55,7 +53,7 @@ export const AppRoutes = () => {
                <Route element={<RoleRoute allowedRoles={["admin", "hr"]} />}>
                   <Route path="/departments" element={<DepartmentPage />} />
                   <Route path="/documents" element={<DocumentPage />} />
-                  <Route path="/reports" element={<ReportPage />} />
+            
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager"]} />}>
@@ -71,8 +69,6 @@ export const AppRoutes = () => {
                      <RoleRoute allowedRoles={["hr", "manager", "employee"]} />
                   }
                >
-                  <Route path="/my-leave" element={<MyLeavePage />} />
-            
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager", "employee"]} />}>

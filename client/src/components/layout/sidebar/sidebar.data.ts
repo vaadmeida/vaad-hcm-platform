@@ -1,4 +1,4 @@
-import {LayoutDashboard,Users,Building2,CalendarDays,FolderOpen,ChartColumn,Settings} from "lucide-react";
+import {LayoutDashboard,Users,Building2,CalendarDays,FolderOpen,Settings} from "lucide-react";
 
 export const adminSidebar = [
   {
@@ -25,11 +25,6 @@ export const adminSidebar = [
     title: "Documents",
     icon: FolderOpen,
     href: "/documents",
-  },
-  {
-    title: "Reports",
-    icon: ChartColumn,
-    href: "/reports",
   },
   {
     title: "Settings",
@@ -62,11 +57,6 @@ export const hrSidebar = [
     title: "Documents",
     icon: FolderOpen,
     href: "/documents",
-  },
-  {
-    title: "Reports",
-    icon: ChartColumn,
-    href: "/reports",
   },
   {
     title: "Settings",

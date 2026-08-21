@@ -6,7 +6,7 @@ import type { LeaveRequestFilters } from "../types/leave.types";
 
 export const useGetLeaveRequests = (filters: LeaveRequestFilters) => {
   return useQuery({
-    queryKey: ["get-leave-requests", filters],
+    queryKey: ["leave-requests", filters],
     queryFn: () => getLeaveRequests(filters),
   });
 };

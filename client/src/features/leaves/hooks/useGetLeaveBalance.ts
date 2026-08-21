@@ -11,6 +11,7 @@ export const useGetAllLeaveBalances = (
   return useQuery({
     queryKey: ["leave-balances", "all", filters],
     queryFn: () => getAllLeaveBalance(filters),
+    
     enabled: options?.enabled,
   });
 };
