@@ -5,7 +5,8 @@ import LeaveOverview from "@/features/leaves/components/section/overview/LeaveOv
 import LeaveRequests from "@/features/leaves/components/section/leave request/LeaveRequests"
 import LeaveTypes from "@/features/leaves/components/section/leavetypes/LeaveTypes"
 import { useState } from "react"
-import MyLeavePage from "./MyLeavePage"
+import MyLeave from "@/features/leaves/components/section/myleave/MyLeave"
+
 
 const LeavePage = () => {
 
@@ -42,8 +43,8 @@ const LeavePage = () => {
         )
       }
       {
-        activeTab === 'Leave Types' && (
-          <MyLeavePage />
+        activeTab === 'My Leaves' && (
+          <MyLeave/>
         )
       }
 
