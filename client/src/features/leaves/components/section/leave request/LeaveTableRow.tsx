@@ -15,7 +15,7 @@ const LeaveRequestTableRow = ({
 
   const initials = employeeName
     .split(" ")
-    .map((name) => name.charAt(0))
+    .map((name: string) => name.charAt(0))
     .join("")
     .slice(0, 2)
     .toUpperCase();
