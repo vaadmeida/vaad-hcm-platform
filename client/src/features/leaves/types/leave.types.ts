@@ -46,8 +46,10 @@ export interface RecentLeaveRequestsResponse {
 
 export interface LeaveRequestEmployee {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
+  avatar_url: string | null;
 }
 
 export interface LeaveRequest {
@@ -120,7 +122,7 @@ export interface EmployeeLeaveBalanceResponse {
   success: boolean;
   data: {
     employee: LeaveBalanceEmployee;
-    balances: LeaveBalance[];
+    balances: EmployeeLeaveBalance[];
   };
 }
 
@@ -192,7 +194,7 @@ export interface SubmitLeaveRequestResponse {
     total_days: number;
     reason?: string | null;
     document_url?: string | null;
-    status: string;
+    status: LeaveStatus;
     created_at: string;
     employee?: {
       id: string;

@@ -31,7 +31,7 @@ export const getRecentLeavesRequests = async (): Promise<RecentLeaveRequestsResp
     const response = await api.get<RecentLeaveRequestsResponse>('/api/leaves/recent')
     return response.data;
   } catch (error) {
-    console.error("Getting upcoming leaves API Error:", error);
+    console.error("Getting recent leaves API Error:", error);
     throw error;
   }
 }
