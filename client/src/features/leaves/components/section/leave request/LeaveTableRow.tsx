@@ -12,11 +12,11 @@ interface LeaveRequestTableRowProps {
 const LeaveRequestTableRow = ({
   request,
 }: LeaveRequestTableRowProps) => {
-  const employeeName = request.employee.name;
+const employeeName = `${request.employee.first_name} ${request.employee.last_name}`;
 
   const initials = employeeName
     .split(" ")
-    .map((name: string) => name.charAt(0))
+    .map((name) => name.charAt(0))
     .join("")
     .slice(0, 2)
     .toUpperCase();

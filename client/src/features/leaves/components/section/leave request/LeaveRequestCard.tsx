@@ -7,6 +7,7 @@ import type { LeaveRequest } from "@/features/leaves/types/leave.types";
 
 
 
+
 interface LeaveRequestCardProps {
   request: LeaveRequest;
 }
@@ -14,11 +15,13 @@ interface LeaveRequestCardProps {
 const LeaveRequestCard = ({
   request,
 }: LeaveRequestCardProps) => {
-  const employeeName = request.employee.name;
+
+ const employeeName = `${request.employee.first_name} ${request.employee.last_name}`;
 
   const initials = employeeName
-    .split(" ")
-    .map((name: string) => name[0])
+    .trim()
+    .split(/\s+/)
+    .map((name) => name[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
