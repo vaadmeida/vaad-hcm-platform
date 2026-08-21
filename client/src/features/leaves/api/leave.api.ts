@@ -1,5 +1,6 @@
 import { api } from "@/lib";
-import type { EmployeeLeaveBalanceResponse, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, RecentLeaveRequestsResponse } from "../types/leave.types";
+import type { CreateLeaveTypePayload, CreateLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType } from "../types/leave.types";
+import axios from "axios";
 
 export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
   try {
@@ -95,3 +96,62 @@ export const getEmployeeLeaveBalance = async (
     throw error;
   }
 };
+export const getLeaveTypes = async (): Promise<LeaveTypesResponse> => {
+  try {
+    const response = await api.get<LeaveTypesResponse>("/api/leaves");
+    return response.data;
+  } catch (error) {
+    console.error("Getting leave types API Error:", error);
+    throw error;
+  }
+};
+
+
+export const createLeaveType = async (payload: CreateLeaveTypePayload): Promise<CreateLeaveTypeResponse> => {
+  try {
+    const response = await api.post<CreateLeaveTypeResponse>("/api/leaves", payload);
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.log("CREATE LEAVE TYPE ERROR STATUS:", error.response?.status);
+      console.log("CREATE LEAVE TYPE ERROR DATA:", error.response?.data);
+    }
+
+    console.error("Creating leave type API Error:", error);
+    console.error("Creating leave type API Error:", error);
+    throw error;
+  }
+};
+export const getMyLeaveBalance = async (): Promise<EmployeeLeaveBalanceResponse> => {
+  try {
+    const response = await api.get<EmployeeLeaveBalanceResponse>(
+      "/api/leaves/balance"
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Getting my leave balance API Error:", error);
+    throw error;
+  }
+};
+
+export const submitLeaveRequest = async (data: SubmitLeaveRequestType): Promise<SubmitLeaveRequestResponse> => {
+  try {
+    const response = await api.post<SubmitLeaveRequestResponse>("/api/leaves/request", data);
+
+    return response.data;
+  }  catch (error) {
+  if (axios.isAxiosError<LeaveApiError>(error)) {
+    console.log("SUBMIT LEAVE ERROR STATUS:", error.response?.status);
+    console.log("SUBMIT LEAVE ERROR DATA:", error.response?.data);
+
+    console.log(
+      "SUBMIT LEAVE VALIDATION DETAIL:",
+      JSON.stringify(error.response?.data?.detail, null, 2)
+    );
+  }
+
+  throw error;
+}
+}
