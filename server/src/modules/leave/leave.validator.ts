@@ -40,7 +40,7 @@ export const submitRequestSchema = z.object({
   leave_type_id: z.uuid(),
   start_date: z.coerce.date(),
   end_date: z.coerce.date(),
-  reason: z.string().min(10, "Reason must be at least 10 characters")
+  reason: z.string().min(10, "Reason must be at least 10 characters").optional()
 })
 
 export const approveOrRejectParamsSchema = z.object({

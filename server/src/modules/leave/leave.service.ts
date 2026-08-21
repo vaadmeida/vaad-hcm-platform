@@ -29,7 +29,8 @@ type SubmitLeaveRequestType = {
     leave_type_id: string
     start_date: Date
     end_date: Date
-    reason: string
+    reason?: string
+    document_url?: string
 }
 
 
@@ -144,6 +145,7 @@ export const getMyLeaveBalance = async (userId: string) => {
                     id: true,
                     first_name: true,
                     last_name: true,
+                    avatar_url: true
                 },
             },
         },
@@ -675,6 +677,34 @@ export const submitLeaveRequests = async (
 
         const currentYear = new Date().getFullYear()
 
+          const leaveType = await tx.leaveType.findUnique({
+            where: {
+                id: data.leave_type_id,
+            },
+            select: {
+                id: true,
+                name: true,
+                requires_document: true,
+            },
+        });
+
+        if (!leaveType) {
+            throw new AppError(
+                "Leave type not found",
+                404,
+                "LEAVE_TYPE_NOT_FOUND"
+            );
+        }
+
+        // 2. Check if supporting document is required
+        if (leaveType.requires_document && !data.document_url) {
+            throw new AppError(
+                `${leaveType.name} requires a supporting document`,
+                400,
+                "DOCUMENT_REQUIRED"
+            );
+        }
+
         const balance = await tx.leaveBalance.findUnique({
             where: {
                 employee_id_leave_type_id_year: {
@@ -737,7 +767,9 @@ export const submitLeaveRequests = async (
                 end_date: data.end_date,
                 total_days: totalDays,
                 reason: data.reason,
+                document_url: data.document_url,
                 status: "pending",
+                
             },
             include: {
                 employee: {

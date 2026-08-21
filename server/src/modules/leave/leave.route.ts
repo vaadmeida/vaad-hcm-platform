@@ -17,7 +17,7 @@ leaveRouter.get("/stats", authenticate, asyncHandler(getLeaveStats));
 leaveRouter.get("/balance", authenticate, asyncHandler(getMyLeaveBalanceController));
 leaveRouter.get("/balance/team", authenticate, asyncHandler(getTeamLeaveBalancesController));
 leaveRouter.get("/balance/all", authenticate, requireRoles("admin", "hr"), asyncHandler(getAllLeaveBalancesController));
-leaveRouter.get("/balance/:id", authenticate, requireRoles("admin", "hr"), asyncHandler(getEmployeeLeaveBalanceController));
+leaveRouter.get("/balance/:id", authenticate, requireRoles("admin", "hr" , "manager"), asyncHandler(getEmployeeLeaveBalanceController));
 
 // LEAVE REQUESTS
 leaveRouter.get("/request", authenticate, asyncHandler(getLeaveRequestsController));
