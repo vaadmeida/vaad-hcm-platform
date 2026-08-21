@@ -2,7 +2,8 @@ import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
-import type { LeaveRequest } from "../../../types/leave.types";
+import type { LeaveRequest } from "@/features/leaves/types/leave.types";
+
 
 interface LeaveRequestTableRowProps {
   request: LeaveRequest;

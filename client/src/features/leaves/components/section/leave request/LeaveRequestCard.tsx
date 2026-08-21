@@ -3,7 +3,8 @@ import {
   AvatarFallback,
 
 } from "@/components/ui/avatar";
-import type { LeaveRequest } from "../../../types/leave.types";
+import type { LeaveRequest } from "@/features/leaves/types/leave.types";
+
 
 
 interface LeaveRequestCardProps {
@@ -17,7 +18,7 @@ const LeaveRequestCard = ({
 
   const initials = employeeName
     .split(" ")
-    .map((name) => name[0])
+    .map((name: string) => name[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();

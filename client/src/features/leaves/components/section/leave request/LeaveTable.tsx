@@ -1,5 +1,6 @@
-import type { LeaveRequest } from "../../../types/leave.types";
-import LeaveRequestTableRow from "./LeaveTableRow";
+import LeaveRequestTableRow from "@/assets/section/leave request/LeaveTableRow";
+import type { LeaveRequest } from "@/features/leaves/types/leave.types";
+
 
 
 interface LeaveRequestTableProps {
