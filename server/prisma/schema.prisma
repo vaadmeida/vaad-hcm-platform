@@ -122,12 +122,14 @@ model LeaveBalance {
   leave_type_id String    @db.Uuid
   year          Int       @default(dbgenerated("EXTRACT(year FROM now())"))
   entitled_days Decimal   @db.Decimal(5, 1)
+  document_url  String?
   used_days     Decimal?  @default(0) @db.Decimal(5, 1)
   pending_days  Decimal?  @default(0) @db.Decimal(5, 1)
   created_at    DateTime? @default(now()) @db.Timestamp(6)
   updated_at    DateTime? @default(now()) @db.Timestamp(6)
   employee      Employee  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   leaveType     LeaveType @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
 
   @@unique([employee_id, leave_type_id, year])
   @@map("leave_balances")
