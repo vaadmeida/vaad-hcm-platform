@@ -2,11 +2,12 @@ import {
     Avatar,
     AvatarFallback,
 } from "@/components/ui/avatar";
-import type { LeaveBalanceItem } from "../../../types/leave.types";
+
 import { ChevronDown } from "lucide-react";
 import { Fragment, useState } from "react";
 import { useGetEmployeeLeaveBalance } from "@/features/leaves/hooks/useGetEmployeeBalance";
 import EmployeeLeaveBalanceTable from "./EmployeeLeaveBalanceTable";
+import type { LeaveBalanceItem } from "@/features/leaves/types/leave.types";
 
 interface LeaveBalanceTableRowProps {
     employee: LeaveBalanceItem;

@@ -1,4 +1,5 @@
-import type { LeaveBalanceItem } from "../../../types/leave.types";
+
+import type { LeaveBalanceItem } from "@/features/leaves/types/leave.types";
 import LeaveBalanceTableRow from "./LeaveBalanceTableRow";
 
 interface LeaveBalanceTableProps {
