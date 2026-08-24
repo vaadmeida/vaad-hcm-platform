@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { CreateLeaveTypePayload, CreateLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType } from "../types/leave.types";
+import type { CreateLeaveTypePayload, CreateLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestDetailsResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType } from "../types/leave.types";
 import axios from "axios";
 
 export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
@@ -141,17 +141,30 @@ export const submitLeaveRequest = async (data: SubmitLeaveRequestType): Promise<
     const response = await api.post<SubmitLeaveRequestResponse>("/api/leaves/request", data);
 
     return response.data;
-  }  catch (error) {
-  if (axios.isAxiosError<LeaveApiError>(error)) {
-    console.log("SUBMIT LEAVE ERROR STATUS:", error.response?.status);
-    console.log("SUBMIT LEAVE ERROR DATA:", error.response?.data);
+  } catch (error) {
+    if (axios.isAxiosError<LeaveApiError>(error)) {
+      console.log("SUBMIT LEAVE ERROR STATUS:", error.response?.status);
+      console.log("SUBMIT LEAVE ERROR DATA:", error.response?.data);
 
-    console.log(
-      "SUBMIT LEAVE VALIDATION DETAIL:",
-      JSON.stringify(error.response?.data?.detail, null, 2)
-    );
+      console.log(
+        "SUBMIT LEAVE VALIDATION DETAIL:",
+        JSON.stringify(error.response?.data?.detail, null, 2)
+      );
+    }
+
+    throw error;
   }
+}
 
-  throw error;
-}
-}
+export const getLeaveRequestById = async (id: string): Promise<LeaveRequestDetailsResponse> => {
+  try {
+    const response = await api.get(`api/leaves/request/${id}`);
+
+    return response.data;
+  } catch (error) {
+
+    console.error("Employee Getting Leave Request By ID API Error:",error);
+
+    throw error;
+  }
+};
