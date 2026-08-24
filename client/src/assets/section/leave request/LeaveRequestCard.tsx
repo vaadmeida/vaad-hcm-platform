@@ -3,7 +3,8 @@ import {
   AvatarFallback,
 
 } from "@/components/ui/avatar";
-import type { LeaveRequest } from "../../../types/leave.types";
+import type { LeaveRequest } from "@/features/leaves/types/leave.types";
+
 
 
 interface LeaveRequestCardProps {
@@ -13,7 +14,7 @@ interface LeaveRequestCardProps {
 const LeaveRequestCard = ({
   request,
 }: LeaveRequestCardProps) => {
-  const employeeName = request.employee.name;
+  const employeeName = `${request.employee.first_name} ${request.employee.last_name}`;
 
   const initials = employeeName
     .split(" ")

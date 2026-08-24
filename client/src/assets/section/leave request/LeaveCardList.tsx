@@ -1,4 +1,5 @@
-import type { LeaveRequest } from "../../../types/leave.types";
+
+import type { LeaveRequest } from "@/features/leaves/types/leave.types";
 import LeaveRequestCard from "./LeaveRequestCard";
 
 interface LeaveRequestCardListProps {
