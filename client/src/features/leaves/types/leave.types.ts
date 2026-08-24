@@ -50,6 +50,10 @@ export interface LeaveRequestEmployee {
   last_name: string;
   email: string;
   avatar_url: string | null;
+  department: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export interface LeaveRequest {
@@ -216,4 +220,48 @@ export interface LeaveApiError {
   code: string;
   message: string;
   detail: string | null;
+}
+
+export interface LeaveRequestLeaveType {
+  id: string;
+  name: string;
+  default_days_per_year: number | null;
+  requires_document: boolean;
+  is_paid: boolean;
+  carries_over: boolean;
+  max_carryover_days: number;
+  created_at: string;
+}
+
+export interface LeaveRequestApprover {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+}
+
+export interface LeaveRequestDetails {
+  id: string;
+  employee_id: string;
+  leave_type_id: string;
+  start_date: string;
+  end_date: string;
+  total_days: string;
+  reason: string | null;
+  status: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+
+  approver: LeaveRequestApprover | null;
+  employee: LeaveRequestEmployee;
+  leaveType: LeaveRequestLeaveType;
+}
+
+export interface LeaveRequestDetailsResponse {
+  success: boolean;
+  message: string;
+  data: LeaveRequestDetails;
 }
