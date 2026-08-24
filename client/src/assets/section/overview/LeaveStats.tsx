@@ -1,8 +1,9 @@
 import ErrorState from "@/components/common/ErrorState";
-import { useLeaveStats } from "../../../hooks/useLeaveStats";
+
 import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { CalendarDays, CircleCheck, Clock, FileText } from "lucide-react";
 import StatsCard from "@/features/dashboard/components/StatsCard";
+import { useLeaveStats } from "@/features/leaves/hooks/useLeaveStats";
 
 
 const LeaveStats = () => {
