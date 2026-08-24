@@ -1,6 +1,7 @@
 import ErrorState from "@/components/common/ErrorState";
 import SkeletonLoader from "@/components/common/SkeletonLoader";
-import { useUpcomingLeaves } from "../../../hooks/useUpcomingLeaves";
+import { useUpcomingLeaves } from "@/features/leaves/hooks/useUpcomingLeaves";
+
 
 const UpcomingApprovedLeaves = () => {
   const { data, isLoading, error, refetch } = useUpcomingLeaves();
