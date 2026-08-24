@@ -1,6 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { UpdateEmployeeDTO } from "../../types/employee.types";
+import { useGetCountries } from "@/features/location/hooks/useGetCountries";
+import { useGetStates } from "@/features/location/hooks/useGetStates";
+import { useGetCities } from "@/features/location/hooks/useGetCities";
 
 
 interface formInfoProps {
@@ -10,7 +13,59 @@ interface formInfoProps {
   ) => void;
 }
 
-const formInfo = ({ form, handleChange }: formInfoProps) => {
+const FormInfo = ({ form, handleChange }: formInfoProps) => {
+
+
+
+
+  const { data: countries } = useGetCountries();
+
+  const countryCode = countries?.data.find((country) => country.name === form.nationality)?.code ?? "";
+
+  const { data: states } = useGetStates(countryCode);
+
+  const stateCode = states?.data.find((state) => state.name === form.state_of_residence)?.code ?? "";
+
+
+  const { data: cities } = useGetCities(countryCode,stateCode);
+
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    
+    handleChange(e);
+
+    handleChange({
+      target: {
+        name: "state_of_residence",
+        value: "",
+      },
+    } as React.ChangeEvent<HTMLSelectElement>);
+
+    handleChange({
+      target: {
+        name: "city",
+        value: "",
+      },
+    } as React.ChangeEvent<HTMLSelectElement>);
+  };
+
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    handleChange(e);
+
+    handleChange({
+      target: {
+        name: "city",
+        value: "",
+      },
+    } as React.ChangeEvent<HTMLSelectElement>);
+  };
+
+  const handleCityChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    handleChange(e);
+  };
+
 
   return (
     <div className="w-full min-w-0">
@@ -112,27 +167,42 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
         {/* Nationality */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="nationality">Nationality</Label>
-          <Input
+
+          <select
             id="nationality"
             name="nationality"
-            placeholder="Enter nationality"
             value={form.nationality ?? ""}
-            onChange={handleChange}
-            className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
-          />
+            onChange={handleCountryChange}
+            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
+          >
+            <option value="">Select Country</option>
+
+            {countries?.data.map((country) => (
+              <option key={country.id} value={country.name}>
+                {country.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* City */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="city">City</Label>
-          <Input
+          <select
             id="city"
             name="city"
-            placeholder="Enter city"
             value={form.city ?? ""}
-            onChange={handleChange}
-            className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
-          />
+            onChange={handleCityChange}
+            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
+          >
+            <option value="">Select City</option>
+
+            {cities?.data.map((city) => (
+              <option key={city.id} value={city.name}>
+                {city.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* State */}
@@ -140,14 +210,21 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
           <Label htmlFor="state_of_residence">
             State of Residence
           </Label>
-          <Input
+          <select
             id="state_of_residence"
             name="state_of_residence"
-            placeholder="Enter state of residence"
             value={form.state_of_residence ?? ""}
-            onChange={handleChange}
-            className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
-          />
+            onChange={handleStateChange}
+            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
+          >
+            <option value="">Select State</option>
+
+            {states?.data.map((state) => (
+              <option key={state.id} value={state.name}>
+                {state.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Residential Address */}
@@ -169,4 +246,4 @@ const formInfo = ({ form, handleChange }: formInfoProps) => {
   );
 };
 
-export default formInfo;
+export default FormInfo;
