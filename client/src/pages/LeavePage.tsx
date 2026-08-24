@@ -6,12 +6,16 @@ import LeaveRequests from "@/features/leaves/components/section/leave request/Le
 import LeaveTypes from "@/features/leaves/components/section/leavetypes/LeaveTypes"
 import { useState } from "react"
 import MyLeave from "@/features/leaves/components/section/myleave/MyLeave"
+import { useAuthStore } from "@/store/auth.store"
 
 
 const LeavePage = () => {
 
 
   const [activeTab, setActiveTab] = useState<LeaveTabsTypes>('Overview')
+
+  const user = useAuthStore((state) => state.user)
+
 
   return (
     <div className="space-y-6">
@@ -28,7 +32,7 @@ const LeavePage = () => {
         )
       }
       {
-        activeTab ===  'Requests' && (
+        activeTab === 'Requests' && (
           <LeaveRequests />
         )
       }
@@ -42,11 +46,11 @@ const LeavePage = () => {
           <LeaveTypes />
         )
       }
-      {
-        activeTab === 'My Leaves' && (
-          <MyLeave/>
-        )
-      }
+      
+      { 
+        activeTab === 'My Leaves' && user?.role !== 'admin' && (
+          <MyLeave />
+        )}
 
     </div>
   )

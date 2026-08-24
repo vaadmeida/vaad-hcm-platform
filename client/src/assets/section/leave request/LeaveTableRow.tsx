@@ -14,6 +14,9 @@ const LeaveRequestTableRow = ({
 }: LeaveRequestTableRowProps) => {
 const employeeName = `${request.employee.first_name} ${request.employee.last_name}`;
 
+console.log(employeeName);
+
+
   const initials = employeeName
     .split(" ")
     .map((name) => name.charAt(0))
