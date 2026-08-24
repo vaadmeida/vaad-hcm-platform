@@ -9,12 +9,12 @@ const departmentRouter  = Router()
 
 departmentRouter.post('/',  authenticate , requireRoles('admin'), asyncHandler(createDepartmentController))
 departmentRouter.get('/',  authenticate , requireRoles('admin', "hr"), asyncHandler(getDepartmentController))
-departmentRouter.get('/:id/employees',  authenticate , requireRoles('admin'), asyncHandler(teamMembersController))
+departmentRouter.get('/:id/employees',  authenticate , requireRoles('admin', "hr"), asyncHandler(teamMembersController))
 departmentRouter.get('/:id',  authenticate , requireRoles('admin', "hr"), asyncHandler(getDepartmentByIdController))
-departmentRouter.patch('/:id',  authenticate , requireRoles('admin'), asyncHandler(updateDepartmentController))
+departmentRouter.patch('/:id',  authenticate , requireRoles('admin', "hr"), asyncHandler(updateDepartmentController))
 departmentRouter.patch('/:id/manager',  authenticate , requireRoles('admin'), asyncHandler(assignDepartmentManagerController))
-departmentRouter.get('/:departmentId/activities',  authenticate , requireRoles('admin'), asyncHandler(teamRecentActivitiesController))
-departmentRouter.get('/:departmentId/stats',  authenticate , requireRoles('admin'), asyncHandler(getDepartmentStatsController))
+departmentRouter.get('/:departmentId/activities',  authenticate , requireRoles('admin', "hr"), asyncHandler(teamRecentActivitiesController))
+departmentRouter.get('/:departmentId/stats',  authenticate , requireRoles('admin', "hr"), asyncHandler(getDepartmentStatsController))
 departmentRouter.delete('/:departmentId/manager',  authenticate , requireRoles('admin'), asyncHandler(removeDepartmentManagerController))
 
 export default departmentRouter

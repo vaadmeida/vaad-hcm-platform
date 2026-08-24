@@ -147,7 +147,7 @@ export const updateDepartment = async ({
         );
     }
 
-    const isAdmin = user.role === "admin";
+    const isAdmin = user.role === "admin" || user.role !== "hr";
 
     if (!isAdmin) {
         throw new AppError(
