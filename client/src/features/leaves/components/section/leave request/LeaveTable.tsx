@@ -1,14 +1,16 @@
-import LeaveRequestTableRow from "@/assets/section/leave request/LeaveTableRow";
 import type { LeaveRequest } from "@/features/leaves/types/leave.types";
+import LeaveRequestTableRow from "./LeaveTableRow";
 
 
 
 interface LeaveRequestTableProps {
   requests: LeaveRequest[];
+  onRequestClick: (requestId: string) => void;
 }
 
 const LeaveRequestTable = ({
   requests,
+  onRequestClick
 }: LeaveRequestTableProps) => {
   return (
     <div className="w-full overflow-x-auto">
@@ -45,6 +47,7 @@ const LeaveRequestTable = ({
             <LeaveRequestTableRow
               key={request.id}
               request={request}
+              onClick={onRequestClick}
             />
           ))}
         </tbody>

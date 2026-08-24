@@ -1,9 +1,10 @@
 import { Request, Response } from "express"
 import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, employeeIdParamsSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema } from "./leave.validator.ts"
 import { AppError } from "../../errors/appError.ts";
-import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, getUpcomingLeave, submitLeaveRequests } from "./leave.service.ts";
+import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequestById, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, getUpcomingLeave, submitLeaveRequests } from "./leave.service.ts";
 import z from "zod";
 import { LeaveStats } from "./leave.types.ts";
+import prisma from "../../config/prisma.ts";
 
 
 
@@ -230,6 +231,30 @@ export const getLeaveRequestsController = async (req: Request, res: Response) =>
     });
 
 };
+
+
+export const getLeaveRequestByIdController = async (req: Request, res: Response) => {
+
+    const { id } = req.params
+
+    if (typeof id !== "string") {
+        res.status(400).json({
+            success: false,
+            message: "Invalid leave request ID",
+        });
+        return;
+    }
+
+
+    const leaveRequest = await getLeaveRequestById(id)
+
+    res.status(200).json({
+        success: true,
+        message: "Leave request retrieved successfully",
+        data: leaveRequest,
+    });
+
+}
 
 export const submitLeaveRequestsController = async (req: Request, res: Response) => {
 

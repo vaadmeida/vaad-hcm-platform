@@ -1,5 +1,6 @@
-import LeaveBalanceTableRow from "@/assets/section/leavebalance/LeaveBalanceTableRow";
+
 import type { LeaveBalanceItem } from "@/features/leaves/types/leave.types";
+import LeaveBalanceTableRow from "./LeaveBalanceTableRow";
 
 
 

@@ -7,12 +7,16 @@ import type { LeaveRequest } from "@/features/leaves/types/leave.types";
 
 interface LeaveRequestTableRowProps {
   request: LeaveRequest;
+  onClick: (requestId: string) => void;
 }
 
 const LeaveRequestTableRow = ({
   request,
+  onClick,
 }: LeaveRequestTableRowProps) => {
-const employeeName = `${request.employee.first_name} ${request.employee.last_name}`;
+  const employeeName = request?.employee
+    ? `${request.employee.first_name} ${request.employee.last_name}`
+    : "Unknown Employee";
 
   const initials = employeeName
     .split(" ")
@@ -45,7 +49,9 @@ const employeeName = `${request.employee.first_name} ${request.employee.last_nam
   };
 
   return (
-    <tr className="last:border-none hover:bg-gray-50">
+    <tr
+      onClick={() => onClick(request.id)}
+      className="last:border-none hover:bg-gray-50 cursor-pointer">
 
       {/* Employee */}
       <td className="px-3 py-3">
@@ -91,13 +97,12 @@ const employeeName = `${request.employee.first_name} ${request.employee.last_nam
           )}`}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              request.status === "approved"
+            className={`h-1.5 w-1.5 rounded-full ${request.status === "approved"
                 ? "bg-green-500"
                 : request.status === "pending"
-                ? "bg-amber-500"
-                : "bg-red-500"
-            }`}
+                  ? "bg-amber-500"
+                  : "bg-red-500"
+              }`}
           />
 
           {request.status}

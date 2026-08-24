@@ -620,16 +620,88 @@ export const getLeaveRequests = async ({
 
         employee: {
             id: request.employee.id,
-            name: `${request.employee.first_name} ${request.employee.last_name}`,
+            first_name: request.employee.first_name,
+            last_name: request.employee.last_name,
             email: request.employee.email,
         },
-
         leaveType: {
             id: request.leaveType.id,
             name: request.leaveType.name,
         },
     }));
 };
+
+export const getLeaveRequestById = async (id: string) => {
+    const leaveRequest = await prisma.leaveRequest.findUnique({
+        where: {
+            id,
+        },
+        select: {
+            id: true,
+            employee_id: true,
+            leave_type_id: true,
+            start_date: true,
+            end_date: true,
+            total_days: true,
+            reason: true,
+            status: true,
+            approved_by: true,
+            approved_at: true,
+            rejection_reason: true,
+            created_at: true,
+            updated_at: true,
+
+            employee: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    avatar_url: true,
+                    department: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+
+            leaveType: {
+                select: {
+                    id: true,
+                    name: true,
+                    default_days_per_year: true,
+                    requires_document: true,
+                    is_paid: true,
+                    carries_over: true,
+                    max_carryover_days: true,
+                    created_at: true,
+                },
+            },
+
+            // 👇 Get the person who approved/rejected it
+            approver: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                },
+            },
+        },
+    });
+
+    if (!leaveRequest) {
+        throw new AppError(
+            "Leave request not found",
+            404,
+            "LEAVE_REQUEST_NOT_FOUND"
+        );
+    }
+
+    return leaveRequest
+}
 
 export const seedLeaveBalance = async (tx: Prisma.TransactionClient, employeeId: string) => {
 
@@ -677,7 +749,7 @@ export const submitLeaveRequests = async (
 
         const currentYear = new Date().getFullYear()
 
-          const leaveType = await tx.leaveType.findUnique({
+        const leaveType = await tx.leaveType.findUnique({
             where: {
                 id: data.leave_type_id,
             },
@@ -769,7 +841,7 @@ export const submitLeaveRequests = async (
                 reason: data.reason,
                 document_url: data.document_url,
                 status: "pending",
-                
+
             },
             include: {
                 employee: {

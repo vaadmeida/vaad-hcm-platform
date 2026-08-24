@@ -3,6 +3,7 @@ import LeaveRequestFilters from "./LeaveRequestFilters";
 import LeavesCardList from "./LeavesCardList";
 import LeaveRequestTable from "./LeaveTable";
 import { useGetLeaveRequests } from "@/features/leaves/hooks/useGetLeaveRequests";
+import LeaveRequestDetails from "./LeaveRequestDetails";
 
 
 const LeaveRequests = () => {
@@ -21,9 +22,20 @@ const LeaveRequests = () => {
   const approved = requests?.data.filter((request) => request.status === "approved").length ?? 0;
   const rejected = requests?.data.filter((request) => request.status === "rejected").length ?? 0;
 
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
+    null
+  );
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const handleRequestClick = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setDetailsOpen(true);
+  };
+
 
   return (
-    
+
     <div>
       <section className="overflow-hidden rounded-lg border border-border bg-white">
 
@@ -46,9 +58,16 @@ const LeaveRequests = () => {
         <div className="hidden md:block">
           <LeaveRequestTable
             requests={requests?.data ?? []}
+            onRequestClick={handleRequestClick}
           />
 
         </div>
+
+        <LeaveRequestDetails
+          requestId={selectedRequestId}
+          open={detailsOpen}
+          onClose={() => setDetailsOpen(false)}
+        />
 
 
         {/* Mobile */}

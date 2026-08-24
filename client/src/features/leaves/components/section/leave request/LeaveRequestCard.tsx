@@ -16,7 +16,9 @@ const LeaveRequestCard = ({
   request,
 }: LeaveRequestCardProps) => {
 
- const employeeName = `${request.employee.first_name} ${request.employee.last_name}`;
+  const employeeName = request?.employee
+    ? `${request.employee.first_name} ${request.employee.last_name}`
+    : "Unknown Employee";
 
   const initials = employeeName
     .trim()

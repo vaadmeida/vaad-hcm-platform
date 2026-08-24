@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.ts";
-import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getEmployeeLeaveBalanceController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, getUpcomingLeaveRequestController, submitLeaveRequestsController } from "./leave.controller.ts";
+import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getEmployeeLeaveBalanceController, getLeaveRequestByIdController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, getUpcomingLeaveRequestController, submitLeaveRequestsController } from "./leave.controller.ts";
 import { requireRoles } from "../../middlewares/role.ts";
 import { authenticate } from "../../middlewares/auth.ts";
 
@@ -25,6 +25,7 @@ leaveRouter.get("/upcoming", authenticate, asyncHandler(getUpcomingLeaveRequestC
 leaveRouter.get("/recent", authenticate, asyncHandler(getRecentLeaveRequestController));
 
 leaveRouter.post("/request", authenticate, asyncHandler(submitLeaveRequestsController));
+leaveRouter.get("/request/:id", authenticate, asyncHandler(getLeaveRequestByIdController));
 
 leaveRouter.patch("/:id/cancel", authenticate, asyncHandler(cancelRequestController));
 leaveRouter.patch("/:id", authenticate, asyncHandler(approveOrRejectRequestController));
