@@ -234,10 +234,10 @@ export interface LeaveRequestLeaveType {
 }
 
 export interface LeaveRequestApprover {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
 }
 
 export interface LeaveRequestDetails {
@@ -264,4 +264,33 @@ export interface LeaveRequestDetailsResponse {
   success: boolean;
   message: string;
   data: LeaveRequestDetails;
+}
+
+
+export type LeaveRequestAction = "APPROVE" | "REJECT";
+
+export type ApproveOrRejectLeaveRequestPayload =
+  | {
+    action: "APPROVE";
+  }
+  | {
+    action: "REJECT";
+    rejectionReason: string;
+  };
+
+
+
+export interface ApproveOrRejectLeaveRequestResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id: string;
+    status: LeaveRequestAction;
+    reason?: string;
+  };
+}
+
+export interface ApiError {
+    success: boolean;
+    message: string;
 }
