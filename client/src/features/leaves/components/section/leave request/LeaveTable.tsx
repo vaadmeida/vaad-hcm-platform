@@ -10,7 +10,7 @@ interface LeaveRequestTableProps {
 
 const LeaveRequestTable = ({
   requests,
-  onRequestClick
+  onRequestClick,
 }: LeaveRequestTableProps) => {
   return (
     <div className="w-full overflow-x-auto">

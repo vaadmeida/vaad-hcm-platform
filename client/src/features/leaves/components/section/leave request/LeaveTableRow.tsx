@@ -2,7 +2,9 @@ import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
+import { useApproveOrRejectLeaveRequest } from "@/features/leaves/hooks/useApproveOrRejectLeaveRequest";
 import type { LeaveRequest } from "@/features/leaves/types/leave.types";
+import { Check, MoreHorizontal, X } from "lucide-react";
 
 
 interface LeaveRequestTableRowProps {
@@ -46,6 +48,19 @@ const LeaveRequestTableRow = ({
       default:
         return "bg-gray-50 text-gray-600";
     }
+  };
+
+  const { mutate: approveOrReject, isPending } =  useApproveOrRejectLeaveRequest();
+
+  const handleApprove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    approveOrReject({
+      id: request.id,
+      payload: {
+        action: "APPROVE",
+      },
+    });
   };
 
   return (
@@ -98,10 +113,10 @@ const LeaveRequestTableRow = ({
         >
           <span
             className={`h-1.5 w-1.5 rounded-full ${request.status === "approved"
-                ? "bg-green-500"
-                : request.status === "pending"
-                  ? "bg-amber-500"
-                  : "bg-red-500"
+              ? "bg-green-500"
+              : request.status === "pending"
+                ? "bg-amber-500"
+                : "bg-red-500"
               }`}
           />
 
@@ -110,32 +125,39 @@ const LeaveRequestTableRow = ({
       </td>
 
       {/* Actions */}
-      <td className="px-3 py-3 text-right">
+      {/* Actions */}
+      <td className="px-3 py-3 text-center">
         {request.status === "pending" ? (
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-center gap-2">
             <button
               type="button"
               title="Reject leave request"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-red-600 transition hover:bg-red-50"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-red-600 transition hover:bg-red-50 cursor-pointer"
             >
-              ✕
+              <X className="h-4 w-4" />
             </button>
 
             <button
               type="button"
               title="Approve leave request"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-green-600 transition hover:bg-green-50"
+              onClick={handleApprove}
+              disabled={isPending}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-green-600 transition hover:bg-green-50 cursor-pointer"
             >
-              ✓
+              <Check className="h-4 w-4" />
             </button>
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">
-            —
-          </span>
+          <div className="flex justify-center">
+            <span
+              title="No actions available"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground"
+            >
+              <MoreHorizontal className="h-4 w-4 lg:ml-6 xl:ml-5" />
+            </span>
+          </div>
         )}
       </td>
-
     </tr>
   );
 };
