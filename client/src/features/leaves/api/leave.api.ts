@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { CreateLeaveTypePayload, CreateLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestDetailsResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType } from "../types/leave.types";
+import type { ApproveOrRejectLeaveRequestPayload, ApproveOrRejectLeaveRequestResponse, CreateLeaveTypePayload, CreateLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestDetailsResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType } from "../types/leave.types";
 import axios from "axios";
 
 export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
@@ -163,8 +163,24 @@ export const getLeaveRequestById = async (id: string): Promise<LeaveRequestDetai
     return response.data;
   } catch (error) {
 
-    console.error("Employee Getting Leave Request By ID API Error:",error);
+    console.error("Employee Getting Leave Request By ID API Error:", error);
 
     throw error;
   }
+};
+
+export const approveOrRejectLeaveRequest = async (id: string,
+  payload: ApproveOrRejectLeaveRequestPayload
+): Promise<ApproveOrRejectLeaveRequestResponse> => {
+
+  try {
+    const response = await api.patch(`api/leaves/${id}`, payload);
+
+    return response.data;
+  } catch (error) {
+    console.error("Approve or Reject Leave Request API Error:", error);
+
+    throw error;
+  }
+
 };
