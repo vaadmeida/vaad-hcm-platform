@@ -5,7 +5,6 @@ import LeaveRequestTable from "./LeaveTable";
 import { useGetLeaveRequests } from "@/features/leaves/hooks/useGetLeaveRequests";
 import LeaveRequestDetails from "./LeaveRequestDetails";
 
-
 const LeaveRequests = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -13,14 +12,26 @@ const LeaveRequests = () => {
 
   const { data: requests } = useGetLeaveRequests({
     search: search || undefined,
-    status: status === "all" ? undefined : status || undefined,
-    leave_type_id: leaveType === "all" ? undefined : leaveType || undefined,
+    status: status === "all" ? undefined : status,
+    leave_type_id: leaveType === "all" ? undefined : leaveType,
   });
 
   const total = requests?.data?.length ?? 0;
-  const pending = requests?.data.filter((request) => request.status === "pending").length ?? 0;
-  const approved = requests?.data.filter((request) => request.status === "approved").length ?? 0;
-  const rejected = requests?.data.filter((request) => request.status === "rejected").length ?? 0;
+
+  const pending =
+    requests?.data.filter(
+      (request) => request.status === "pending"
+    ).length ?? 0;
+
+  const approved =
+    requests?.data.filter(
+      (request) => request.status === "approved"
+    ).length ?? 0;
+
+  const rejected =
+    requests?.data.filter(
+      (request) => request.status === "rejected"
+    ).length ?? 0;
 
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
     null
@@ -33,14 +44,9 @@ const LeaveRequests = () => {
     setDetailsOpen(true);
   };
 
-
   return (
-
     <div>
       <section className="overflow-hidden rounded-lg border border-border bg-white">
-
-
-
         <LeaveRequestFilters
           search={search}
           onSearch={setSearch}
@@ -60,7 +66,6 @@ const LeaveRequests = () => {
             requests={requests?.data ?? []}
             onRequestClick={handleRequestClick}
           />
-
         </div>
 
         <LeaveRequestDetails
@@ -69,13 +74,10 @@ const LeaveRequests = () => {
           onClose={() => setDetailsOpen(false)}
         />
 
-
         {/* Mobile */}
         <div className="md:hidden">
           <LeavesCardList />
         </div>
-
-
       </section>
     </div>
   );
