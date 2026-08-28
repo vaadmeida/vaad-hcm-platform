@@ -6,9 +6,10 @@ interface SidebarItemProps {
     href: string;
     icon: React.ElementType;
   };
+  onItemClick: () => void;
 }
 
-const SidebarItem = ({ item }: SidebarItemProps) => {
+const SidebarItem = ({ item, onItemClick }: SidebarItemProps) => {
   const Icon = item.icon;
 
   return (
@@ -21,6 +22,7 @@ const SidebarItem = ({ item }: SidebarItemProps) => {
             : "text-gray-300 hover:bg-white/10"
         }`
       }
+      onClick={onItemClick}
     >
       <Icon size={15} />
 

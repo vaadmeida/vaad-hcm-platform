@@ -2,7 +2,13 @@ import { useAuthStore } from "@/store/auth.store";
 import SideBarItem from "./SideBarItem";
 import { adminSidebar, employeeSidebar, hrSidebar, managerSidebar } from "./sidebar.data";
 
-const SidebarMenu = () => {
+interface SideBarMenuProps {
+  onItemClick: () => void;
+}
+
+
+
+const SidebarMenu = ({onItemClick}: SideBarMenuProps) => {
 
   const user = useAuthStore((state) => state.user)
 
@@ -32,6 +38,7 @@ const SidebarMenu = () => {
         <SideBarItem
           key={item.href}
           item={item}
+          onItemClick={onItemClick}
         />
       ))}
     </nav>
