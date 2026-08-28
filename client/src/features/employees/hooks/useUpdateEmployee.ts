@@ -12,7 +12,9 @@ export const useUpdateEmployee = () => {
       queryClient.invalidateQueries({
         queryKey: ["employees"],
       });
-
+      queryClient.invalidateQueries({
+        queryKey: ["my-profile"],
+      });
       queryClient.invalidateQueries({
         queryKey: ["employees", variables.employeeId],
       });
