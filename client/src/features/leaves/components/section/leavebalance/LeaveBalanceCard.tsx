@@ -30,17 +30,14 @@ const LeaveBalanceCard = ({
     .slice(0, 2)
     .toUpperCase();
 
-  const visibleTypes = employee.leave_types_used.slice(0, 2);
-  const remainingTypes = Math.max(
-    employee.leave_types_used.length - 2,
-    0
-  );
+  const visibleTypes = employee.leave_types_used?.slice(0, 2) ?? [];
+  const remainingTypes = Math.max((employee.leave_types_used?.length ?? 0) - 2, 0);
 
   const formatLeaveType = (type: string) =>
     type.replace(/\s+Leave$/i, "");
 
   return (
-  <div className="mb-3 rounded-xl border border-border bg-white px-4 py-4 last:mb-0">
+    <div className="mb-3 rounded-xl border border-border bg-white px-4 py-4 last:mb-0">
       <div className="flex items-start justify-between gap-3">
         {/* Employee */}
         <div className="flex min-w-0 items-center gap-3">
@@ -93,7 +90,7 @@ const LeaveBalanceCard = ({
           Leave types
         </p>
 
-        {employee.leave_types_used.length === 0 ? (
+        {(employee.leave_types_used?.length ?? 0) === 0 ? (
           <p className="mt-0.5 text-sm text-muted-foreground">
             No leave used
           </p>
@@ -129,9 +126,8 @@ const LeaveBalanceCard = ({
           {isOpen ? "Close" : "View"}
 
           <ChevronDown
-            className={`h-3.5 w-3.5 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+            className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
           />
         </button>
       </div>
