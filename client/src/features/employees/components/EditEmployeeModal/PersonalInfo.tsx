@@ -5,33 +5,38 @@ import { useGetCountries } from "@/features/location/hooks/useGetCountries";
 import { useGetStates } from "@/features/location/hooks/useGetStates";
 import { useGetCities } from "@/features/location/hooks/useGetCities";
 
-
-interface formInfoProps {
+interface FormInfoProps {
   form: UpdateEmployeeDTO;
   handleChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
+  isMyProfile?: boolean;
 }
 
-const FormInfo = ({ form, handleChange }: formInfoProps) => {
-
-
-
-
+const FormInfo = ({
+  form,
+  handleChange,
+  isMyProfile = false,
+}: FormInfoProps) => {
   const { data: countries } = useGetCountries();
 
-  const countryCode = countries?.data.find((country) => country.name === form.nationality)?.code ?? "";
+  const countryCode =
+    countries?.data.find(
+      (country) => country.name === form.nationality
+    )?.code ?? "";
 
   const { data: states } = useGetStates(countryCode);
 
-  const stateCode = states?.data.find((state) => state.name === form.state_of_residence)?.code ?? "";
+  const stateCode =
+    states?.data.find(
+      (state) => state.name === form.state_of_residence
+    )?.code ?? "";
 
+  const { data: cities } = useGetCities(countryCode, stateCode);
 
-  const { data: cities } = useGetCities(countryCode,stateCode);
-
-
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    
+  const handleCountryChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     handleChange(e);
 
     handleChange({
@@ -49,7 +54,9 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
     } as React.ChangeEvent<HTMLSelectElement>);
   };
 
-  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStateChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     handleChange(e);
 
     handleChange({
@@ -60,46 +67,44 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
     } as React.ChangeEvent<HTMLSelectElement>);
   };
 
-  const handleCityChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    handleChange(e);
-  };
-
-
   return (
     <div className="w-full min-w-0">
-
       <div className="grid w-full min-w-0 grid-cols-1 gap-5 sm:grid-cols-2">
-        {/* First Name */}
+
+        {/* First Name - Cannot self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="first_name">First Name</Label>
+
           <Input
             id="first_name"
             name="first_name"
             placeholder="Enter first name"
             value={form.first_name ?? ""}
             onChange={handleChange}
+            disabled={isMyProfile}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
 
-        {/* Last Name */}
+        {/* Last Name - Cannot self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="last_name">Last Name</Label>
+
           <Input
             id="last_name"
             name="last_name"
             placeholder="Enter last name"
             value={form.last_name ?? ""}
             onChange={handleChange}
+            disabled={isMyProfile}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
 
-        {/* Email */}
+        {/* Email - Cannot self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="email">Email</Label>
+
           <Input
             id="email"
             type="email"
@@ -107,13 +112,15 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
             placeholder="Enter email"
             value={form.email ?? ""}
             onChange={handleChange}
+            disabled={isMyProfile}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
 
-        {/* Phone */}
+        {/* Phone - Can self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="phone">Phone</Label>
+
           <Input
             id="phone"
             name="phone"
@@ -124,9 +131,12 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
           />
         </div>
 
-        {/* Alternate Phone */}
+        {/* Alternate Phone - Can self edit */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="alternate_phone">Alternate Phone</Label>
+          <Label htmlFor="alternate_phone">
+            Alternate Phone
+          </Label>
+
           <Input
             id="alternate_phone"
             name="alternate_phone"
@@ -137,79 +147,95 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
           />
         </div>
 
-        {/* Gender */}
+        {/* Gender - Cannot self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="gender">Gender</Label>
+
           <Input
             id="gender"
             name="gender"
             placeholder="Enter gender"
             value={form.gender ?? ""}
             onChange={handleChange}
+            disabled={isMyProfile}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
 
-        {/* Date of Birth */}
+        {/* Date of Birth - Cannot self edit */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="date_of_birth">Date of Birth</Label>
+          <Label htmlFor="date_of_birth">
+            Date of Birth
+          </Label>
+
           <Input
             id="date_of_birth"
             type="date"
             name="date_of_birth"
-            placeholder="Enter date of birth"
-            value={form.date_of_birth?.slice(0, 10)}
+            value={form.date_of_birth?.slice(0, 10) ?? ""}
             onChange={handleChange}
+            disabled={isMyProfile}
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
 
-        {/* Nationality */}
+        {/* Nationality - Cannot self edit */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="nationality">Nationality</Label>
+          <Label htmlFor="nationality">
+            Nationality
+          </Label>
 
           <select
             id="nationality"
             name="nationality"
             value={form.nationality ?? ""}
             onChange={handleCountryChange}
-            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
+            disabled={isMyProfile}
+            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none disabled:cursor-not-allowed disabled:opacity-60"
           >
             <option value="">Select Country</option>
 
             {countries?.data.map((country) => (
-              <option key={country.id} value={country.name}>
+              <option
+                key={country.id}
+                value={country.name}
+              >
                 {country.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* City */}
+        {/* City - Can self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="city">City</Label>
+
           <select
             id="city"
             name="city"
             value={form.city ?? ""}
-            onChange={handleCityChange}
+            onChange={handleChange}
             className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
           >
             <option value="">Select City</option>
 
             {cities?.data.map((city) => (
-              <option key={city.id} value={city.name}>
+              <option
+                key={city.id}
+                value={city.name}
+              >
                 {city.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* State */}
+        {/* State - Can self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="state_of_residence">
             State of Residence
           </Label>
+
           <select
             id="state_of_residence"
             name="state_of_residence"
@@ -220,18 +246,22 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
             <option value="">Select State</option>
 
             {states?.data.map((state) => (
-              <option key={state.id} value={state.name}>
+              <option
+                key={state.id}
+                value={state.name}
+              >
                 {state.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Residential Address */}
+        {/* Residential Address - Can self edit */}
         <div className="min-w-0 space-y-2 sm:col-span-2">
           <Label htmlFor="residential_address">
             Residential Address
           </Label>
+
           <Input
             id="residential_address"
             name="residential_address"
@@ -241,6 +271,7 @@ const FormInfo = ({ form, handleChange }: formInfoProps) => {
             className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
           />
         </div>
+
       </div>
     </div>
   );
