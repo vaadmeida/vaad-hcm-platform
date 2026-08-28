@@ -20,9 +20,9 @@ const EmployeeTableRow = ({
   const navigate = useNavigate();
 
   return (
-    <tr 
+    <tr
       onClick={() => navigate(`/employees/${employee.id}`)}
-     className="last:border-none hover:bg-gray-50 cursor-pointer">
+      className="last:border-none hover:bg-gray-50 cursor-pointer">
 
       <td className="px-3 py-2">
         <div className="flex items-center gap-3">
@@ -33,9 +33,9 @@ const EmployeeTableRow = ({
               alt={`${employee.first_name} ${employee.last_name}`}
             />
 
-            <AvatarFallback>
-              {employee.first_name.charAt(0)}
-              {employee.last_name.charAt(0)}
+            <AvatarFallback className="bg-gray-200 text-gray-700 font-medium">
+              {employee.first_name?.charAt(0)}
+              {employee.last_name?.charAt(0)}
             </AvatarFallback>
           </Avatar>
 
@@ -65,7 +65,7 @@ const EmployeeTableRow = ({
 
       {/* Status */}
       <td className="px-3 py-2">
-        <StatusBadge status={employee.status}/>
+        <StatusBadge status={employee.status} />
       </td>
 
 
@@ -78,7 +78,7 @@ const EmployeeTableRow = ({
       {/* Actions */}
       <td className="px-3 py-2 text-center"
         onClick={(e) => e.stopPropagation()}>
-         <EmployeeActions employee={employee}/>
+        <EmployeeActions employee={employee} />
       </td>
 
     </tr>
