@@ -24,6 +24,7 @@ import { getDashboardRoute } from "@/utils/getDashboardRoute";
 import MyDocumentsPage from "@/pages/MyDocumentsPage";
 import DepartmentDetailsPage from "@/pages/DepartmentDetailsPage";
 import MyProfile from "@/pages/MyProfile";
+import EmployeeLeavePage from "@/pages/EmployeeLeavePage";
 
 export const AppRoutes = () => {
    const token = useAuthStore((state) => state.token);
@@ -70,6 +71,7 @@ export const AppRoutes = () => {
                      <RoleRoute allowedRoles={["hr", "manager", "employee"]} />
                   }
                >
+                  <Route path="/my-documents" element={<MyDocumentsPage />} />
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager", "employee"]} />}>
@@ -83,12 +85,11 @@ export const AppRoutes = () => {
 
                <Route element={<RoleRoute allowedRoles={["manager"]} />}>
                   <Route path="/manager/dashboard" element={<ManagerDashboard />} />
-                   <Route path="/my-documents" element={<MyDocumentsPage />} />
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["employee"]} />}>
                   <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-                 
+                  <Route path="/my-leave" element={<EmployeeLeavePage />} />
                </Route>
 
             </Route>
