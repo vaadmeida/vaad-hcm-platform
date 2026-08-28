@@ -69,7 +69,7 @@ export const getTeamLeaveBalance = async (
 ): Promise<LeaveBalanceItem[]> => {
   try {
     const response = await api.get<LeaveBalanceResponse>(
-      "/api/leaves/team-balance",
+      "/api/leaves/balance/team",
       {
         params: filters,
       }
