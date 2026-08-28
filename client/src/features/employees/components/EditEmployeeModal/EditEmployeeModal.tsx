@@ -32,10 +32,12 @@ import { toast } from "sonner";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
 import { useManagers } from "../../hooks/useManagers";
 
+
 interface EmployeeEditModalProps {
     employee: Employee;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    isMyProfile?: boolean;
 }
 
 const tabTriggerClass = `
@@ -93,21 +95,43 @@ const mapEmployeeToForm = (
     account_name: employee.payroll?.account_name ?? "",
 });
 
+
 const EmployeeEditModal = ({
     employee,
     open,
     onOpenChange,
+    isMyProfile = false,
 }: EmployeeEditModalProps) => {
 
 
     const [form, setForm] = useState<UpdateEmployeeDTO>(mapEmployeeToForm(employee));
     const [activeTab, setActiveTab] = useState<"personal" | "employment" | "emergency" | "account">("personal");
-    
-    const { data: departments = [] } = useDepartments();
 
-    const { data: managers = [] } = useManagers();
+    const { data: departments = [] } = useDepartments({
+        enabled: open && !isMyProfile,
+    });
+
+    const { data: managers = [] } = useManagers({
+        enabled: open && !isMyProfile,
+    });
 
     const { isPending, mutateAsync } = useUpdateEmployee()
+
+    const selfPayload: Partial<UpdateEmployeeDTO> = {
+        phone: form.phone,
+        alternate_phone: form.alternate_phone,
+        residential_address: form.residential_address,
+        city: form.city,
+        state_of_residence: form.state_of_residence,
+
+        emergency_contact_name: form.emergency_contact_name,
+        emergency_contact_relationship: form.emergency_contact_relationship,
+        emergency_contact_number: form.emergency_contact_number,
+    };
+
+
+
+
     const handleChange = (
         e: React.ChangeEvent<
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -128,32 +152,41 @@ const EmployeeEditModal = ({
         }));
     };
 
-    const payload = {
-        ...form,
-        department_id: form.department_id || undefined,
-        manager_id: form.manager_id || undefined,
-    };
+
+
+    const payload = isMyProfile
+        ? selfPayload
+        : {
+            ...form,
+            department_id: form.department_id || undefined,
+            manager_id: form.manager_id || undefined,
+        };
+
 
     const handleSubmit = async (
         e: React.MouseEvent<HTMLButtonElement>
     ) => {
         e.preventDefault();
 
+        console.log("isMyProfile:", isMyProfile);
+        console.log("PAYLOAD BEING SENT:", payload);
+
         try {
             await mutateAsync({
                 employeeId: employee.id,
-                payload
+                payload,
             });
 
             onOpenChange(false);
 
-            toast.success(`${employee.full_name}'s details updated successfully!`);
+            toast.success(
+                `${employee.full_name}'s details updated successfully!`
+            );
         } catch (error) {
             console.error(error);
             toast.error("Failed to update employee");
         }
     };
-
     const handleOpenChange = (value: boolean) => {
         if (value) {
             setForm(mapEmployeeToForm(employee));
@@ -214,20 +247,23 @@ const EmployeeEditModal = ({
                                 Personal
                             </TabsTrigger>
 
-                            <TabsTrigger value="employment" className={tabTriggerClass}>
-                                <BriefcaseBusiness className="h-4 w-4 shrink-0" />
-                                Employment
-                            </TabsTrigger>
+                            {!isMyProfile && (
+                                <TabsTrigger value="employment" className={tabTriggerClass}>
+                                    <BriefcaseBusiness className="h-4 w-4 shrink-0" />
+                                    Employment
+                                </TabsTrigger>
+                            )}
 
                             <TabsTrigger value="emergency" className={tabTriggerClass}>
                                 <ShieldCheck className="h-4 w-4 shrink-0" />
                                 Emergency
                             </TabsTrigger>
 
-                            <TabsTrigger value="account" className={tabTriggerClass}>
-                                <CreditCard className="h-4 w-4 shrink-0" />
-                                Payroll
-                            </TabsTrigger>
+                            {!isMyProfile && (
+                                <TabsTrigger value="account" className={tabTriggerClass}>
+                                    <CreditCard className="h-4 w-4 shrink-0" />
+                                    Payroll
+                                </TabsTrigger>)}
                         </TabsList>
                     </div>
 
@@ -246,6 +282,7 @@ const EmployeeEditModal = ({
                             </div>
 
                             <PersonalInfo handleChange={handleChange} form={form}
+                                isMyProfile={isMyProfile}
                             />
                         </TabsContent>
 
