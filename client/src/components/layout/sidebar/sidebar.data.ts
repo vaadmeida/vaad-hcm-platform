@@ -1,4 +1,4 @@
-import {LayoutDashboard,Users,Building2,CalendarDays,FolderOpen,Settings} from "lucide-react";
+import { LayoutDashboard, Users, Building2, CalendarDays, FolderOpen, Settings, User } from "lucide-react";
 
 export const adminSidebar = [
   {
@@ -59,6 +59,11 @@ export const hrSidebar = [
     href: "/documents",
   },
   {
+    title: "My Profile",
+    icon: User,
+    href: "/profile",
+  },
+  {
     title: "Settings",
     icon: Settings,
     href: "/settings",
@@ -86,6 +91,11 @@ export const managerSidebar = [
     href: "/my-documents",
   },
   {
+    title: "My Profile",
+    icon: User,
+    href: "/profile",
+  },
+  {
     title: "Settings",
     icon: Settings,
     href: "/settings",
@@ -106,6 +116,11 @@ export const employeeSidebar = [
     title: "My Documents",
     icon: FolderOpen,
     href: "/my-documents",
+  },
+  {
+    title: "My Profile",
+    icon: User,
+    href: "/profile",
   },
   {
     title: "Settings",

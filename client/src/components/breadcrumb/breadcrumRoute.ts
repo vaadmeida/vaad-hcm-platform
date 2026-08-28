@@ -29,7 +29,7 @@ export const breadcrumbRoutes = [
       { label: "Departments", path: "/departments" },
     ],
   },
-    {
+  {
     match: /^\/departments\/([^/]+)$/,
     breadcrumbs: [
       { label: "Departments", path: "/departments" },
@@ -82,6 +82,18 @@ export const breadcrumbRoutes = [
       { label: "Employees", path: "/employees" },
       { label: "Employee Profile" },
       { label: "Activity" },
+    ],
+  },
+  {
+    match: /^\/my-documents$/,
+    breadcrumbs: [
+      { label: "My Documents", path: "/my-documents" },
+    ],
+  },
+  {
+    match: /^\/profile$/,
+    breadcrumbs: [
+      { label: "My Profile", path: "/profile" },
     ],
   },
 ];
