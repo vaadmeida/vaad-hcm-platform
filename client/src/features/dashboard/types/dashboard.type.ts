@@ -2,7 +2,11 @@ export interface DashboardStats {
     totalEmployees: number,
     totalDepartments: number,
     activeEmployees: number,
+    inactiveEmployees: number,
     pendingLeaveRequests: number
+    approvedLeaveRequests: number
+    rejectedLeaveRequests: number
+    totalLeaveTypes: number 
     teamMembers: number
     activeTeamMembers: number
     pendingLeaveApprovals: number
