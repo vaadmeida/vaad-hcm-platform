@@ -26,6 +26,7 @@ import { useAuthStore } from "@/store/auth.store";
 interface EmployeeDetailsHeaderProps {
   employee: Employee;
   onEdit: () => void;
+  isMyProfile?: boolean,
 }
 
 const statusStyles = {
@@ -62,6 +63,7 @@ const statusOptions = [
 const EmployeeDetailsHeader = ({
   employee,
   onEdit,
+  isMyProfile = false,
 }: EmployeeDetailsHeaderProps) => {
 
 
@@ -224,10 +226,9 @@ const EmployeeDetailsHeader = ({
             </div>
           </div>
 
-
-          {canManageEmployee && (
-            <div className="flex w-full shrink-0 items-center gap-3 lg:w-auto lg:pt-1">
-              {/* Status */}
+          <div className="flex w-full shrink-0 items-center gap-3 lg:w-auto lg:pt-1">
+            {/* Status */}
+            {canManageEmployee ? (
               <Select
                 value={status}
                 onValueChange={handleStatusChange}
@@ -254,19 +255,41 @@ const EmployeeDetailsHeader = ({
                   ))}
                 </SelectContent>
               </Select>
+            ) : (
+              <div
+                className={`inline-flex h-8 min-w-25 items-center justify-center rounded-full border px-3 text-xs font-medium capitalize whitespace-nowrap ${statusStyles[status as keyof typeof statusStyles]
+                  }`}
+              >
+                {status}
+              </div>
+            )}
 
-              {/* Edit */}
+            {/* Edit */}
+            {isMyProfile ? (
               <button
                 type="button"
                 onClick={onEdit}
                 className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#1078A9] bg-white px-3 text-xs font-medium whitespace-nowrap text-[#1078A9] transition hover:bg-[#1078A9]/5"
               >
                 <Pencil className="h-3.5 w-3.5 shrink-0" />
-                Edit Employee
+                Edit Profile
               </button>
-            </div>
-          )}
+            ) : (
+              canManageEmployee && (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#1078A9] bg-white px-3 text-xs font-medium whitespace-nowrap text-[#1078A9] transition hover:bg-[#1078A9]/5"
+                >
+                  <Pencil className="h-3.5 w-3.5 shrink-0" />
+                  Edit Employee
+                </button>
+              )
+            )}
+          </div>
+
         </div>
+
         <TerminateEmployeeDialog
           open={showTerminateDialog}
           employeeName={employee.full_name}
