@@ -110,7 +110,7 @@ export const employeeSidebar = [
   {
     title: "My Leave",
     icon: Building2,
-    href: "/departments",
+    href: "/my-leave",
   },
   {
     title: "My Documents",
