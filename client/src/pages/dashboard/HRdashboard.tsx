@@ -1,5 +1,5 @@
-import DashboardStats from "@/features/dashboard/components/DashboardStats";
 import EmployeeByDepartmentChart from "@/features/dashboard/components/EmployeeByDepartmentsChart";
+import HRDashBoardStats from "@/features/dashboard/components/HRDashBoardStats";
 import LeaveOverviewChart from "@/features/dashboard/components/LeaveOverviewChart";
 import { useEmployeesByDepartment } from "@/features/dashboard/hooks/useEmployeesByDepartment";
 import { useLeaveOverview } from "@/features/dashboard/hooks/useLeaveOverview";
@@ -30,7 +30,7 @@ const HRdashboard = () => {
         </section>
 
         {/* Stats Cards */}
-        <DashboardStats />
+        <HRDashBoardStats />
 
         {/* Charts */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

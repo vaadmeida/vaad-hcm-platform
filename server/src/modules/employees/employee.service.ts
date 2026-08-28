@@ -270,6 +270,144 @@ export const getEmployee = async (id: string, user: User) => {
     };
 };
 
+export const getMyProfile = async (user: User) => {
+
+    const employee = await prisma.employee.findUnique({
+        where: { id: user.id },
+        select: {
+            id: true,
+            employee_code: true,
+
+            // Personal Information
+            avatar_url: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+            gender: true,
+            date_of_birth: true,
+            nationality: true,
+            phone: true,
+            alternate_phone: true,
+            residential_address: true,
+            city: true,
+            state_of_residence: true,
+
+            // Emergency Contact
+            emergency_contact_name: true,
+            emergency_contact_relationship: true,
+            emergency_contact_number: true,
+
+            // Employment Information
+            job_title: true,
+            job_description: true,
+            role: true,
+            status: true,
+            employment_type: true,
+            hire_date: true,
+            probation_end_date: true,
+            date_exited: true,
+            work_email: true,
+            owns_personal_computer: true,
+
+            department: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+
+            manager: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                },
+            },
+
+            // Payroll & Bank
+            paye_id: true,
+            bank_name: true,
+            account_number: true,
+            account_name: true,
+
+            created_at: true,
+            updated_at: true,
+        },
+    });
+
+    if (!employee) {
+        throw new AppError(
+            "Employee profile not found",
+            404,
+            "EMPLOYEE_PROFILE_NOT_FOUND"
+        );
+    }
+
+    return {
+        id: employee.id,
+        employee_code: employee.employee_code,
+        full_name: `${employee.first_name} ${employee.last_name}`,
+        avatar_url: employee.avatar_url,
+
+        personal: {
+            first_name: employee.first_name,
+            last_name: employee.last_name,
+            email: employee.email,
+            gender: employee.gender,
+            date_of_birth: employee.date_of_birth,
+            nationality: employee.nationality,
+            phone: employee.phone,
+            alternate_phone: employee.alternate_phone,
+            residential_address: employee.residential_address,
+            city: employee.city,
+            state_of_residence: employee.state_of_residence,
+        },
+
+        employment: {
+            job_title: employee.job_title,
+            job_description: employee.job_description,
+            role: employee.role,
+            status: employee.status,
+            employment_type: employee.employment_type,
+            hire_date: employee.hire_date,
+            probation_end_date: employee.probation_end_date,
+            date_exited: employee.date_exited,
+            work_email: employee.work_email,
+            owns_personal_computer: employee.owns_personal_computer,
+
+            department: employee.department
+                ? {
+                    id: employee.department.id,
+                    name: employee.department.name,
+                }
+                : null,
+
+            manager: employee.manager
+                ? {
+                    id: employee.manager.id,
+                    name: `${employee.manager.first_name} ${employee.manager.last_name}`,
+                }
+                : null,
+        },
+
+        emergency_contact: {
+            name: employee.emergency_contact_name,
+            relationship: employee.emergency_contact_relationship,
+            phone: employee.emergency_contact_number,
+        },
+
+        payroll: {
+            paye_id: employee.paye_id,
+            bank_name: employee.bank_name,
+            account_number: employee.account_number,
+            account_name: employee.account_name,
+        },
+
+        created_at: employee.created_at,
+        updated_at: employee.updated_at,
+    };
+};
+
 
 export const getAllEmployees = async (
     user: User,
@@ -417,6 +555,7 @@ export const updateEmployee = async ({
     user,
 }: UpdateEmployeeInput) => {
 
+
     const employee = await prisma.employee.findUnique({
         where: { id },
     });
@@ -429,27 +568,14 @@ export const updateEmployee = async ({
         );
     }
 
-
     const isAdmin = user.role === "admin";
     const isHR = user.role === "hr";
-    const isManager = user.role === "manager";
     const isSelf = user.id === id;
 
-    // ─── Authorization ──────────────────────────────────
-
-    if (!isAdmin && !isHR && !isSelf) {
-        if (!isManager || employee.manager_id !== user.id) {
-            throw new AppError(
-                "You are not allowed to update this employee",
-                403,
-                "FORBIDDEN"
-            );
-        }
-    }
-
-    // ─── Allowed fields ─────────────────────────────────
+    // ─── Allowed Fields ──────────────────────────────────
 
     const employeeFields = [
+        // Personal Information
         "first_name",
         "last_name",
         "gender",
@@ -462,12 +588,12 @@ export const updateEmployee = async ({
         "city",
         "state_of_residence",
 
-        // Emergency contact
+        // Emergency Contact
         "emergency_contact_name",
         "emergency_contact_relationship",
         "emergency_contact_number",
 
-        // Employment
+        // Employment Information
         "role",
         "job_title",
         "job_description",
@@ -489,6 +615,7 @@ export const updateEmployee = async ({
     ];
 
     const selfAllowedFields = [
+        "avatar_url",
         "phone",
         "alternate_phone",
         "residential_address",
@@ -499,12 +626,25 @@ export const updateEmployee = async ({
         "emergency_contact_number",
     ];
 
+    // ─── Authorization ───────────────────────────────────
+
+    // Admin and HR can edit any employee
+    // A user can only edit their own profile
+    // Managers and other employees cannot edit other employees
+    if (!isAdmin && !isHR && !isSelf) {
+        throw new AppError(
+            "You are not allowed to update this employee",
+            403,
+            "FORBIDDEN"
+        );
+    }
+
     const allowedFields =
         isAdmin || isHR
             ? employeeFields
             : selfAllowedFields;
 
-    // ─── Validate fields ─────────────────────────────────
+    // ─── Validate Fields ─────────────────────────────────
 
     const inputKeys = Object.keys(data);
 
@@ -520,15 +660,18 @@ export const updateEmployee = async ({
         );
     }
 
-    // ─── Update ──────────────────────────────────────────
+    // ─── Department Changes ──────────────────────────────
 
     const isDepartmentChange =
         data.department_id !== undefined &&
         data.department_id !== employee.department_id;
 
     const isDepartmentRemoved =
-        employee.department_id &&
+        employee.department_id !== null &&
+        employee.department_id !== undefined &&
         data.department_id === null;
+
+    // ─── Update ──────────────────────────────────────────
 
     const result = await prisma.$transaction(async (tx) => {
         const updatedEmployee = await tx.employee.update({
@@ -539,18 +682,20 @@ export const updateEmployee = async ({
         let action: ActivityAction = "UPDATED";
 
         let description =
-            `Employee ${updatedEmployee.first_name} ${updatedEmployee.last_name} was updated`;
+            `Employee ${updatedEmployee.first_name} ` +
+            `${updatedEmployee.last_name} was updated`;
 
         const performer = await tx.employee.findUnique({
-                where: {
-                    id: user.id,
-                },
-                select: {
-                    first_name: true,
-                    last_name: true,
-                },
-            });
+            where: {
+                id: user.id,
+            },
+            select: {
+                first_name: true,
+                last_name: true,
+            },
+        });
 
+        // ─── Department Assigned ─────────────────────────
 
         if (isDepartmentChange && updatedEmployee.department_id) {
             const department = await tx.department.findUnique({
@@ -562,17 +707,15 @@ export const updateEmployee = async ({
                 },
             });
 
-
-
             action = "DEPARTMENT_ASSIGNED";
-
-        
 
             description =
                 `${performer?.first_name} ${performer?.last_name} assigned ` +
                 `${updatedEmployee.first_name} ${updatedEmployee.last_name} ` +
                 `to ${department?.name ?? "a department"}`;
         }
+
+        // ─── Department Removed ──────────────────────────
 
         if (isDepartmentRemoved) {
             action = "DEPARTMENT_REMOVED";
@@ -582,6 +725,8 @@ export const updateEmployee = async ({
                 `${updatedEmployee.first_name} ${updatedEmployee.last_name} ` +
                 `from their department`;
         }
+
+        // ─── Activity Log ────────────────────────────────
 
         await tx.activityLog.create({
             data: {
@@ -597,7 +742,12 @@ export const updateEmployee = async ({
         return updatedEmployee;
     });
 
-    const { password_hash, ...safeEmployee } = result;
+    // ─── Remove Sensitive Data ───────────────────────────
+
+    const {
+        password_hash,
+        ...safeEmployee
+    } = result;
 
     return safeEmployee;
 };

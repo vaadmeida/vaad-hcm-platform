@@ -1,3 +1,4 @@
+import SkeletonLoader from "@/components/common/SkeletonLoader";
 import EmployeeEditModal from "@/features/employees/components/EditEmployeeModal/EditEmployeeModal";
 import EmployeeDetailsHeader from "@/features/employees/components/EmployeeDetailsHeader";
 import type { EmployeeDetailsTab } from "@/features/employees/components/EmployeeDetailsTab/EmployeeDetailsTabs";
@@ -12,13 +13,12 @@ const EmployeeDetailsPage = () => {
 
   const { data: employee, isLoading } = useEmployeeDetails(employeeId);
 
-  const [activeTab, setActiveTab] =
-    useState<EmployeeDetailsTab>("overview");
+  const [activeTab, setActiveTab] = useState<EmployeeDetailsTab>("overview");
 
   const [open, setOpen] = useState(false);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <SkeletonLoader />;
   }
 
   if (!employee) {
@@ -51,13 +51,14 @@ const EmployeeDetailsPage = () => {
       )}
       */}
 
-      {/* Edit Employee Modal */}
-      <EmployeeEditModal
-        key={employee.id}
-        employee={employee}
-        open={open}
-        onOpenChange={setOpen}
-      />
+      {open && (
+        <EmployeeEditModal
+          key={employee.id}
+          employee={employee}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
     </div>
   );
 };

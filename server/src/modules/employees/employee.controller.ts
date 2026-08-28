@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { createEmployee, deactivateEmployee, getAllEmployees, getEmployee, getManagers, terminateEmployee, updateEmployee } from "./employee.service.ts"
+import { createEmployee, deactivateEmployee, getAllEmployees, getEmployee, getManagers, getMyProfile, terminateEmployee, updateEmployee } from "./employee.service.ts"
 import { AppError } from "../../errors/appError.ts";
 import { createEmployeeSchema, getAllEmployeesSchema, getEmployeeSchema, updateEmployeeSchema } from "./employee.validator.ts";
 
@@ -53,6 +53,25 @@ export const getEmployeeController = async (req: Request, res: Response) => {
         data: employee,
     });
 };
+
+export const getMyProfileController = async (
+    req: Request,
+    res: Response
+) => {
+    const user = req.user;
+
+    if (!user) {
+        throw new AppError("Unauthorized", 401, "NO_USER");
+    }
+
+    const employee = await getMyProfile(user);
+
+    return res.status(200).json({
+        success: true,
+        data: employee,
+    });
+};
+
 
 export const getAllEmployeesController = async (req: Request, res: Response) => {
 
@@ -149,7 +168,7 @@ export const terminateEmployeeController = async (
         if (!req.user) {
             throw new AppError("Unauthorized", 401, "NO_USER");
         }
-        const employee = await terminateEmployee(id,req.user!);
+        const employee = await terminateEmployee(id, req.user!);
 
         return res.status(200).json({
             success: true,

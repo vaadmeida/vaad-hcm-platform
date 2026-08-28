@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/store/auth.store";
+import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,8 +11,11 @@ const SideBarFooter = () => {
 
   const navigate = useNavigate()
 
+  const queryClient = useQueryClient();
+
   const handleLogout = () => {
     logout()
+    queryClient.clear()
     navigate('/login', { replace: true })
   }
 

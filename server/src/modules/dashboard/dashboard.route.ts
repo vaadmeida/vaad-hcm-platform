@@ -6,7 +6,7 @@ import { asyncHandler } from "../../utils/asyncHandler.ts";
 
 const dashboardRouter = Router()
 dashboardRouter.get("/stats", authenticate , asyncHandler(getDashboardStats))
-dashboardRouter.get("/employees-by-department", authenticate, requireRoles("admin", "hr"),asyncHandler(getEmployeesByDepartmentController))
+dashboardRouter.get("/employees-by-department", authenticate ,asyncHandler(getEmployeesByDepartmentController))
 dashboardRouter.get("/leave-overview", authenticate ,asyncHandler(getLeaveOverviewController))
 
 
