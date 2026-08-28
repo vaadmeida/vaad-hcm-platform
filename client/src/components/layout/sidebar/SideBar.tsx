@@ -2,12 +2,15 @@ import SideBarFooter from "./SideBarFooter";
 import SideBarHeader from "./SideBarHeader";
 import SideBarMenu from "./SideBarMenu";
 
-interface SideBarProps{
-  sidebarOpen: boolean
-  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>; 
+interface SideBarProps {
+  sidebarOpen: boolean;
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SideBar = ({ sidebarOpen, setSidebarOpen }: SideBarProps) => {
+  
+  const closeSidebar = () => { setSidebarOpen(false) };
+
   return (
     <aside
       className={`
@@ -22,12 +25,10 @@ const SideBar = ({ sidebarOpen, setSidebarOpen }: SideBarProps) => {
     >
       <SideBarHeader setSidebarOpen={setSidebarOpen} />
 
-      {/* Scrollable area */}
       <div className="flex-1 overflow-y-auto">
-        <SideBarMenu />
+        <SideBarMenu onItemClick={closeSidebar} />
       </div>
 
-      {/* Always stays at bottom */}
       <SideBarFooter />
     </aside>
   );
