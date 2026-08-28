@@ -96,4 +96,10 @@ export const breadcrumbRoutes = [
       { label: "My Profile", path: "/profile" },
     ],
   },
+  {
+    match: /^\/my-leave$/,
+    breadcrumbs: [
+      { label: "My Leave", path: "/my-leave" },
+    ],
+  },
 ];
