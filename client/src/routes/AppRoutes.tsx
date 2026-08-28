@@ -23,6 +23,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { getDashboardRoute } from "@/utils/getDashboardRoute";
 import MyDocumentsPage from "@/pages/MyDocumentsPage";
 import DepartmentDetailsPage from "@/pages/DepartmentDetailsPage";
+import MyProfile from "@/pages/MyProfile";
 
 export const AppRoutes = () => {
    const token = useAuthStore((state) => state.token);
@@ -73,6 +74,7 @@ export const AppRoutes = () => {
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager", "employee"]} />}>
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/profile" element={<MyProfile />} />
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["hr"]} />}>
