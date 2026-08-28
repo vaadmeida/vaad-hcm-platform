@@ -34,8 +34,8 @@ const LeaveBalanceTableRow = ({
         .slice(0, 2)
         .toUpperCase();
 
-    const visibleTypes = employee.leave_types_used.slice(0, 2);
-    const remainingTypes = employee.leave_types_used.length - 2;
+    const visibleTypes = employee.leave_types_used?.slice(0, 2) ?? [];
+    const remainingTypes = Math.max((employee.leave_types_used?.length ?? 0) - 2, 0);
 
     const formatLeaveType = (type: string) =>
         type.replace(/\s+Leave$/i, "");
@@ -82,8 +82,9 @@ const LeaveBalanceTableRow = ({
                 </td>
 
                 {/* Leave Types */}
+
                 <td className="hidden px-3 py-3 xl:table-cell">
-                    {employee.leave_types_used.length === 0 ? (
+                    {(employee.leave_types_used?.length ?? 0) === 0 ? (
                         <span className="text-xs text-muted-foreground">
                             No leave used
                         </span>
@@ -102,9 +103,7 @@ const LeaveBalanceTableRow = ({
                             {remainingTypes > 0 && (
                                 <span className="shrink-0 text-xs text-muted-foreground">
                                     + {remainingTypes}{" "}
-                                    {remainingTypes === 1
-                                        ? "other"
-                                        : "others"}
+                                    {remainingTypes === 1 ? "other" : "others"}
                                 </span>
                             )}
                         </div>
