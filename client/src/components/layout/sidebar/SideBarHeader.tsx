@@ -20,8 +20,9 @@ const SideBarHeader = ({ setSidebarOpen }: SidebarHeaderProps) => {
         </h1>
 
         <p className="truncate text-xs text-gray-400">
-          Human Resource Platform
+          Human Capital Management
         </p>
+        
       </div>
 
       {/* Close Button */}

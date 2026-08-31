@@ -14,7 +14,7 @@ export const quickActions = {
     {
       label: "Add Employee",
       icon: UserPlus,
-      path: "/admin/employees/new",
+      path: "/admin/employees",
       color: "action-icon-blue",
     },
     {
@@ -41,19 +41,19 @@ export const quickActions = {
     {
       label: "Add Employee",
       icon: UserPlus,
-      path: "/hr/employees/new",
+      path: "/employees",
       color: "action-icon-blue",
     },
     {
       label: "Upload Document",
       icon: FileText,
-      path: "/hr/documents/upload",
+      path: "/documents",
       color: "action-icon-amber",
     },
     {
       label: "Approve Leave",
       icon: ClipboardCheck,
-      path: "/manager/leave-requests",
+      path: "/leave",
       color: "action-icon-purple",
     },
   ],
