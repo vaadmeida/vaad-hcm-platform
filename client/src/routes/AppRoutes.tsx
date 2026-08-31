@@ -80,7 +80,7 @@ export const AppRoutes = () => {
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager", "employee"]} />}>
-                  <Route path="/settings" element={<SettingsPage />}>
+                   <Route path="/settings" element={<SettingsPage />}>
                      <Route index element={<ProfileSettings />} />
                      <Route path="profile" element={<ProfileSettings />} />
                      <Route path="organization" element={<OrganizationSettings />} />
