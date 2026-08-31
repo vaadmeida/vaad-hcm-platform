@@ -17,7 +17,7 @@ import DepartmentPage from "@/pages/DepartmentPage";
 import LeavePage from "@/pages/LeavePage";
 import DocumentPage from "@/pages/DocumentPage";
 
-import SettingsPage from "@/pages/SettingsPage";
+import SettingsPage from "@/pages/settings/SettingsPage";
 
 import { useAuthStore } from "@/store/auth.store";
 import { getDashboardRoute } from "@/utils/getDashboardRoute";
@@ -25,6 +25,11 @@ import MyDocumentsPage from "@/pages/MyDocumentsPage";
 import DepartmentDetailsPage from "@/pages/DepartmentDetailsPage";
 import MyProfile from "@/pages/MyProfile";
 import EmployeeLeavePage from "@/pages/EmployeeLeavePage";
+import ProfileSettings from "@/pages/settings/ProfileSettings";
+import OrganizationSettings from "@/pages/settings/OrganizationSettings";
+import NotificationSettings from "@/pages/settings/NotificationSettings";
+import SecuritySettings from "@/pages/settings/SecuritySettings";
+import IntegrationsSettings from "@/pages/settings/IntegrationsSettings";
 
 export const AppRoutes = () => {
    const token = useAuthStore((state) => state.token);
@@ -55,14 +60,14 @@ export const AppRoutes = () => {
                <Route element={<RoleRoute allowedRoles={["admin", "hr"]} />}>
                   <Route path="/departments" element={<DepartmentPage />} />
                   <Route path="/documents" element={<DocumentPage />} />
-            
+
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager"]} />}>
                   <Route path="/employees" element={<EmployeePage />} />
                   <Route path="/employees/:employeeId" element={<EmployeeDetailsPage />} />
                   <Route path="/leave" element={<LeavePage />} />
-                  <Route path="/departments/:departmentId" element={<DepartmentDetailsPage/>}/>
+                  <Route path="/departments/:departmentId" element={<DepartmentDetailsPage />} />
                </Route>
 
                {/* HR + MANAGER + EMPLOYEE */}
@@ -75,7 +80,14 @@ export const AppRoutes = () => {
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager", "employee"]} />}>
-                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/settings" element={<SettingsPage />}>
+                     <Route index element={<ProfileSettings />} />
+                     <Route path="profile" element={<ProfileSettings />} />
+                     <Route path="organization" element={<OrganizationSettings />} />
+                     <Route path="notifications" element={<NotificationSettings />} />
+                     <Route path="security" element={<SecuritySettings />} />
+                     <Route path="integrations" element={<IntegrationsSettings />} />
+                  </Route>
                   <Route path="/profile" element={<MyProfile />} />
                </Route>
 

@@ -102,4 +102,45 @@ export const breadcrumbRoutes = [
       { label: "My Leave", path: "/my-leave" },
     ],
   },
+  {
+    match: /^\/settings$/,
+    breadcrumbs: [
+      { label: "Settings" },
+    ],
+  },
+  {
+    match: /^\/settings\/profile$/,
+    breadcrumbs: [
+      { label: "Settings", path: "/settings" },
+      { label: "Profile" },
+    ],
+  },
+  {
+    match: /^\/settings\/organization$/,
+    breadcrumbs: [
+      { label: "Settings", path: "/settings" },
+      { label: "Organization" },
+    ],
+  },
+  {
+    match: /^\/settings\/notifications$/,
+    breadcrumbs: [
+      { label: "Settings", path: "/settings" },
+      { label: "Notifications" },
+    ],
+  },
+  {
+    match: /^\/settings\/security$/,
+    breadcrumbs: [
+      { label: "Settings", path: "/settings" },
+      { label: "Security" },
+    ],
+  },
+  {
+    match: /^\/settings\/integrations$/,
+    breadcrumbs: [
+      { label: "Settings", path: "/settings" },
+      { label: "Integrations" },
+    ],
+  },
 ];
