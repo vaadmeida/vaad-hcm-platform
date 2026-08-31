@@ -138,6 +138,7 @@ export const getEmployee = async (id: string, user: User) => {
             avatar_url: true,
             first_name: true,
             last_name: true,
+            middle_name:true,
             email: true,
             gender: true,
             date_of_birth: true,
@@ -219,6 +220,7 @@ export const getEmployee = async (id: string, user: User) => {
         personal: {
             first_name: employee.first_name,
             last_name: employee.last_name,
+            middle_name: employee.middle_name,
             email: employee.email,
             gender: employee.gender,
             date_of_birth: employee.date_of_birth,
@@ -282,6 +284,7 @@ export const getMyProfile = async (user: User) => {
             avatar_url: true,
             first_name: true,
             last_name: true,
+            middle_name:true,
             email: true,
             gender: true,
             date_of_birth: true,
@@ -352,6 +355,7 @@ export const getMyProfile = async (user: User) => {
         personal: {
             first_name: employee.first_name,
             last_name: employee.last_name,
+            middle_name: employee.middle_name,
             email: employee.email,
             gender: employee.gender,
             date_of_birth: employee.date_of_birth,
@@ -494,6 +498,7 @@ export const getAllEmployees = async (
             id: true,
             first_name: true,
             last_name: true,
+            middle_name: true,
             email: true,
             phone: true,
             role: true,
@@ -513,6 +518,7 @@ export const getAllEmployees = async (
                     id: true,
                     first_name: true,
                     last_name: true,
+                    middle_name: true
                 },
             },
         },
@@ -526,6 +532,7 @@ export const getAllEmployees = async (
         id: emp.id,
         first_name: emp.first_name,
         last_name: emp.last_name,
+        middle_name: emp.middle_name,
         email: emp.email,
         phone: emp.phone,
         role: emp.role,
@@ -578,6 +585,7 @@ export const updateEmployee = async ({
         // Personal Information
         "first_name",
         "last_name",
+        "middle_name",
         "gender",
         "date_of_birth",
         "nationality",
