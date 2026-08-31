@@ -13,7 +13,7 @@ const SettingsSidebar = () => {
   return (
     <nav className="space-y-1">
       <SettingsNavItem
-        to="/settings/profile"
+        to="/settings"
         icon={UserRound}
         label="Profile"
         description="Personal info & preferences"
