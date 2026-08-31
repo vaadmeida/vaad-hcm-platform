@@ -14,6 +14,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://vaad-hcm-platform.vercel.app",
   process.env.CLIENT_URL,
 ].filter((origin): origin is string => Boolean(origin));
 
