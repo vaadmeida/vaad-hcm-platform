@@ -8,6 +8,7 @@ import {
 import StatusBadge from "@/components/common/StatusBadge";
 import EmployeeActions from "./EmployeeActions";
 
+
 interface EmployeeTableRowProps {
   employee: EmployeeListItem;
 }
@@ -19,6 +20,7 @@ const EmployeeTableRow = ({
 
   const navigate = useNavigate();
 
+  console.log(employee.avatar_url);
   return (
     <tr
       onClick={() => navigate(`/employees/${employee.id}`)}
@@ -26,19 +28,16 @@ const EmployeeTableRow = ({
 
       <td className="px-3 py-2">
         <div className="flex items-center gap-3">
-
           <Avatar className="h-9 w-9">
             <AvatarImage
-              src={employee.avatar_url ?? ""}
+              src={employee.avatar_url ?? undefined}
               alt={`${employee.first_name} ${employee.last_name}`}
             />
 
-            <AvatarFallback className="bg-gray-200 text-gray-700 font-medium">
-              {employee.first_name?.charAt(0)}
-              {employee.last_name?.charAt(0)}
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              {`${employee.first_name?.charAt(0) ?? ""}${employee.last_name?.charAt(0) ?? ""}`.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-
           <div>
             <p className="text-sm font-medium text-gray-900">
               {employee.first_name} {employee.last_name}
