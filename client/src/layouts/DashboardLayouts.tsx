@@ -2,12 +2,14 @@ import { Outlet } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import SideBar from "@/components/layout/sidebar/SideBar";
 import { useState } from "react";
+import ProfileSync from "@/components/common/ProfileSync";
 
 const DashboardLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <div className="flex h-screen min-h-0 overflow-hidden bg-background">
+            <ProfileSync />
             <SideBar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
