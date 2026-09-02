@@ -66,7 +66,7 @@ const EmployeeDetailsHeader = ({
   isMyProfile = false,
 }: EmployeeDetailsHeaderProps) => {
 
-
+  const [avatarError, setAvatarError] = useState(false);
   const [status, setStatus] = useState<EmployeeStatus>(employee.employment.status);
   const [showTerminateDialog, setShowTerminateDialog] = useState(false);
   const { mutateAsync: updateEmployee, isPending: isUpdating } = useUpdateEmployee();
@@ -137,8 +137,19 @@ const EmployeeDetailsHeader = ({
           {/* Employee Profile */}
           <div className="flex w-full items-start gap-4">
             {/* Avatar */}
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#1078A9] text-lg font-semibold text-white">
-              {initials}
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#1078A9]">
+              {employee.avatar_url && !avatarError ? (
+                <img
+                  src={employee.avatar_url}
+                  alt={`${employee.personal.first_name} ${employee.personal.last_name}`}
+                  className="h-full w-full object-cover"
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-white">
+                  {initials}
+                </div>
+              )}
             </div>
 
             {/* Employee Details */}
