@@ -5,6 +5,7 @@ import validator from 'validator'
 import { ActivityAction, Prisma } from "@prisma/client";
 import { UpdateEmployeeDTO } from "./employee.validator.ts";
 import { seedLeaveBalance } from "../leave/leave.service.ts";
+import { getPresignedUrl } from "../../config/storage.ts";
 
 type UpdateEmployeeInput = {
     id: string;
@@ -138,7 +139,7 @@ export const getEmployee = async (id: string, user: User) => {
             avatar_url: true,
             first_name: true,
             last_name: true,
-            middle_name:true,
+            middle_name: true,
             email: true,
             gender: true,
             date_of_birth: true,
@@ -212,11 +213,15 @@ export const getEmployee = async (id: string, user: User) => {
             );
         }
     }
+    const avatarUrl = employee.avatar_url
+        ? await getPresignedUrl(employee.avatar_url)
+        : null;
+
     return {
         id: employee.id,
         employee_code: employee.employee_code,
         full_name: `${employee.first_name} ${employee.last_name}`,
-        avatar_url: employee.avatar_url,
+        avatar_url: avatarUrl,
         personal: {
             first_name: employee.first_name,
             last_name: employee.last_name,
@@ -231,7 +236,6 @@ export const getEmployee = async (id: string, user: User) => {
             city: employee.city,
             state_of_residence: employee.state_of_residence,
         },
-
         employment: {
             job_title: employee.job_title,
             job_description: employee.job_description,
@@ -261,12 +265,14 @@ export const getEmployee = async (id: string, user: User) => {
             relationship: employee.emergency_contact_relationship,
             phone: employee.emergency_contact_number,
         },
+
         payroll: {
             paye_id: employee.paye_id,
             bank_name: employee.bank_name,
             account_number: employee.account_number,
             account_name: employee.account_name,
         },
+
         created_at: employee.created_at,
         updated_at: employee.updated_at,
     };
@@ -284,7 +290,7 @@ export const getMyProfile = async (user: User) => {
             avatar_url: true,
             first_name: true,
             last_name: true,
-            middle_name:true,
+            middle_name: true,
             email: true,
             gender: true,
             date_of_birth: true,
@@ -346,11 +352,15 @@ export const getMyProfile = async (user: User) => {
         );
     }
 
+    const avatarUrl = employee.avatar_url
+        ? await getPresignedUrl(employee.avatar_url)
+        : null;
+
     return {
         id: employee.id,
         employee_code: employee.employee_code,
         full_name: `${employee.first_name} ${employee.last_name}`,
-        avatar_url: employee.avatar_url,
+        avatar_url: avatarUrl,
 
         personal: {
             first_name: employee.first_name,
@@ -502,6 +512,7 @@ export const getAllEmployees = async (
             email: true,
             phone: true,
             role: true,
+            avatar_url: true,
             status: true,
             job_title: true,
             employment_type: true,
@@ -528,32 +539,40 @@ export const getAllEmployees = async (
         },
     });
 
-    return employees.map((emp) => ({
-        id: emp.id,
-        first_name: emp.first_name,
-        last_name: emp.last_name,
-        middle_name: emp.middle_name,
-        email: emp.email,
-        phone: emp.phone,
-        role: emp.role,
-        status: emp.status,
-        job_title: emp.job_title,
-        employment_type: emp.employment_type,
-        hire_date: emp.hire_date,
-        created_at: emp.created_at,
-        department: emp.department
-            ? {
-                id: emp.department.id,
-                name: emp.department.name,
-            }
-            : null,
-        manager: emp.manager
-            ? {
-                id: emp.manager.id,
-                name: `${emp.manager.first_name} ${emp.manager.last_name}`,
-            }
-            : null,
-    }));
+    const employeesWithAvatar = await Promise.all(
+        employees.map(async (emp) => ({
+            id: emp.id,
+            first_name: emp.first_name,
+            last_name: emp.last_name,
+            middle_name: emp.middle_name,
+            avatar_url: emp.avatar_url
+                ? await getPresignedUrl(emp.avatar_url)
+                : null,
+            email: emp.email,
+            phone: emp.phone,
+            role: emp.role,
+            status: emp.status,
+            job_title: emp.job_title,
+            employment_type: emp.employment_type,
+            hire_date: emp.hire_date,
+            created_at: emp.created_at,
+
+            department: emp.department
+                ? {
+                    id: emp.department.id,
+                    name: emp.department.name,
+                }
+                : null,
+            manager: emp.manager
+                ? {
+                    id: emp.manager.id,
+                    name: `${emp.manager.first_name} ${emp.manager.last_name}`,
+                }
+                : null,
+        }))
+    );
+
+    return employeesWithAvatar;
 };
 
 export const updateEmployee = async ({
