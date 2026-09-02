@@ -24,6 +24,7 @@ export interface Employee {
   personal: {
     first_name: string;
     last_name: string;
+    middle_name: string | null;
     email: string;
     gender: string | null;
     date_of_birth: string | null;
