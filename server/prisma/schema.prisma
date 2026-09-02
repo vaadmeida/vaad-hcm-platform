@@ -286,3 +286,25 @@ model Notification {
   @@index([user_id, is_read])
   @@index([created_at])
 }
+
+
+model Organization {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  name           String   @db.VarChar(255)
+  industry       String?  @db.VarChar(100)
+  email          String?  @db.VarChar(255)
+  company_size   String?  @db.VarChar(50)
+  phone          String?  @db.VarChar(20)
+  website        String?  @db.VarChar(255)
+
+  street_address String?
+  city           String?  @db.VarChar(100)
+  state          String?  @db.VarChar(100)
+  country        String?  @db.VarChar(100)
+
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("organizations")
+}
