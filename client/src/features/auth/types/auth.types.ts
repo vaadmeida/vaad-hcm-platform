@@ -4,6 +4,8 @@ export interface User {
   first_name: string;
   last_name: string;
   role: "admin" | "hr" | "manager" | "employee";
+  avatar_url?: string | null;
+  employee_code?: string;
 }
 
 export interface LoginResponse {
