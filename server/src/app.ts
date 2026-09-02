@@ -9,6 +9,7 @@ import leaveRouter from './modules/leave/leave.route.ts';
 import dashboardRouter from './modules/dashboard/dashboard.route.ts';
 import departmentRouter from './modules/department/department.route.ts';
 import locationRouter from './modules/location/location.route.ts';
+import settingRouter from './modules/settings/settings.route.ts';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/leaves', leaveRouter)
 app.use('/api/dashboard' , dashboardRouter)
 app.use('/api/departments' , departmentRouter)
 app.use('/api/locations' , locationRouter)
+app.use('/api/settings' , settingRouter)
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
