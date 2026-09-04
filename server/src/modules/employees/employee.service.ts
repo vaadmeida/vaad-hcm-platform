@@ -874,17 +874,19 @@ export const terminateEmployee = async (id: string, user: User) => {
 
 
 export const getManagers = async (user: User) => {
-
     if (user.role !== "admin" && user.role !== "hr") {
         throw new AppError(
             "You do not have permission to access this resource.",
             403,
-            "FORBIDDEN");
+            "FORBIDDEN"
+        );
     }
 
     const managers = await prisma.employee.findMany({
         where: {
-            role: "manager",
+            role: {
+                in: ["manager", "hr"],
+            },
         },
         select: {
             id: true,
