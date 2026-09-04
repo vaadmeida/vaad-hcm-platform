@@ -5,6 +5,9 @@ import { useAuthStore } from "@/store/auth.store";
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
 
+  console.log("REQUEST URL:", config.url);
+  console.log("AUTH TOKEN:", token);
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
