@@ -22,6 +22,18 @@ export const useSubmitLeaveRequest = () => {
       queryClient.invalidateQueries({
         queryKey: ["my-leave-balance"],
       });
+
+      // Refresh upcoming leave requests
+      queryClient.invalidateQueries({
+        queryKey: ["upcoming-leave-requests"],
+      });
+
+    
+      // Refresh recent leave requests
+      queryClient.invalidateQueries({
+        queryKey: ["recent-leave-requests"],
+      });
+
     },
   });
 };
