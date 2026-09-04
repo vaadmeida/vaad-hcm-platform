@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "seed": "tsx prisma/seed.ts",
     "seed:local": "dotenv -e .env -- tsx prisma/seed.ts",
-    "seed:production": "dotenv -e .env.production -- tsx prisma/seed.ts"
+    "seed:production": "dotenv -e .env.production -- tsx prisma/seed.ts",
+    "create:production-org": "dotenv -e .env.production -- tsx src/scripts/create-production-organization.ts"
   },
   "keywords": [],
   "author": "",
