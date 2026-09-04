@@ -12,9 +12,9 @@ departmentRouter.get('/',  authenticate , requireRoles('admin', "hr"), asyncHand
 departmentRouter.get('/:id/employees',  authenticate , requireRoles('admin', "hr"), asyncHandler(teamMembersController))
 departmentRouter.get('/:id',  authenticate , requireRoles('admin', "hr"), asyncHandler(getDepartmentByIdController))
 departmentRouter.patch('/:id',  authenticate , requireRoles('admin', "hr"), asyncHandler(updateDepartmentController))
-departmentRouter.patch('/:id/manager',  authenticate , requireRoles('admin'), asyncHandler(assignDepartmentManagerController))
+departmentRouter.patch('/:id/manager',  authenticate , requireRoles('admin', "hr"), asyncHandler(assignDepartmentManagerController))
 departmentRouter.get('/:departmentId/activities',  authenticate , requireRoles('admin', "hr"), asyncHandler(teamRecentActivitiesController))
 departmentRouter.get('/:departmentId/stats',  authenticate , requireRoles('admin', "hr"), asyncHandler(getDepartmentStatsController))
-departmentRouter.delete('/:departmentId/manager',  authenticate , requireRoles('admin'), asyncHandler(removeDepartmentManagerController))
+departmentRouter.delete('/:departmentId/manager',  authenticate , requireRoles('admin', "hr"), asyncHandler(removeDepartmentManagerController))
 
 export default departmentRouter
