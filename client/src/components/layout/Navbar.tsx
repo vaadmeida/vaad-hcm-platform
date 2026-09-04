@@ -19,9 +19,6 @@ const Navbar = ({ setSidebarOpen }: NavbarProps) => {
 
   const user = useAuthStore((state) => state.user);
 
-  console.log("NAV USER:", user);
-console.log("NAV AVATAR:", user?.avatar_url);
-
   const initials = `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`;
 
   const hasAvatar = Boolean(user?.avatar_url) && !avatarError;
