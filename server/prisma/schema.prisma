@@ -106,6 +106,7 @@ model LeaveType {
   id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                  String         @db.VarChar(100)
   default_days_per_year Int?
+  requires_balance      Boolean        @default(true)
   requires_document     Boolean?       @default(false)
   is_paid               Boolean?       @default(true)
   carries_over          Boolean?       @default(false)
@@ -115,6 +116,18 @@ model LeaveType {
   leaveRequests         LeaveRequest[]
 
   @@map("leave_types")
+}
+
+model LeaveDay {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leave_request_id String       @db.Uuid
+  date             DateTime     @db.Date
+  consumed         Boolean      @default(false)
+  consumed_at      DateTime?
+  leaveRequest     LeaveRequest @relation(fields: [leave_request_id], references: [id], onDelete: Cascade)
+
+  @@unique([leave_request_id, date])
+  @@map("leave_days")
 }
 
 model LeaveBalance {
@@ -136,22 +149,23 @@ model LeaveBalance {
 }
 
 model LeaveRequest {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  employee_id      String    @db.Uuid
-  leave_type_id    String    @db.Uuid
-  start_date       DateTime  @db.Date
-  end_date         DateTime  @db.Date
-  total_days       Decimal   @db.Decimal(5, 1)
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id      String     @db.Uuid
+  leave_type_id    String     @db.Uuid
+  start_date       DateTime   @db.Date
+  end_date         DateTime   @db.Date
+  total_days       Decimal    @db.Decimal(5, 1)
   reason           String?
-  status           String?   @default("pending") @db.VarChar(20)
-  approved_by      String?   @db.Uuid
-  approved_at      DateTime? @db.Timestamp(6)
+  status           String?    @default("pending") @db.VarChar(20)
+  approved_by      String?    @db.Uuid
+  approved_at      DateTime?  @db.Timestamp(6)
   rejection_reason String?
-  created_at       DateTime? @default(now()) @db.Timestamp(6)
-  updated_at       DateTime? @default(now()) @db.Timestamp(6)
-  approver         Employee? @relation("ApprovedLeaveRequests", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee         Employee  @relation("EmployeeLeaveRequests", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  leaveType        LeaveType @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  created_at       DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?  @default(now()) @db.Timestamp(6)
+  approver         Employee?  @relation("ApprovedLeaveRequests", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee         Employee   @relation("EmployeeLeaveRequests", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leaveType        LeaveType  @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leaveDays        LeaveDay[]
 
   @@map("leave_requests")
 }
@@ -287,24 +301,23 @@ model Notification {
   @@index([created_at])
 }
 
-
 model Organization {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  name           String   @db.VarChar(255)
-  industry       String?  @db.VarChar(100)
-  email          String?  @db.VarChar(255)
-  company_size   String?  @db.VarChar(50)
-  phone          String?  @db.VarChar(20)
-  website        String?  @db.VarChar(255)
+  name         String  @db.VarChar(255)
+  industry     String? @db.VarChar(100)
+  email        String? @db.VarChar(255)
+  company_size String? @db.VarChar(50)
+  phone        String? @db.VarChar(20)
+  website      String? @db.VarChar(255)
 
   street_address String?
-  city           String?  @db.VarChar(100)
-  state          String?  @db.VarChar(100)
-  country        String?  @db.VarChar(100)
+  city           String? @db.VarChar(100)
+  state          String? @db.VarChar(100)
+  country        String? @db.VarChar(100)
 
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("organizations")
 }
