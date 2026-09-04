@@ -36,6 +36,14 @@ app.use('/api/leaves', leaveRouter)
 app.use('/api/dashboard' , dashboardRouter)
 app.use('/api/departments' , departmentRouter)
 app.use('/api/locations' , locationRouter)
+// middleware
+app.use((req, _res, next) => {
+  console.log("🔥 INCOMING REQUEST:", req.method, req.originalUrl);
+  next();
+});
+
+// routes
+
 app.use('/api/settings' , settingRouter)
 
 
