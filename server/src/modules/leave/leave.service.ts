@@ -3,12 +3,14 @@ import prisma from "../../config/prisma.ts";
 import { AppError } from "../../errors/appError.ts";
 import { calculateWorkingDays } from "../../utils/date.utils.ts";
 import { User } from "../employees/employee.service.ts";
+import { getPresignedUrl } from "../../config/storage.ts";
+import { DateTime } from "luxon";
 
 type CreateLeaveTypes = {
     name: string;
     user: {
         id: string;
-        role: "admin" | "manager" | "employee";
+        role: "admin" | "hr" | "manager" | "employee";
     };
     default_days_per_year?: number | null;
     requires_document?: boolean
@@ -42,10 +44,14 @@ export const createLeaveTypes = async ({
     requires_document,
     max_carryover_days,
     default_days_per_year,
-    user }: CreateLeaveTypes) => {
-
-    if (user.role !== 'admin') {
-        throw new AppError("You do not have permission for this action", 403, "NOT_AUTHORIZED")
+    user,
+}: CreateLeaveTypes) => {
+    if (user.role !== "admin" && user.role !== "hr") {
+        throw new AppError(
+            "You do not have permission for this action",
+            403,
+            "NOT_AUTHORIZED"
+        );
     }
 
     if (!name || name.trim().length < 3) {
@@ -77,9 +83,10 @@ export const createLeaveTypes = async ({
     const normalizedName = name.trim();
 
     const existing = await prisma.leaveType.findFirst({
-        where: { name: normalizedName }
+        where: {
+            name: normalizedName,
+        },
     });
-
 
     if (existing) {
         throw new AppError(
@@ -89,19 +96,40 @@ export const createLeaveTypes = async ({
         );
     }
 
-    const leaveType = await prisma.leaveType.create({
-        data: {
-            name: normalizedName,
-            default_days_per_year: default_days_per_year ?? null,
-            is_paid: is_paid ?? false,
-            requires_document: requires_document ?? false,
-            carries_over: carries_over ?? false,
-            max_carryover_days: maxCarryover,
-        },
+    return await prisma.$transaction(async (tx) => {
+        const leaveType = await tx.leaveType.create({
+            data: {
+                name: normalizedName,
+                default_days_per_year: default_days_per_year ?? null,
+                is_paid: is_paid ?? false,
+                requires_document: requires_document ?? false,
+                carries_over: carries_over ?? false,
+                max_carryover_days: maxCarryover,
+            },
+        });
+
+        // Get ALL employees regardless of status
+        const employees = await tx.employee.findMany({
+            select: {
+                id: true,
+            },
+        });
+
+        if (employees.length > 0) {
+            await tx.leaveBalance.createMany({
+                data: employees.map((employee) => ({
+                    employee_id: employee.id,
+                    leave_type_id: leaveType.id,
+                    entitled_days: default_days_per_year ?? 0,
+                    used_days: 0,
+                })),
+            });
+        }
+
+        return leaveType;
     });
 
-    return leaveType;
-}
+};
 
 export const getLeaveTypes = async (id: string, user: { id: string; role: string }) => {
 
@@ -133,7 +161,30 @@ export const getAllLeaveTypes = async () => {
     return leaveTypes
 }
 
+
 export const getMyLeaveBalance = async (userId: string) => {
+
+    // Find approved leave requests that may need catch-up processing
+
+    const approvedLeaves = await prisma.leaveRequest.findMany({
+        where: {
+            employee_id: userId,
+            status: "approved",
+            leaveType: {
+                requires_balance: true,
+            },
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    // Catch up any leave days that were missed by the scheduler
+    for (const leave of approvedLeaves) {
+        await catchUpLeaveDays(leave.id);
+    }
+
+    // Fetch the updated balances
     const balances = await prisma.leaveBalance.findMany({
         where: {
             employee_id: userId,
@@ -145,7 +196,7 @@ export const getMyLeaveBalance = async (userId: string) => {
                     id: true,
                     first_name: true,
                     last_name: true,
-                    avatar_url: true
+                    avatar_url: true,
                 },
             },
         },
@@ -162,12 +213,21 @@ export const getMyLeaveBalance = async (userId: string) => {
     const employee = balances[0].employee;
 
     const formattedBalances = balances.map((balance) => {
-
+        
         const allocated = Number(balance.entitled_days);
         const used = Number(balance.used_days);
         const pending = Number(balance.pending_days);
-        const remaining = Math.max(allocated - used, 0);
-        const usagePercentage = allocated > 0 ? Math.round((used / allocated) * 100) : 0;
+
+        // Available balance excludes both used and pending days
+        const remaining = Math.max(
+            allocated - used - pending,
+            0
+        );
+
+        const usagePercentage =
+            allocated > 0
+                ? Math.round((used / allocated) * 100)
+                : 0;
 
         return {
             id: balance.id,
@@ -734,20 +794,19 @@ export const seedLeaveBalance = async (tx: Prisma.TransactionClient, employeeId:
     }
 };
 
+
 export const submitLeaveRequests = async (
     employeeId: string,
     data: SubmitLeaveRequestType
 ) => {
-
     return prisma.$transaction(async (tx) => {
-
 
         const totalDays = calculateWorkingDays({
             startDate: data.start_date,
-            endDate: data.end_date
-        })
+            endDate: data.end_date,
+        });
 
-        const currentYear = new Date().getFullYear()
+        const currentYear = new Date().getFullYear();
 
         const leaveType = await tx.leaveType.findUnique({
             where: {
@@ -757,6 +816,7 @@ export const submitLeaveRequests = async (
                 id: true,
                 name: true,
                 requires_document: true,
+                requires_balance: true,
             },
         });
 
@@ -768,7 +828,7 @@ export const submitLeaveRequests = async (
             );
         }
 
-        // 2. Check if supporting document is required
+        // Check if supporting document is required
         if (leaveType.requires_document && !data.document_url) {
             throw new AppError(
                 `${leaveType.name} requires a supporting document`,
@@ -777,51 +837,56 @@ export const submitLeaveRequests = async (
             );
         }
 
-        const balance = await tx.leaveBalance.findUnique({
-            where: {
-                employee_id_leave_type_id_year: {
-                    employee_id: employeeId,
-                    leave_type_id: data.leave_type_id,
-                    year: currentYear
-                }
+        // Only leave types that require a balance
+        // should check and reserve leave days.
+        if (leaveType.requires_balance) {
+            const balance = await tx.leaveBalance.findUnique({
+                where: {
+                    employee_id_leave_type_id_year: {
+                        employee_id: employeeId,
+                        leave_type_id: data.leave_type_id,
+                        year: currentYear,
+                    },
+                },
+            });
+
+            if (!balance) {
+                throw new AppError(
+                    "Leave balance record not found",
+                    404,
+                    "NO_BALANCE_RECORD"
+                );
             }
-        })
 
-        if (!balance) {
-            throw new AppError(
-                "Leave balance record not found",
-                404,
-                "NO_BALANCE_RECORD"
-            );
+            const remaining =
+                Number(balance.entitled_days) -
+                Number(balance.used_days ?? 0) -
+                Number(balance.pending_days ?? 0);
+
+            if (remaining < totalDays) {
+                throw new AppError(
+                    "Insufficient leave balance",
+                    400,
+                    "INSUFFICIENT_BALANCE"
+                );
+            }
         }
 
-        const remaining =
-            Number(balance.entitled_days) -
-            Number(balance.used_days ?? 0) -
-            Number(balance.pending_days ?? 0);
-
-        if (remaining < totalDays) {
-            throw new AppError(
-                "Insufficient leave balance",
-                400,
-                "INSUFFICIENT_BALANCE"
-            );
-        }
-
+        // Check for overlapping pending/approved leave
         const overlap = await tx.leaveRequest.findFirst({
             where: {
                 employee_id: employeeId,
                 status: {
-                    in: ["pending", "approved"]
+                    in: ["pending", "approved"],
                 },
                 start_date: {
-                    lte: data.end_date
+                    lte: data.end_date,
                 },
                 end_date: {
-                    gte: data.start_date
-                }
-            }
-        })
+                    gte: data.start_date,
+                },
+            },
+        });
 
         if (overlap) {
             throw new AppError(
@@ -841,7 +906,6 @@ export const submitLeaveRequests = async (
                 reason: data.reason,
                 document_url: data.document_url,
                 status: "pending",
-
             },
             include: {
                 employee: {
@@ -862,40 +926,377 @@ export const submitLeaveRequests = async (
             },
         });
 
-        await tx.leaveBalance.update({
-            where: {
-                employee_id_leave_type_id_year: {
-                    employee_id: employeeId,
-                    leave_type_id: data.leave_type_id,
-                    year: currentYear,
+        // Only reserve pending days for leave types
+        // that actually consume a leave balance.
+        if (leaveType.requires_balance) {
+            await tx.leaveBalance.update({
+                where: {
+                    employee_id_leave_type_id_year: {
+                        employee_id: employeeId,
+                        leave_type_id: data.leave_type_id,
+                        year: currentYear,
+                    },
                 },
+                data: {
+                    pending_days: {
+                        increment: totalDays,
+                    },
+                },
+            });
+        }
+
+        return request;
+    });
+};
+
+export const consumeLeaveDay = async (leaveRequestId: string) => {
+    return await prisma.$transaction(async (tx) => {
+        const leaveRequest = await tx.leaveRequest.findUnique({
+            where: {
+                id: leaveRequestId,
             },
-            data: {
-                pending_days: {
-                    increment: totalDays,
+            include: {
+                leaveType: true,
+            },
+        });
+
+        if (!leaveRequest) {
+            throw new AppError(
+                "Leave request not found",
+                404,
+                "LEAVE_REQUEST_NOT_FOUND"
+            );
+        }
+
+        // Only approved leave can consume days
+        if (leaveRequest.status !== "approved") {
+            return null;
+        }
+
+        // Unpaid/non-balance leave does not consume a balance
+        if (!leaveRequest.leaveType.requires_balance) {
+            return null;
+        }
+
+        const today = DateTime.now().setZone("Africa/Lagos").startOf("day");
+
+        const startDate = DateTime.fromJSDate(leaveRequest.start_date)
+            .setZone("Africa/Lagos")
+            .startOf("day");
+
+        const endDate = DateTime.fromJSDate(leaveRequest.end_date)
+            .setZone("Africa/Lagos")
+            .startOf("day");
+
+
+        // Leave has not started yet
+        if (today < startDate) {
+            return null;
+        }
+
+        // Leave has already ended
+        if (today > endDate) {
+            return null;
+        }
+
+        // Saturday = 6, Sunday = 0
+        const dayOfWeek = today.weekday;
+
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            return null;
+        }
+
+        // Prevent consuming the same leave day twice
+        const existingLeaveDay = await tx.leaveDay.findUnique({
+            where: {
+                leave_request_id_date: {
+                    leave_request_id: leaveRequestId,
+                   date: today.toJSDate(),
                 },
             },
         });
 
-        return request
+        if (existingLeaveDay?.consumed) {
+            return null;
+        }
 
+        // Make sure the LeaveDay record exists
+        const leaveDay = existingLeaveDay
+            ? existingLeaveDay
+            : await tx.leaveDay.create({
+                data: {
+                    leave_request_id: leaveRequestId,
+                    date: today.toJSDate(),
+                },
+            });
+
+        // Make sure there is still a reserved day available
+        const balance = await tx.leaveBalance.findUnique({
+            where: {
+                employee_id_leave_type_id_year: {
+                    employee_id: leaveRequest.employee_id,
+                    leave_type_id: leaveRequest.leave_type_id,
+                    year: startDate.year,
+                },
+            },
+        });
+
+        if (!balance) {
+            throw new AppError(
+                "Leave balance record not found",
+                404,
+                "NO_BALANCE_RECORD"
+            );
+        }
+
+        if (Number(balance.pending_days) <= 0) {
+            return null;
+        }
+
+        // Consume exactly ONE day
+        await tx.leaveBalance.update({
+            where: {
+                employee_id_leave_type_id_year: {
+                    employee_id: leaveRequest.employee_id,
+                    leave_type_id: leaveRequest.leave_type_id,
+                    year: startDate.year,
+                },
+            },
+            data: {
+                pending_days: {
+                    decrement: 1,
+                },
+                used_days: {
+                    increment: 1,
+                },
+            },
+        });
+
+        // Mark this particular date as consumed
+        await tx.leaveDay.update({
+            where: {
+                id: leaveDay.id,
+            },
+            data: {
+                consumed: true,
+                consumed_at: new Date(),
+            },
+        });
+
+        return leaveDay;
+    });
+};
+
+export const processActiveLeaves = async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeLeaves = await prisma.leaveRequest.findMany({
+        where: {
+            status: "approved",
+
+            start_date: {
+                lte: today,
+            },
+
+            end_date: {
+                gte: today,
+            },
+
+            leaveType: {
+                requires_balance: true,
+            },
+        },
+
+        select: {
+            id: true,
+            employee_id: true,
+            leave_type_id: true,
+            start_date: true,
+            end_date: true,
+        },
     });
 
-}
+    const results = [];
+
+    for (const leave of activeLeaves) {
+        const result = await consumeLeaveDay(leave.id);
+
+        results.push({
+            leaveRequestId: leave.id,
+            consumed: Boolean(result),
+        });
+    }
+
+    return results;
+};
+
+
+export const catchUpLeaveDays = async (leaveRequestId: string) => {
+    return await prisma.$transaction(async (tx) => {
+        const leaveRequest = await tx.leaveRequest.findUnique({
+            where: {
+                id: leaveRequestId,
+            },
+            include: {
+                leaveType: true,
+            },
+        });
+
+        if (!leaveRequest) {
+            throw new AppError(
+                "Leave request not found",
+                404,
+                "LEAVE_REQUEST_NOT_FOUND"
+            );
+        }
+
+        // Only approved leave can consume days
+        if (leaveRequest.status !== "approved") {
+            return [];
+        }
+
+        // Leave types that don't require a balance should not consume days
+        if (!leaveRequest.leaveType.requires_balance) {
+            return [];
+        }
+
+        const startDate = DateTime.fromJSDate(leaveRequest.start_date)
+            .setZone("Africa/Lagos")
+            .startOf("day");
+
+        const endDate = DateTime.fromJSDate(leaveRequest.end_date)
+            .setZone("Africa/Lagos")
+            .startOf("day");
+
+        const today = DateTime.now()
+            .setZone("Africa/Lagos")
+            .startOf("day");
+
+        // Never process beyond the leave end date
+        const processUntil = today < endDate ? today : endDate;
+
+        // Leave hasn't started yet
+        if (processUntil < startDate) {
+            return [];
+        }
+
+        const balance = await tx.leaveBalance.findUnique({
+            where: {
+                employee_id_leave_type_id_year: {
+                    employee_id: leaveRequest.employee_id,
+                    leave_type_id: leaveRequest.leave_type_id,
+                    year: startDate.year,
+                },
+            },
+        });
+
+        if (!balance) {
+            throw new AppError(
+                "Leave balance record not found",
+                404,
+                "NO_BALANCE_RECORD"
+            );
+        }
+
+        // Use a normal number only for loop calculations.
+        // Prisma still keeps pending_days/used_days as Decimal.
+        let remainingPendingDays = Number(balance.pending_days);
+
+        const processedDays: string[] = [];
+
+        let currentDate = startDate;
+
+        while (currentDate <= processUntil) {
+            // Skip Saturday and Sunday
+            if (currentDate.weekday !== 6 && currentDate.weekday !== 7) {
+                const date = currentDate.toISODate();
+
+                if (date) {
+                    const existingLeaveDay = await tx.leaveDay.findUnique({
+                        where: {
+                            leave_request_id_date: {
+                                leave_request_id: leaveRequestId,
+                                date,
+                            },
+                        },
+                    });
+
+                    // Only consume days that haven't already been consumed
+                    if (!existingLeaveDay?.consumed) {
+                        // Nothing left to consume
+                        if (remainingPendingDays <= 0) {
+                            break;
+                        }
+
+                        const leaveDay = existingLeaveDay
+                            ? existingLeaveDay
+                            : await tx.leaveDay.create({
+                                  data: {
+                                      leave_request_id: leaveRequestId,
+                                      date,
+                                  },
+                              });
+
+                        await tx.leaveBalance.update({
+                            where: {
+                                employee_id_leave_type_id_year: {
+                                    employee_id: leaveRequest.employee_id,
+                                    leave_type_id:
+                                        leaveRequest.leave_type_id,
+                                    year: startDate.year,
+                                },
+                            },
+                            data: {
+                                pending_days: {
+                                    decrement: 1,
+                                },
+                                used_days: {
+                                    increment: 1,
+                                },
+                            },
+                        });
+
+                        await tx.leaveDay.update({
+                            where: {
+                                id: leaveDay.id,
+                            },
+                            data: {
+                                consumed: true,
+                                consumed_at: new Date(),
+                            },
+                        });
+
+                        // Update local counter for the next iteration
+                        remainingPendingDays -= 1;
+
+                        processedDays.push(date);
+                    }
+                }
+            }
+
+            currentDate = currentDate.plus({ days: 1 });
+        }
+
+        return processedDays;
+    });
+};
+
 
 export const approveOrRejectRequest = async (
     action: "APPROVE" | "REJECT",
     requestId: string,
     role: string,
     managerId: string,
-    rejectionReason?: string) => {
-
+    rejectionReason?: string
+) => {
     const leaveRequest = await prisma.leaveRequest.findUnique({
         where: { id: requestId },
         include: {
-            employee: true
-        }
-    })
+            employee: true,
+            leaveType: true,
+        },
+    });
 
     if (!leaveRequest) {
         throw new AppError(
@@ -913,6 +1314,7 @@ export const approveOrRejectRequest = async (
         );
     }
 
+    // Managers can only approve/reject requests from their employees
     if (role === "manager") {
         if (leaveRequest.employee.manager_id !== managerId) {
             throw new AppError(
@@ -926,27 +1328,8 @@ export const approveOrRejectRequest = async (
     const year = leaveRequest.start_date.getFullYear();
 
     return await prisma.$transaction(async (tx) => {
-
         if (action === "APPROVE") {
-            await tx.leaveBalance.update({
-                where: {
-                    employee_id_leave_type_id_year: {
-                        employee_id: leaveRequest.employee_id,
-                        leave_type_id: leaveRequest.leave_type_id,
-                        year
-                    }
-                },
-                data: {
-                    used_days: {
-                        increment: leaveRequest.total_days
-                    },
-                    pending_days: {
-                        decrement: leaveRequest.total_days
-                    },
-                }
-            })
-
-            await tx.leaveRequest.update({
+            return await tx.leaveRequest.update({
                 where: {
                     id: requestId,
                 },
@@ -956,17 +1339,15 @@ export const approveOrRejectRequest = async (
                     approved_at: new Date(),
                 },
             });
+        }
+        if (action === "REJECT") {
 
-        } else {
-
-            if (action === "REJECT") {
-                if (!rejectionReason) {
-                    throw new AppError(
-                        "Rejection reason is required",
-                        400,
-                        "VALIDATION_ERROR"
-                    );
-                }
+            if (!rejectionReason) {
+                throw new AppError(
+                    "Rejection reason is required",
+                    400,
+                    "VALIDATION_ERROR"
+                );
             }
 
             await tx.leaveBalance.update({
@@ -984,7 +1365,7 @@ export const approveOrRejectRequest = async (
                 },
             });
 
-            await tx.leaveRequest.update({
+            return await tx.leaveRequest.update({
                 where: {
                     id: requestId,
                 },
@@ -995,11 +1376,9 @@ export const approveOrRejectRequest = async (
                     rejection_reason: rejectionReason,
                 },
             });
-
         }
-    })
-}
-
+    });
+};
 export const cancelRequest = async (requestId: string, employeeId: string) => {
 
     const request = await prisma.leaveRequest.findUnique({
@@ -1232,11 +1611,15 @@ export const getEmployeeLeaveStats = async (employeeId: string) => {
     };
 };
 
-export const getUpcomingLeave = async (user: any) => {
+export const getUpcomingLeave = async (user: User) => {
+
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const thirtyDaysFromNow = new Date(today);
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+
 
     let roleFilter = {};
 
@@ -1265,7 +1648,6 @@ export const getUpcomingLeave = async (user: any) => {
                 gte: today,
                 lte: thirtyDaysFromNow,
             },
-            ...roleFilter,
         },
         select: {
             id: true,
@@ -1291,19 +1673,28 @@ export const getUpcomingLeave = async (user: any) => {
         orderBy: {
             start_date: "asc",
         },
-        take: 5
+        take: 20,
     });
 
-    const formattedUpcomingRequest = upcomingLeaves.map((request) => ({
-        ...request,
-        total_days: Number(request.total_days),
-    }));
+    const formattedUpcomingLeaves = await Promise.all(
+        upcomingLeaves.map(async (leave) => ({
+            ...leave,
+            total_days: Number(leave.total_days),
+            employee: {
+                ...leave.employee,
+                avatar_url: leave.employee.avatar_url
+                    ? await getPresignedUrl(leave.employee.avatar_url)
+                    : null,
+            },
+        }))
+    );
 
-    return formattedUpcomingRequest
+    return formattedUpcomingLeaves;
+
 
 };
 
-export const getRecentLeaveRequest = async (user: any) => {
+export const getRecentLeaveRequest = async (user: User) => {
     let roleFilter = {};
 
     if (user.role === "admin" || user.role === "hr") {
@@ -1358,11 +1749,18 @@ export const getRecentLeaveRequest = async (user: any) => {
         take: 5,
     });
 
-    const formattedRequests = recentRequests.map((request) => ({
-        ...request,
-        total_days: Number(request.total_days),
-    }));
-
+    const formattedRequests = await Promise.all(
+        recentRequests.map(async (request) => ({
+            ...request,
+            total_days: Number(request.total_days),
+            employee: {
+                ...request.employee,
+                avatar_url: request.employee.avatar_url
+                    ? await getPresignedUrl(request.employee.avatar_url)
+                    : null,
+            },
+        }))
+    );
 
     return formattedRequests;
 };
