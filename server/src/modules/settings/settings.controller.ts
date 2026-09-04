@@ -37,6 +37,8 @@ export const getOrganizationController = async (
     res: Response,
 ) => {
 
+      console.log("🔥 ORGANIZATION CONTROLLER HIT");
+      
     const organization = await getOrganization();
 
     return res.status(200).json({
