@@ -42,7 +42,7 @@ export const getDepartmentController = async (req: Request, res: Response) => {
 
 export const updateDepartmentController = async (req: Request, res: Response) => {
 
-    const parsed = await updateDepartmentSchema.safeParse(req.body)
+    const parsed =  updateDepartmentSchema.safeParse(req.body)
 
     if (!parsed.success) {
         return res.status(400).json({
