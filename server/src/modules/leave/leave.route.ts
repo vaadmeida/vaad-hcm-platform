@@ -3,12 +3,13 @@ import { asyncHandler } from "../../utils/asyncHandler.ts";
 import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getEmployeeLeaveBalanceController, getLeaveRequestByIdController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, getUpcomingLeaveRequestController, submitLeaveRequestsController } from "./leave.controller.ts";
 import { requireRoles } from "../../middlewares/role.ts";
 import { authenticate } from "../../middlewares/auth.ts";
+import { consumeLeaveDay, processActiveLeaves } from "./leave.service.ts";
 
 const leaveRouter = Router();
 
 // LEAVE TYPES
 leaveRouter.get("/", authenticate, asyncHandler(getAllLeaveTypesController));
-leaveRouter.post("/", authenticate, requireRoles("admin"), asyncHandler(createLeaveTypesController));
+leaveRouter.post("/", authenticate, requireRoles("admin", "hr"), asyncHandler(createLeaveTypesController));
 
 // STATS
 leaveRouter.get("/stats", authenticate, asyncHandler(getLeaveStats));
@@ -33,5 +34,6 @@ leaveRouter.patch("/:id", authenticate, asyncHandler(approveOrRejectRequestContr
 // GET ONE LEAVE TYPE
 // Keep this LAST because /:id is a catch-all for one-segment GET routes
 leaveRouter.get("/:id", authenticate, requireRoles("admin"), asyncHandler(getLeaveTypesController));
+
 
 export default leaveRouter;
