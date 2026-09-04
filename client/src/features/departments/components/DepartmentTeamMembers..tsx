@@ -1,5 +1,6 @@
 import { UserPlus, MoreVertical } from "lucide-react";
 import { useTeamMembers } from "../hooks/useTeamMembers";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DepartmentTeamMembersProps {
   departmentId: string;
@@ -46,6 +47,9 @@ const DepartmentTeamMembers = ({
 
   const members = data?.members ?? [];
 
+  console.log("MANAGER DATA:", data?.manager);
+console.log("MANAGER AVATAR URL:", data?.manager?.avatar_url);
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white">
       {/* Header */}
@@ -72,7 +76,7 @@ const DepartmentTeamMembers = ({
         </button>
       </div>
 
-   
+
       {/* Manager */}
       {data?.manager && (
         <div className="border-b border-gray-100 bg-gray-50/60 px-5 py-4">
@@ -81,11 +85,20 @@ const DepartmentTeamMembers = ({
           </p>
 
           <div className="flex items-center gap-3">
+
             {/* Avatar */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
-              {data.manager.first_name[0]}
-              {data.manager.last_name[0]}
-            </div>
+            <Avatar className="h-10 w-10 shrink-0">
+              <AvatarImage
+                src={data.manager?.avatar_url || undefined}
+                alt={`${data.manager?.first_name} ${data.manager?.last_name}`}
+              />
+
+              <AvatarFallback className="bg-primary text-sm font-semibold text-white">
+                {data.manager?.first_name?.[0]}
+                {data.manager?.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
+
 
             {/* Info */}
             <div className="min-w-0 flex-1">
@@ -101,8 +114,8 @@ const DepartmentTeamMembers = ({
             {/* Status */}
             <span
               className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${data.manager.status === "active"
-                  ? "bg-green-50 text-green-700"
-                  : "bg-gray-100 text-gray-600"
+                ? "bg-green-50 text-green-700"
+                : "bg-gray-100 text-gray-600"
                 }`}
             >
               {data.manager.status}
