@@ -112,8 +112,6 @@ export const UpdateMyProfile = async (
 export const getOrganization = async () => {
     const organization = await prisma.organization.findFirst();
 
-    console.log("PRODUCTION ORGANIZATION:", organization);
-
     if (!organization) {
         throw new AppError(
             "Organization not found",
