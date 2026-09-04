@@ -20,7 +20,7 @@ const EmployeeTableRow = ({
 
   const navigate = useNavigate();
 
-  console.log(employee.avatar_url);
+
   return (
     <tr
       onClick={() => navigate(`/employees/${employee.id}`)}
