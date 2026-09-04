@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma.ts"
+import { getPresignedUrl } from "../../config/storage.ts";
 import { AppError } from "../../errors/appError.ts";
 import { User } from "../employees/employee.service.ts";
 import { AssignDepartmentManagerDto, CreateDepartmentDto, UpdateDepartmentDto } from "./department.validator.ts"
@@ -31,19 +32,16 @@ export const createDepartment = async (data: CreateDepartmentDto) => {
 }
 
 export const getDepartmentById = async (id: string, user: User) => {
-
-
     if (user.role !== "admin" && user.role !== "hr") {
         throw new AppError(
             "You do not have permission to access this resource.",
             403,
-            "FORBIDDEN");
+            "FORBIDDEN"
+        );
     }
 
     const department = await prisma.department.findUnique({
-        where: {
-            id,
-        },
+        where: { id },
         include: {
             manager: {
                 select: {
@@ -53,10 +51,12 @@ export const getDepartmentById = async (id: string, user: User) => {
                     avatar_url: true,
                 },
             },
-
             employees: {
                 select: {
                     id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
                 },
             },
         },
@@ -66,16 +66,37 @@ export const getDepartmentById = async (id: string, user: User) => {
         throw new AppError(
             "Department not found.",
             404,
-            "DEPARTMENT_NOT_FOUND");
+            "DEPARTMENT_NOT_FOUND"
+        );
     }
 
-    const { employees, ...departmentData } = department;
+    const { manager, employees, ...departmentData } = department;
+
+    const formattedManager = manager
+        ? {
+            ...manager,
+            avatar_url: manager.avatar_url
+                ? await getPresignedUrl(manager.avatar_url)
+                : null,
+        }
+        : null;
+
+    const formattedEmployees = await Promise.all(
+        employees.map(async (employee) => ({
+            ...employee,
+            avatar_url: employee.avatar_url
+                ? await getPresignedUrl(employee.avatar_url)
+                : null,
+        }))
+    );
 
     return {
         ...departmentData,
-        employee_count: department.employees.length,
+        manager: formattedManager,
+        employees: formattedEmployees,
+        employee_count: employees.length,
     };
-}
+};
 
 export const getDepartments = async (user: User) => {
 
@@ -110,16 +131,26 @@ export const getDepartments = async (user: User) => {
         },
     });
 
-    const formattedDepartments = departments.map(
-        ({ _count, ...department }) => ({
-            ...department,
-            employee_count: _count.employees,
+    const formattedDepartments = await Promise.all(
+        departments.map(async ({ _count, manager, ...department }) => {
+            const managerAvatarUrl = manager?.avatar_url
+                ? await getPresignedUrl(manager.avatar_url)
+                : null;
+
+            return {
+                ...department,
+                employee_count: _count.employees,
+                manager: manager
+                    ? {
+                        ...manager,
+                        avatar_url: managerAvatarUrl,
+                    }
+                    : null,
+            };
         })
     );
 
-
     return formattedDepartments;
-
 }
 
 type UpdateDepartmentInput = {
@@ -288,8 +319,6 @@ export const assignDepartmentManager = async ({
 
 
 export const teamMembers = async (departmentId: string) => {
-
-
     const department = await prisma.department.findUnique({
         where: {
             id: departmentId,
@@ -302,7 +331,7 @@ export const teamMembers = async (departmentId: string) => {
                     last_name: true,
                     job_title: true,
                     avatar_url: true,
-                    status: true
+                    status: true,
                 },
             },
             employees: {
@@ -326,11 +355,31 @@ export const teamMembers = async (departmentId: string) => {
         );
     }
 
+    const manager = department.manager
+        ? {
+            ...department.manager,
+            avatar_url: department.manager.avatar_url
+                ? await getPresignedUrl(department.manager.avatar_url)
+                : null,
+        }
+        : null;
+
+    const members = await Promise.all(
+        department.employees
+            .filter((employee) => employee.id !== department.manager_id)
+            .map(async (employee) => ({
+                ...employee,
+                avatar_url: employee.avatar_url
+                    ? await getPresignedUrl(employee.avatar_url)
+                    : null,
+            }))
+    );
+
     return {
-        manager: department.manager,
-        members: department.employees.filter((employee) => (employee.id !== department.manager_id)),
+        manager,
+        members,
     };
-};
+};;
 
 
 export const removeDepartmentManager = async (
