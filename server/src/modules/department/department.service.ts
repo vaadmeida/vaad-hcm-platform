@@ -168,7 +168,7 @@ export const updateDepartment = async ({
 
     const department = await prisma.department.findUnique({
         where: { id }
-    })
+    });
 
     if (!department) {
         throw new AppError(
@@ -178,16 +178,16 @@ export const updateDepartment = async ({
         );
     }
 
-    const isAdmin = user.role === "admin" || user.role !== "hr";
+    const canUpdateDepartment =
+        user.role === "admin" || user.role === "hr";
 
-    if (!isAdmin) {
+    if (!canUpdateDepartment) {
         throw new AppError(
             "You are not allowed to update departments",
             403,
             "FORBIDDEN"
-        )
+        );
     }
-
 
     const updatedDepartment = await prisma.department.update({
         where: { id },
@@ -195,8 +195,9 @@ export const updateDepartment = async ({
     });
 
     return updatedDepartment;
+};
 
-}
+
 type AssignDepartmentManagerInput = {
     id: string;
     data: AssignDepartmentManagerDto;
@@ -208,7 +209,6 @@ export const assignDepartmentManager = async ({
     data,
     user,
 }: AssignDepartmentManagerInput) => {
-
     const { manager_id } = data;
 
     // 1. Check department exists
@@ -225,7 +225,10 @@ export const assignDepartmentManager = async ({
     }
 
     // 2. Check authorization
-    if (user.role !== "admin") {
+    const canAssignManager =
+        user.role === "admin" || user.role === "hr";
+
+    if (!canAssignManager) {
         throw new AppError(
             "You are not allowed to assign department managers",
             403,
@@ -254,9 +257,10 @@ export const assignDepartmentManager = async ({
         );
     }
 
-    if (employee.role !== "manager") {
+    // Department managers can be managers or HR
+    if (employee.role !== "manager" && employee.role !== "hr") {
         throw new AppError(
-            "Only employees with manager role can be assigned as department managers",
+            "Only employees with manager or HR role can be assigned as department managers",
             400,
             "INVALID_MANAGER"
         );
@@ -309,9 +313,8 @@ export const assignDepartmentManager = async ({
         },
     });
 
-    // 6. TODO: Notify employee
-
-    // 7. TODO: Write audit log
+    // TODO: Notify employee
+    // TODO: Write audit log
 
     return updatedDepartment;
 };
