@@ -21,7 +21,7 @@ const AuthBranding = () => {
         {/* Main */}
         <div className="max-w-md">
           <div className="mb-6 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/80 backdrop-blur-sm">
-            Human Capital Management
+            Human Capital Management Platform
           </div>
 
           <h1 className="text-5xl font-semibold leading-tight tracking-tight text-white">
