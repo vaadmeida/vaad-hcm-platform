@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import {
+  changePasswordController,
   loginUserController,
   logOutController,
   refreshAccessTokenController
 } from './auth.controller.ts';
+import { authenticate } from '../../middlewares/auth.ts';
 
 const authRouter = Router();
 
@@ -61,5 +63,7 @@ authRouter.post('/logout', logOutController);
  *         description: Token refreshed
  */
 authRouter.post('/refresh', refreshAccessTokenController);
+
+authRouter.post('/change-password', authenticate, changePasswordController);
 
 export default authRouter;
