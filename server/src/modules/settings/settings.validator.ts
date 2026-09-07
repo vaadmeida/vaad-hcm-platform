@@ -6,28 +6,32 @@ export const updateMyProfileValidator = z.object({
     .trim()
     .min(2, "First name must be at least 2 characters")
     .max(50, "First name must not exceed 50 characters")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   last_name: z
     .string()
     .trim()
     .min(2, "Last name must be at least 2 characters")
     .max(50, "Last name must not exceed 50 characters")
-    .optional(),
-    
+    .optional()
+    .or(z.literal("")),
+
   middle_name: z
     .string()
     .trim()
-    .min(2, "Last name must be at least 2 characters")
-    .max(50, "Last name must not exceed 50 characters")
-    .optional(),
+    .min(2, "Middle name must be at least 2 characters")
+    .max(50, "Middle name must not exceed 50 characters")
+    .optional()
+    .or(z.literal("")),
 
   email: z
     .string()
     .trim()
     .email("Please provide a valid email address")
     .max(100, "Email must not exceed 100 characters")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   phone: z
     .string()
@@ -36,7 +40,16 @@ export const updateMyProfileValidator = z.object({
       /^(\+234|0)[789][01]\d{8}$/,
       "Please provide a valid Nigerian phone number"
     )
-    .optional(),
+    .optional()
+    .or(z.literal("")),
+
+  job_title: z
+    .string()
+    .trim()
+    .min(2, "Job title must be at least 2 characters")
+    .max(100, "Job title must not exceed 100 characters")
+    .optional()
+    .or(z.literal("")),
 });
 
 

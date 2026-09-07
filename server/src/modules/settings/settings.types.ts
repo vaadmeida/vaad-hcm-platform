@@ -4,6 +4,7 @@ export type UpdateMyProfileInput = {
   middle_name?: string;
   email?: string;
   phone?: string;
+  job_title?: string;
 };
 
 export type UpdateMyProfileResponse = {
