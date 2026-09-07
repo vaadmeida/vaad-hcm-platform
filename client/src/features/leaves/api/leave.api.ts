@@ -17,12 +17,12 @@ export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
   }
 };
 
-export const getUpcomingLeavesRequests = async (): Promise<RecentLeaveRequestsResponse> => {
+export const getCurrentlyOnLeave = async (): Promise<RecentLeaveRequestsResponse> => {
   try {
-    const response = await api.get<RecentLeaveRequestsResponse>('/api/leaves/upcoming')
+    const response = await api.get<RecentLeaveRequestsResponse>('/api/leaves/on-leave')
     return response.data;
   } catch (error) {
-    console.error("Getting upcoming leaves API Error:", error);
+    console.error("Getting currently on leave API Error:", error);
     throw error;
   }
 }
