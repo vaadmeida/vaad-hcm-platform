@@ -57,7 +57,7 @@ export const loginUser = async (email: string, password: string) => {
     expiresIn: "8h",
   });
   return {
-  
+
     data: {
       user: {
         id: employee.id,
@@ -66,7 +66,7 @@ export const loginUser = async (email: string, password: string) => {
         first_name: employee.first_name,
         last_name: employee.last_name,
       },
-        token
+      token
     },
   };
 };
@@ -107,3 +107,31 @@ export const refreshAccessToken = async (authHeader: string) => {
 
   return newToken;
 };
+
+
+
+export const changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+
+  const employee = await prisma.employee.findUnique({
+    where: { id: userId },
+  });
+
+  const passwordMatch = await bcrypt.compare(currentPassword, employee?.password_hash || '');
+
+  if (!passwordMatch) {
+    throw new AppError(
+      "Current password is incorrect",
+      400,
+      "AUTH_INCORRECT_CURRENT_PASSWORD"
+    );
+  }
+
+  const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+
+  await prisma.employee.update({
+    where: { id: userId },
+    data: { password_hash: newPasswordHash },
+  });
+
+}
