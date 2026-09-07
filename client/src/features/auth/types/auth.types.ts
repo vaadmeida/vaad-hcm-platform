@@ -16,3 +16,23 @@ export interface LoginResponse {
     token: string;
   };
 }
+
+export interface ChangePasswordPayload {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export interface ChangePasswordResponse {
+  status: number;
+  code: string;
+  message: string;
+  detail: null;
+}
+
+export interface ApiErrorResponse {
+  status: number;
+  code: string;
+  message: string;
+  detail: unknown;
+}
