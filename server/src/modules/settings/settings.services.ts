@@ -64,6 +64,7 @@ export const UpdateMyProfile = async (
             ...(data.middle_name !== undefined && {
                 middle_name: data.middle_name,
             }),
+
             ...(data.last_name !== undefined && {
                 last_name: data.last_name,
             }),
@@ -74,6 +75,10 @@ export const UpdateMyProfile = async (
 
             ...(data.phone !== undefined && {
                 phone: data.phone,
+            }),
+
+            ...(data.job_title !== undefined && {
+                job_title: data.job_title,
             }),
         },
         select: {
@@ -88,7 +93,6 @@ export const UpdateMyProfile = async (
             avatar_url: true,
         },
     });
-
     return {
         id: updatedEmployee.id,
         employee_code: updatedEmployee.employee_code,
