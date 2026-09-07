@@ -5,12 +5,18 @@ import { toast } from "sonner";
 import { useGetMyProfile } from "@/features/my-profile/hooks/useGetMyProfile";
 import { useUpdateMyProfile } from "@/features/settings/hooks/useUpdateMyProfile";
 import { useUpdateMyProfileAvatar } from "@/features/settings/hooks/useUpdateMyProfileAvatar";
+import { useAuthStore } from "@/store/auth.store";
 
 const ProfileSettings = () => {
   const { data: profile, isLoading } = useGetMyProfile();
   const { mutate: updateProfile, isPending } = useUpdateMyProfile();
-  const { mutate: updateAvatar, isPending: isUploadingAvatar } =
-    useUpdateMyProfileAvatar();
+  const { mutate: updateAvatar, isPending: isUploadingAvatar } = useUpdateMyProfileAvatar();
+
+  
+
+  const user = useAuthStore((state) => state.user);
+  const canEditJobTitle = user?.role === "admin" || user?.role === "hr";
+
 
   const [isEditing, setIsEditing] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -23,7 +29,9 @@ const ProfileSettings = () => {
     middle_name: "",
     email: "",
     phone: "",
+    job_title: "",
   });
+
 
   const handleEdit = () => {
     if (!profile) return;
@@ -34,6 +42,7 @@ const ProfileSettings = () => {
       middle_name: profile.personal.middle_name || "",
       email: profile.personal.email || "",
       phone: profile.personal.phone || "",
+      job_title: profile.employment.job_title || "",
     });
 
     setIsEditing(true);
@@ -106,19 +115,13 @@ const ProfileSettings = () => {
     );
   }
 
-  const firstNameInitial =
-    profile.personal.first_name?.trim().charAt(0) || "";
+  const firstNameInitial = profile.personal.first_name?.trim().charAt(0) || "";
 
-  const lastNameInitial =
-    profile.personal.last_name?.trim().charAt(0) || "";
+  const lastNameInitial = profile.personal.last_name?.trim().charAt(0) || "";
 
-  const initials =
-    `${firstNameInitial}${lastNameInitial}`.toUpperCase();
+  const initials = `${firstNameInitial}${lastNameInitial}`.toUpperCase();
 
   const hasAvatar = Boolean(profile.avatar_url) && !avatarError;
-
-  console.log("PROFILE FROM QUERY:", profile);
-console.log("PROFILE AVATAR:", profile.avatar_url);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
@@ -325,12 +328,20 @@ console.log("PROFILE AVATAR:", profile.avatar_url);
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Job Title
               </label>
-
               <input
                 type="text"
-                value={profile.employment.job_title || ""}
-                disabled
-                className="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-500"
+                name="job_title"
+                value={
+                  canEditJobTitle
+                    ? formData.job_title
+                    : profile.employment.job_title || ""
+                }
+                onChange={canEditJobTitle ? handleChange : undefined}
+                disabled={!canEditJobTitle || !isEditing}
+                className={`w-full rounded-lg border px-3.5 py-2.5 text-sm ${canEditJobTitle && isEditing
+                    ? "border-gray-300 bg-white text-gray-900"
+                    : "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-500"
+                  }`}
               />
 
               <p className="mt-1.5 text-xs text-gray-400">
