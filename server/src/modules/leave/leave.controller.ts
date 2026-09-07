@@ -1,10 +1,10 @@
 import { Request, Response } from "express"
 import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, employeeIdParamsSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema } from "./leave.validator.ts"
 import { AppError } from "../../errors/appError.ts";
-import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequestById, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, getUpcomingLeave, submitLeaveRequests } from "./leave.service.ts";
+import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getCurrentlyOnLeave, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequestById, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, submitLeaveRequests } from "./leave.service.ts";
 import z from "zod";
 import { LeaveStats } from "./leave.types.ts";
-import prisma from "../../config/prisma.ts";
+
 
 
 
@@ -62,6 +62,8 @@ export const getLeaveTypesController = async (req: Request, res: Response) => {
     });
 
 }
+
+
 
 export const getAllLeaveTypesController = async (req: Request, res: Response) => {
 
@@ -409,20 +411,32 @@ export const getLeaveStats = async (req: Request, res: Response) => {
     });
 };
 
-export const getUpcomingLeaveRequestController = async (req: Request, res: Response) => {
+export const getCurrentlyOnLeaveController = async (req: Request, res: Response) => {
 
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Authentication required.",
+        });
+    }
 
-    const upcomingRequests = await getUpcomingLeave(req.user)
+    const currentlyOnLeave = await getCurrentlyOnLeave(req.user)
 
     return res.status(200).json({
         success: true,
-        message: "Upcoming Leave Requests retrieved successfully.",
-        data: upcomingRequests,
+        message: "Currently On Leave retrieved successfully.",
+        data: currentlyOnLeave,
     });
 
 }
 export const getRecentLeaveRequestController = async (req: Request, res: Response) => {
 
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Authentication required.",
+        });
+    }
 
     const recentRequests = await getRecentLeaveRequest(req.user)
 

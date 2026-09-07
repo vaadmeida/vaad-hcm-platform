@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.ts";
-import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getEmployeeLeaveBalanceController, getLeaveRequestByIdController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, getUpcomingLeaveRequestController, submitLeaveRequestsController } from "./leave.controller.ts";
+import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getCurrentlyOnLeaveController, getEmployeeLeaveBalanceController, getLeaveRequestByIdController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, submitLeaveRequestsController } from "./leave.controller.ts";
 import { requireRoles } from "../../middlewares/role.ts";
 import { authenticate } from "../../middlewares/auth.ts";
 import { consumeLeaveDay, processActiveLeaves } from "./leave.service.ts";
@@ -22,7 +22,7 @@ leaveRouter.get("/balance/:id", authenticate, requireRoles("admin", "hr" , "mana
 
 // LEAVE REQUESTS
 leaveRouter.get("/request", authenticate, asyncHandler(getLeaveRequestsController));
-leaveRouter.get("/upcoming", authenticate, asyncHandler(getUpcomingLeaveRequestController));
+leaveRouter.get("/on-leave", authenticate, asyncHandler(getCurrentlyOnLeaveController));
 leaveRouter.get("/recent", authenticate, asyncHandler(getRecentLeaveRequestController));
 
 leaveRouter.post("/request", authenticate, asyncHandler(submitLeaveRequestsController));

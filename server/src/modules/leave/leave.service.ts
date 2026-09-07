@@ -6,6 +6,7 @@ import { User } from "../employees/employee.service.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 import { DateTime } from "luxon";
 
+
 type CreateLeaveTypes = {
     name: string;
     user: {
@@ -162,9 +163,9 @@ export const getAllLeaveTypes = async () => {
 }
 
 
-export const getMyLeaveBalance = async (userId: string) => {
 
-    // Find approved leave requests that may need catch-up processing
+
+export const getMyLeaveBalance = async (userId: string) => {
 
     const approvedLeaves = await prisma.leaveRequest.findMany({
         where: {
@@ -212,13 +213,20 @@ export const getMyLeaveBalance = async (userId: string) => {
 
     const employee = balances[0].employee;
 
+    // Generate a presigned URL for the employee avatar
+    const employeeWithAvatar = {
+        ...employee,
+        avatar_url: employee.avatar_url
+            ? await getPresignedUrl(employee.avatar_url)
+            : null,
+    };
+
     const formattedBalances = balances.map((balance) => {
-        
+
         const allocated = Number(balance.entitled_days);
         const used = Number(balance.used_days);
         const pending = Number(balance.pending_days);
 
-        // Available balance excludes both used and pending days
         const remaining = Math.max(
             allocated - used - pending,
             0
@@ -245,14 +253,16 @@ export const getMyLeaveBalance = async (userId: string) => {
     });
 
     return {
-        employee,
+        employee: employeeWithAvatar,
         balances: formattedBalances,
     };
 };
 
 
 export const getTeamLeaveBalances = async (userId: string) => {
+
     const balances = await prisma.leaveBalance.findMany({
+
         where: {
             employee: {
                 manager_id: userId,
@@ -1011,7 +1021,7 @@ export const consumeLeaveDay = async (leaveRequestId: string) => {
             where: {
                 leave_request_id_date: {
                     leave_request_id: leaveRequestId,
-                   date: today.toJSDate(),
+                    date: today.toJSDate(),
                 },
             },
         });
@@ -1210,6 +1220,7 @@ export const catchUpLeaveDays = async (leaveRequestId: string) => {
         while (currentDate <= processUntil) {
             // Skip Saturday and Sunday
             if (currentDate.weekday !== 6 && currentDate.weekday !== 7) {
+
                 const date = currentDate.toISODate();
 
                 if (date) {
@@ -1217,7 +1228,7 @@ export const catchUpLeaveDays = async (leaveRequestId: string) => {
                         where: {
                             leave_request_id_date: {
                                 leave_request_id: leaveRequestId,
-                                date,
+                                date: new Date(`${date}T00:00:00.000Z`),
                             },
                         },
                     });
@@ -1229,14 +1240,13 @@ export const catchUpLeaveDays = async (leaveRequestId: string) => {
                             break;
                         }
 
-                        const leaveDay = existingLeaveDay
-                            ? existingLeaveDay
+                        const leaveDay = existingLeaveDay ? existingLeaveDay
                             : await tx.leaveDay.create({
-                                  data: {
-                                      leave_request_id: leaveRequestId,
-                                      date,
-                                  },
-                              });
+                                data: {
+                                    leave_request_id: leaveRequestId,
+                                    date: new Date(`${date}T00:00:00.000Z`),
+                                },
+                            });
 
                         await tx.leaveBalance.update({
                             where: {
@@ -1269,15 +1279,12 @@ export const catchUpLeaveDays = async (leaveRequestId: string) => {
 
                         // Update local counter for the next iteration
                         remainingPendingDays -= 1;
-
                         processedDays.push(date);
                     }
                 }
             }
-
             currentDate = currentDate.plus({ days: 1 });
         }
-
         return processedDays;
     });
 };
@@ -1551,6 +1558,7 @@ export const getManagerLeaveStats = async (managerId: string) => {
         currentlyOnLeave,
     };
 };
+
 export const getEmployeeLeaveStats = async (employeeId: string) => {
     const today = new Date();
 
@@ -1611,7 +1619,7 @@ export const getEmployeeLeaveStats = async (employeeId: string) => {
     };
 };
 
-export const getUpcomingLeave = async (user: User) => {
+export const getCurrentlyOnLeave = async (user: User) => {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1641,12 +1649,14 @@ export const getUpcomingLeave = async (user: User) => {
         };
     }
 
-    const upcomingLeaves = await prisma.leaveRequest.findMany({
+    const currentlyOnLeave = await prisma.leaveRequest.findMany({
         where: {
             status: "approved",
             start_date: {
+                lte: today,
+            },
+            end_date: {
                 gte: today,
-                lte: thirtyDaysFromNow,
             },
         },
         select: {
@@ -1671,13 +1681,13 @@ export const getUpcomingLeave = async (user: User) => {
             },
         },
         orderBy: {
-            start_date: "asc",
+            end_date: "asc",
         },
         take: 20,
     });
 
-    const formattedUpcomingLeaves = await Promise.all(
-        upcomingLeaves.map(async (leave) => ({
+    const OnLeave = await Promise.all(
+        currentlyOnLeave.map(async (leave) => ({
             ...leave,
             total_days: Number(leave.total_days),
             employee: {
@@ -1689,7 +1699,7 @@ export const getUpcomingLeave = async (user: User) => {
         }))
     );
 
-    return formattedUpcomingLeaves;
+    return OnLeave;
 
 
 };
