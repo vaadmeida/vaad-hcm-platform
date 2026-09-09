@@ -1,8 +1,8 @@
-import PersonalInformation from "./section/PersonalInformation";
 import type { Employee } from "../../types/employee.types";
-import EmploymentInformation from "./section/EmploymentInformation";
-import EmergencyContact from "./section/EmergencyContact";
 import AccountDetails from "./section/AccountDetails";
+import EmergencyContact from "./section/EmergencyContact";
+import EmploymentInformation from "./section/EmploymentInformation";
+import PersonalInformation from "./section/PersonalInformation";
 
 interface EmployeeOverviewProps {
   employee: Employee;
