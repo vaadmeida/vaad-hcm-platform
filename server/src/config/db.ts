@@ -1,5 +1,5 @@
 import pg from 'pg';
-import './env.ts'; // 👈 ensures env is loaded even if imported alone
+import './env.ts';
 
 const { Pool } = pg;
 
@@ -11,6 +11,9 @@ if (!connectionString) {
 
 const pool = new Pool({
   connectionString,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 export default pool;
