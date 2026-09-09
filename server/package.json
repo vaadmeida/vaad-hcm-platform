@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "dotenv -e .env.production -- node dist/server.js",
     "seed": "tsx prisma/seed.ts",
     "seed:local": "dotenv -e .env -- tsx prisma/seed.ts",
     "seed:production": "dotenv -e .env.production -- tsx prisma/seed.ts",
