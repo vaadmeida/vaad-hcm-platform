@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { createDocumentTypeSchema, getDocumentDownloadSchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
-import { createDocumentType, getDocumentDownloadUrl, getEmployeeDocuments, getExpiredDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
-import { AppError } from "../../errors/appError.ts";
+import { createDocumentType, getAllEmployeeDocuments, getDocumentDownloadUrl, getDocumentsStats, getEmployeeDocuments, getExpiringDocuments, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
 
 
 export const createDocumentTypeController = async (req: Request, res: Response) => {
@@ -64,6 +63,19 @@ export const uploadDocumentController = async (req: Request, res: Response) => {
     });
 
 }
+
+
+export const getAllEmployeeDocumentsController = async (req: Request, res: Response) => {
+
+    const documents = await getAllEmployeeDocuments();
+
+    return res.status(200).json({
+        success: true,
+        message: "Documents retrieved successfully",
+        data: documents,
+    });
+};
+
 export const getEmployeeDocumentsController = async (req: Request, res: Response) => {
 
     const { employeeId } = getEmployeeDocumentsSchema.parse(req.params);
@@ -105,14 +117,38 @@ export const verifyDocumentController = async (req: Request, res: Response) => {
          data: document,
      });
 }
-export const getExpiredDocumentsController = async (req: Request, res: Response) => {
- 
-    const documents = await getExpiredDocuments();
+
+
+export const getDocumentsStatsController = async (req: Request, res: Response) => {
+    const stats = await getDocumentsStats();
 
     return res.status(200).json({
-      success: true,
-      message: "Expiring documents retrieved successfully",
-      data: documents,
+        success: true,
+        message: "Document statistics retrieved successfully",
+        data: stats,
     });
-     
+}
+
+
+export const getRecentDocumentsController = async (req: Request, res: Response) => {
+
+    const documents = await getRecentDocuments();
+
+    return res.status(200).json({
+        success: true,
+        message: "Recent documents retrieved successfully",
+        data: documents,
+    });
+
+}
+export const getExpiringDocumentsController = async (req: Request, res: Response) => {
+
+    const documents = await getExpiringDocuments();
+
+    return res.status(200).json({
+        success: true,
+        message: "Expiring documents retrieved successfully",
+        data: documents,
+    });
+
 }
