@@ -8,96 +8,70 @@ datasource db {
 }
 
 model Department {
-  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String           @unique @db.VarChar(255)
-  description String?
-  status      DepartmentStatus @default(active)
-  manager_id  String?          @unique @db.Uuid
-  manager     Employee?        @relation("DepartmentManager", fields: [manager_id], references: [id])
-  employees   Employee[]       @relation("DepartmentEmployees")
-  created_at  DateTime         @default(now())
-  updated_at  DateTime         @updatedAt
-
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String           @unique @db.VarChar(255)
+  description   String?
+  status        DepartmentStatus @default(active)
+  manager_id    String?          @unique @db.Uuid
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
   activity_logs ActivityLog[]
+  manager       Employee?        @relation("DepartmentManager", fields: [manager_id], references: [id])
+  employees     Employee[]       @relation("DepartmentEmployees")
 
   @@map("departments")
 }
 
-enum DepartmentStatus {
-  active
-  inactive
-}
-
 model Employee {
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-
-  // ─── Personal Information ─────────────────────────────
-  first_name          String    @db.VarChar(100)
-  middle_name         String?   @db.VarChar(100)
-  last_name           String    @db.VarChar(100)
-  email               String    @unique @db.VarChar(255)
-  gender              String?   @db.VarChar(20)
-  date_of_birth       DateTime? @db.Date
-  nationality         String?   @db.VarChar(100)
-  phone               String?   @db.VarChar(20)
-  alternate_phone     String?   @db.VarChar(20)
-  residential_address String?
-  city                String?   @db.VarChar(100)
-  state_of_residence  String?   @db.VarChar(100)
-
-  // ─── Employee Identification ──────────────────────────
-  employee_code String? @unique @db.VarChar(30)
-  avatar_url    String?
-
-  // ─── Emergency Contact ────────────────────────────────
-  emergency_contact_name         String? @db.VarChar(150)
-  emergency_contact_relationship String? @db.VarChar(50)
-  emergency_contact_number       String? @db.VarChar(20)
-
-  // ─── Employment Information ───────────────────────────
-  job_title       String?     @db.VarChar(150)
-  job_description String?
-  department_id   String?     @db.Uuid
-  department      Department? @relation("DepartmentEmployees", fields: [department_id], references: [id])
-
-  manager_id        String?     @db.Uuid
-  manager           Employee?   @relation("EmployeeManager", fields: [manager_id], references: [id])
-  subordinates      Employee[]  @relation("EmployeeManager")
-  managedDepartment Department? @relation("DepartmentManager")
-
-  status                 String    @default("probation") @db.VarChar(20)
-  employment_type        String    @default("full-time") @db.VarChar(50)
-  hire_date              DateTime? @db.Date
-  probation_end_date     DateTime? @db.Date
-  date_exited            DateTime? @db.Date
-  work_email             String?   @db.VarChar(255)
-  owns_personal_computer Boolean   @default(false)
-
-  // ─── Payroll & Bank Information ───────────────────────
-  paye_id        String? @db.VarChar(50)
-  bank_name      String? @db.VarChar(100)
-  account_number String? @db.VarChar(20)
-  account_name   String? @db.VarChar(150)
-
-  // ─── Authentication & Authorization ───────────────────
-  password_hash String @db.VarChar(255)
-  role          String @default("employee") @db.VarChar(20)
-
-  // ─── System ───────────────────────────────────────────
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-
-  // ─── Relations ────────────────────────────────────────
-  documents         EmployeeDocument[] @relation("EmployeeDocuments")
-  uploadedDocuments EmployeeDocument[] @relation("UploadedDocuments")
-  verifiedDocuments EmployeeDocument[] @relation("VerifiedDocuments")
-
-  leaveBalances         LeaveBalance[]
-  approvedLeaveRequests LeaveRequest[] @relation("ApprovedLeaveRequests")
-  leaveRequests         LeaveRequest[] @relation("EmployeeLeaveRequests")
-
-  activity_logs ActivityLog[]
-  notifications Notification[]
+  id                             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  first_name                     String             @db.VarChar(100)
+  last_name                      String             @db.VarChar(100)
+  email                          String             @unique @db.VarChar(255)
+  phone                          String?            @db.VarChar(20)
+  job_title                      String?            @db.VarChar(150)
+  job_description                String?
+  department_id                  String?            @db.Uuid
+  manager_id                     String?            @db.Uuid
+  status                         String             @default("probation") @db.VarChar(20)
+  employment_type                String             @default("full-time") @db.VarChar(50)
+  hire_date                      DateTime?          @db.Date
+  probation_end_date             DateTime?          @db.Date
+  work_email                     String?            @db.VarChar(255)
+  owns_personal_computer         Boolean            @default(false)
+  password_hash                  String             @db.VarChar(255)
+  role                           String             @default("employee") @db.VarChar(20)
+  created_at                     DateTime           @default(now())
+  updated_at                     DateTime           @default(now())
+  employee_code                  String?            @unique @db.VarChar(30)
+  avatar_url                     String?
+  account_name                   String?            @db.VarChar(150)
+  account_number                 String?            @db.VarChar(20)
+  alternate_phone                String?            @db.VarChar(20)
+  bank_name                      String?            @db.VarChar(100)
+  city                           String?            @db.VarChar(100)
+  date_exited                    DateTime?          @db.Date
+  date_of_birth                  DateTime?          @db.Date
+  emergency_contact_name         String?            @db.VarChar(150)
+  emergency_contact_number       String?            @db.VarChar(20)
+  emergency_contact_relationship String?            @db.VarChar(50)
+  gender                         String?            @db.VarChar(20)
+  nationality                    String?            @db.VarChar(100)
+  paye_id                        String?            @db.VarChar(50)
+  residential_address            String?
+  state_of_residence             String?            @db.VarChar(100)
+  middle_name                    String?            @db.VarChar(100)
+  activity_logs                  ActivityLog[]
+  notifications                  Notification[]
+  managedDepartment              Department?        @relation("DepartmentManager")
+  documents                      EmployeeDocument[] @relation("EmployeeDocuments")
+  uploadedDocuments              EmployeeDocument[] @relation("UploadedDocuments")
+  verifiedDocuments              EmployeeDocument[] @relation("VerifiedDocuments")
+  department                     Department?        @relation("DepartmentEmployees", fields: [department_id], references: [id])
+  manager                        Employee?          @relation("EmployeeManager", fields: [manager_id], references: [id])
+  subordinates                   Employee[]         @relation("EmployeeManager")
+  leaveBalances                  LeaveBalance[]
+  approvedLeaveRequests          LeaveRequest[]     @relation("ApprovedLeaveRequests")
+  leaveRequests                  LeaveRequest[]     @relation("EmployeeLeaveRequests")
 
   @@map("employees")
 }
@@ -106,12 +80,12 @@ model LeaveType {
   id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                  String         @db.VarChar(100)
   default_days_per_year Int?
-  requires_balance      Boolean        @default(true)
   requires_document     Boolean?       @default(false)
   is_paid               Boolean?       @default(true)
   carries_over          Boolean?       @default(false)
   max_carryover_days    Int?           @default(0)
   created_at            DateTime?      @default(now()) @db.Timestamp(6)
+  requires_balance      Boolean        @default(true)
   leaveBalances         LeaveBalance[]
   leaveRequests         LeaveRequest[]
 
@@ -136,11 +110,11 @@ model LeaveBalance {
   leave_type_id String    @db.Uuid
   year          Int       @default(dbgenerated("EXTRACT(year FROM now())"))
   entitled_days Decimal   @db.Decimal(5, 1)
-  document_url  String?
   used_days     Decimal?  @default(0) @db.Decimal(5, 1)
   pending_days  Decimal?  @default(0) @db.Decimal(5, 1)
   created_at    DateTime? @default(now()) @db.Timestamp(6)
   updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  document_url  String?
   employee      Employee  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   leaveType     LeaveType @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -162,10 +136,10 @@ model LeaveRequest {
   rejection_reason String?
   created_at       DateTime?  @default(now()) @db.Timestamp(6)
   updated_at       DateTime?  @default(now()) @db.Timestamp(6)
+  leaveDays        LeaveDay[]
   approver         Employee?  @relation("ApprovedLeaveRequests", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee         Employee   @relation("EmployeeLeaveRequests", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   leaveType        LeaveType  @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  leaveDays        LeaveDay[]
 
   @@map("leave_requests")
 }
@@ -188,26 +162,88 @@ model DocumentType {
 }
 
 model EmployeeDocument {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  employeeId     String       @map("employee_id") @db.Uuid
-  documentTypeId String       @map("document_type_id") @db.Uuid
-  fileName       String       @map("file_name") @db.VarChar(255)
-  fileUrl        String       @map("file_url")
-  fileSizeMb     Decimal?     @map("file_size_mb") @db.Decimal(5, 2)
-  status         String?      @default("pending") @db.VarChar(20)
-  expiryDate     DateTime?    @map("expiry_date") @db.Date
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId     String         @map("employee_id") @db.Uuid
+  documentTypeId String         @map("document_type_id") @db.Uuid
+  fileName       String         @map("file_name") @db.VarChar(255)
+  fileUrl        String         @map("file_url")
+  fileSizeMb     Decimal?       @map("file_size_mb") @db.Decimal(5, 2)
+  expiryDate     DateTime?      @map("expiry_date") @db.Date
   notes          String?
-  uploadedBy     String?      @map("uploaded_by") @db.Uuid
-  verifiedBy     String?      @map("verified_by") @db.Uuid
-  verifiedAt     DateTime?    @map("verified_at") @db.Timestamp(6)
-  uploadedAt     DateTime?    @default(now()) @map("uploaded_at") @db.Timestamp(6)
-  updatedAt      DateTime?    @default(now()) @map("updated_at") @db.Timestamp(6)
-  employee       Employee     @relation("EmployeeDocuments", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  uploader       Employee?    @relation("UploadedDocuments", fields: [uploadedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  verifier       Employee?    @relation("VerifiedDocuments", fields: [verifiedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  documentType   DocumentType @relation(fields: [documentTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  uploadedBy     String?        @map("uploaded_by") @db.Uuid
+  verifiedBy     String?        @map("verified_by") @db.Uuid
+  verifiedAt     DateTime?      @map("verified_at") @db.Timestamp(6)
+  uploadedAt     DateTime?      @default(now()) @map("uploaded_at") @db.Timestamp(6)
+  updatedAt      DateTime?      @default(now()) @map("updated_at") @db.Timestamp(6)
+  status         DocumentStatus @default(pending)
+  documentType   DocumentType   @relation(fields: [documentTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee       Employee       @relation("EmployeeDocuments", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  uploader       Employee?      @relation("UploadedDocuments", fields: [uploadedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  verifier       Employee?      @relation("VerifiedDocuments", fields: [verifiedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("employee_documents")
+}
+
+model ActivityLog {
+  id            String         @id @default(uuid())
+  action        ActivityAction
+  entity_type   ActivityEntity
+  entity_id     String
+  description   String
+  performed_by  String         @db.Uuid
+  created_at    DateTime       @default(now())
+  department_id String?        @db.Uuid
+  department    Department?    @relation(fields: [department_id], references: [id])
+  user          Employee       @relation(fields: [performed_by], references: [id])
+
+  @@index([entity_type, entity_id])
+  @@index([performed_by])
+  @@index([department_id])
+  @@index([created_at])
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  user_id    String           @db.Uuid
+  title      String
+  message    String
+  type       NotificationType
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+  read_at    DateTime?
+  user       Employee         @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, is_read])
+  @@index([created_at])
+}
+
+model Organization {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String   @db.VarChar(255)
+  industry       String?  @db.VarChar(100)
+  email          String?  @db.VarChar(255)
+  company_size   String?  @db.VarChar(50)
+  phone          String?  @db.VarChar(20)
+  website        String?  @db.VarChar(255)
+  street_address String?
+  city           String?  @db.VarChar(100)
+  state          String?  @db.VarChar(100)
+  country        String?  @db.VarChar(100)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("organizations")
+}
+
+enum DepartmentStatus {
+  active
+  inactive
+}
+
+enum DocumentStatus {
+  pending
+  verified
+  rejected
 }
 
 enum DocumentCategory {
@@ -236,19 +272,15 @@ enum ActivityAction {
   UPDATED
   DELETED
   STATUS_CHANGED
-
   DEPARTMENT_ASSIGNED
   DEPARTMENT_REMOVED
   MANAGER_ASSIGNED
   MANAGER_REMOVED
-
   EMPLOYEE_ADDED
   EMPLOYEE_REMOVED
-
   LEAVE_APPROVED
   LEAVE_REJECTED
   LEAVE_CANCELLED
-
   LOGIN
   LOGOUT
 }
@@ -261,63 +293,4 @@ enum NotificationType {
   DEPARTMENT
   EMPLOYEE
   SYSTEM
-}
-
-model ActivityLog {
-  id          String         @id @default(uuid())
-  action      ActivityAction
-  entity_type ActivityEntity
-  entity_id   String
-  description String
-
-  performed_by  String  @db.Uuid
-  department_id String? @db.Uuid
-
-  created_at DateTime @default(now())
-
-  user Employee @relation(fields: [performed_by], references: [id])
-
-  department Department? @relation(fields: [department_id], references: [id])
-
-  @@index([entity_type, entity_id])
-  @@index([performed_by])
-  @@index([department_id])
-  @@index([created_at])
-}
-
-model Notification {
-  id         String           @id @default(uuid())
-  user_id    String           @db.Uuid
-  title      String
-  message    String
-  type       NotificationType
-  is_read    Boolean          @default(false)
-  created_at DateTime         @default(now())
-  read_at    DateTime?
-
-  user Employee @relation(fields: [user_id], references: [id])
-
-  @@index([user_id, is_read])
-  @@index([created_at])
-}
-
-model Organization {
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-
-  name         String  @db.VarChar(255)
-  industry     String? @db.VarChar(100)
-  email        String? @db.VarChar(255)
-  company_size String? @db.VarChar(50)
-  phone        String? @db.VarChar(20)
-  website      String? @db.VarChar(255)
-
-  street_address String?
-  city           String? @db.VarChar(100)
-  state          String? @db.VarChar(100)
-  country        String? @db.VarChar(100)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@map("organizations")
 }
