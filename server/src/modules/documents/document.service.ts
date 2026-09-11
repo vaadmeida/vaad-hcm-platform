@@ -154,6 +154,57 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
 }
 
 
+export const getAllEmployeeDocuments = async () => {
+
+    const documents = await prisma.employeeDocument.findMany({
+        include: {
+            documentType: {
+                select: {
+                    name: true,
+                },
+            },
+            employee: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                    department: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: {
+            uploadedAt: "desc",
+        },
+    });
+
+
+    return Promise.all(
+        documents.map(async (document) => ({
+            id: document.id,
+            employeeId: document.employeeId,
+            fileName: document.fileName,
+            fileUrl: document.fileUrl
+                ? await getPresignedUrl(document.fileUrl)
+                : null,
+            fileSizeMb: document.fileSizeMb,
+            uploadedAt: document.uploadedAt,
+            expiryDate: document.expiryDate,
+            status: document.status,
+            documentType: document.documentType,
+            employee: {
+                ...document.employee,
+                avatar_url: document.employee.avatar_url
+                    ? await getPresignedUrl(document.employee.avatar_url)
+                    : null,
+            },
+        }))
+    );
+};
+
 export const getEmployeeDocuments = async (employeeId: string, requestingUser: AuthenticatedUser) => {
 
     if (requestingUser.role === 'employee' && requestingUser.id !== employeeId) {
@@ -337,48 +388,113 @@ export const verifyDocument = async (
         },
     });
 
+
     return document;
 
 }
-export const getExpiredDocuments = async () => {
 
 
-    const now = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
+export const getDocumentsStats = async () => {
 
-    const expiredDocuments = await prisma.employeeDocument.findMany({
+    const [total, pending, verified, rejected] = await Promise.all([
+        prisma.employeeDocument.count(),
+        prisma.employeeDocument.count({ where: { status: "pending" } }),
+        prisma.employeeDocument.count({ where: { status: "verified" } }),
+        prisma.employeeDocument.count({ where: { status: "rejected" } })
+    ]);
+
+
+    return { total, pending, verified, rejected };
+
+}
+
+
+export const getRecentDocuments = async () => {
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentDocuments = await prisma.employeeDocument.findMany({
         where: {
-            expiryDate: {
-                not: null,
-                gte: now,
-                lte: thirtyDaysFromNow,
+            uploadedAt: {
+                gte: sevenDaysAgo,
             },
-            status: "verified",
         },
         include: {
-            employee: true,
-            documentType: true,
+            employee: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                },
+            },
+        },
+        orderBy: {
+            uploadedAt: "desc",
+        },
+    });
+
+    return Promise.all(
+        recentDocuments.map(async (doc) => ({
+            id: doc.id,
+            fileName: doc.fileName,
+            uploadedAt: doc.uploadedAt,
+            status: doc.status,
+            employee: {
+                name: `${doc.employee.first_name} ${doc.employee.last_name}`,
+                avatar: doc.employee.avatar_url
+                    ? await getPresignedUrl(doc.employee.avatar_url)
+                    : null,
+            },
+        }))
+    );
+
+}
+
+export const getExpiringDocuments = async () => {
+    const today = new Date();
+
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    const expiringDocuments = await prisma.employeeDocument.findMany({
+        where: {
+            expiryDate: {
+                gte: today,
+                lte: thirtyDaysFromNow,
+            },
+        },
+        include: {
+            employee: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                },
+            },
+            documentType: {
+                select: {
+                    name: true,
+                },
+            },
         },
         orderBy: {
             expiryDate: "asc",
         },
     });
-    const result = expiredDocuments.map((doc) => {
-        const daysRemaining = Math.ceil(
-            (doc.expiryDate!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        );
 
-        return {
+    return Promise.all(
+        expiringDocuments.map(async (doc) => ({
             id: doc.id,
             fileName: doc.fileName,
             expiryDate: doc.expiryDate,
+            employee: {
+                name: `${doc.employee.first_name} ${doc.employee.last_name}`,
+                avatar: doc.employee.avatar_url
+                    ? await getPresignedUrl(doc.employee.avatar_url)
+                    : null,
+            },
             documentType: doc.documentType.name,
-            employee: `${doc.employee.first_name} ${doc.employee.last_name}`,
-            email: doc.employee.email,
-            daysRemaining,
-        };
-    });
-
-    return result;
-}
+        }))
+    );
+};
