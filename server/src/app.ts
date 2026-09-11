@@ -10,6 +10,7 @@ import dashboardRouter from './modules/dashboard/dashboard.route.ts';
 import departmentRouter from './modules/department/department.route.ts';
 import locationRouter from './modules/location/location.route.ts';
 import settingRouter from './modules/settings/settings.route.ts';
+import documentRouter from './modules/documents/document.route.ts';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRouter)
 app.use('/api/employees', employeeRouter)
 app.use('/api/leaves', leaveRouter)
+app.use('/api/documents', documentRouter)
 app.use('/api/dashboard' , dashboardRouter)
 app.use('/api/departments' , departmentRouter)
 app.use('/api/locations' , locationRouter)
