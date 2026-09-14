@@ -166,7 +166,6 @@ export const getAllLeaveTypes = async () => {
 
 
 export const getMyLeaveBalance = async (userId: string) => {
-
     const approvedLeaves = await prisma.leaveRequest.findMany({
         where: {
             employee_id: userId,
@@ -180,40 +179,39 @@ export const getMyLeaveBalance = async (userId: string) => {
         },
     });
 
-    // Catch up any leave days that were missed by the scheduler
     for (const leave of approvedLeaves) {
         await catchUpLeaveDays(leave.id);
     }
 
-    // Fetch the updated balances
     const balances = await prisma.leaveBalance.findMany({
         where: {
             employee_id: userId,
         },
         include: {
             leaveType: true,
-            employee: {
-                select: {
-                    id: true,
-                    first_name: true,
-                    last_name: true,
-                    avatar_url: true,
-                },
-            },
         },
     });
 
-    if (balances.length === 0) {
+    const employee = await prisma.employee.findUnique({
+        where: {
+            id: userId,
+        },
+        select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            avatar_url: true,
+        },
+    });
+
+    if (!employee) {
         throw new AppError(
-            "Leave balance not found",
+            "Employee not found",
             404,
-            "LEAVE_BALANCE_NOT_FOUND"
+            "EMPLOYEE_NOT_FOUND"
         );
     }
 
-    const employee = balances[0].employee;
-
-    // Generate a presigned URL for the employee avatar
     const employeeWithAvatar = {
         ...employee,
         avatar_url: employee.avatar_url
@@ -222,7 +220,6 @@ export const getMyLeaveBalance = async (userId: string) => {
     };
 
     const formattedBalances = balances.map((balance) => {
-
         const allocated = Number(balance.entitled_days);
         const used = Number(balance.used_days);
         const pending = Number(balance.pending_days);
@@ -257,7 +254,6 @@ export const getMyLeaveBalance = async (userId: string) => {
         balances: formattedBalances,
     };
 };
-
 
 export const getTeamLeaveBalances = async (userId: string) => {
 
