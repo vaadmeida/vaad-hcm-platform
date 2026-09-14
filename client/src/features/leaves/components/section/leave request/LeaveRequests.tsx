@@ -18,10 +18,7 @@ const LeaveRequests = () => {
 
   const total = requests?.data?.length ?? 0;
 
-  const pending =
-    requests?.data.filter(
-      (request) => request.status === "pending"
-    ).length ?? 0;
+  const pending = requests?.data.filter((request) => request.status === "pending").length ?? 0;
 
   const approved =
     requests?.data.filter(
