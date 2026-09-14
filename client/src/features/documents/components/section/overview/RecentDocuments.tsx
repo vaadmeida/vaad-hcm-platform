@@ -1,7 +1,8 @@
 import ErrorState from "@/components/common/ErrorState";
 import SkeletonLoader from "@/components/common/SkeletonLoader";
-import { useRecentDocuments } from "../../../hooks/useRecentDocuments";
+
 import EmptyState from "@/components/common/EmptyState";
+import { useRecentDocuments } from "@/features/documents/hooks/useRecentDocuments";
 
 const RecentDocuments = () => {
     const { data, isLoading, error, refetch } = useRecentDocuments();
