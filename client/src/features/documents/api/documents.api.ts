@@ -34,7 +34,7 @@ export const getExpiringDocuments = async (): Promise<ExpiringDocumentsResponse>
 
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const response = await api.get<ExpiringDocumentsResponse>("/api/documents/expiring");
+    const response = await api.get<ExpiringDocumentsResponse>("/api/documents/expirin");
 
     return response.data;
 
