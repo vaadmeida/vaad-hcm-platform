@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../../middlewares/auth.ts'
-import { createDocumentTypeController, getAllEmployeeDocumentsController, getDocumentDownloadUrlController, getDocumentsStatsController, getEmployeeDocumentsController, getExpiringDocumentsController, getRecentDocumentsController, uploadDocumentController, verifyDocumentController } from './document.controller.ts';
+import { createDocumentTypeController, getAllEmployeeDocumentsController, getDocumentDownloadUrlController, getDocumentsStatsController, getEmployeeDocumentsController, getExpiredDocumentsController, getExpiringDocumentsController, getRecentDocumentsController, uploadDocumentController, verifyDocumentController } from './document.controller.ts';
 import { asyncHandler } from '../../utils/asyncHandler.ts';
 import { requireRoles } from '../../middlewares/role.ts';
 import upload from '../../middlewares/upload.ts';
@@ -16,5 +16,6 @@ documentRouter.get('/download/:documentId', authenticate, asyncHandler(getDocume
 documentRouter.patch('/verify/:documentId', authenticate, requireRoles('admin'), asyncHandler(verifyDocumentController))
 documentRouter.get('/recent', authenticate, requireRoles('admin', 'hr'), asyncHandler(getRecentDocumentsController))
 documentRouter.get('/expiring', authenticate, requireRoles('admin', 'hr'), asyncHandler(getExpiringDocumentsController))
+documentRouter.get('/expired', authenticate, requireRoles('admin', 'hr'), asyncHandler(getExpiredDocumentsController))
 
 export default documentRouter;
