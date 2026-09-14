@@ -22,7 +22,10 @@ export const getRecentDocuments = async (): Promise<RecentDocumentsResponse> => 
 
     const response = await api.get<RecentDocumentsResponse>("/api/documents/recent");
 
+    console.log(response.data);
+
     return response.data;
+    
 
   } catch (error) {
     console.error("Recent Documents API Error:", error);
@@ -34,12 +37,12 @@ export const getExpiringDocuments = async (): Promise<ExpiringDocumentsResponse>
 
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const response = await api.get<ExpiringDocumentsResponse>("/api/documents/expirin");
+    const response = await api.get<ExpiringDocumentsResponse>("/api/documents/expiring");
 
     return response.data;
 
   } catch (error) {
-    console.error("Recent Documents API Error:", error);
+    console.error("Expiring Documents API Error:", error);
     throw error;
   }
 };
