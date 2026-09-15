@@ -1,4 +1,4 @@
-import { DocumentCategory } from "@prisma/client";
+import { DocumentCategory, DocumentStatus } from "@prisma/client";
 import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
 import { getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
@@ -153,29 +153,87 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
 
 }
 
+interface GetEmployeeDocumentsInput {
+    status?: string;
+    employee_id?: string;
+    search?: string;
+    document_type_id?: string;
+}
 
-export const getAllEmployeeDocuments = async () => {
+
+export const getAllEmployeeDocuments = async ({
+    status,
+    employee_id,
+    search,
+    document_type_id
+}: GetEmployeeDocumentsInput) => {
+
+
 
     const documents = await prisma.employeeDocument.findMany({
+        where: {
+            ...(status && {
+                status: status as DocumentStatus,
+            }),
+            ...(employee_id && {
+                employeeId: employee_id,
+            }),
+            ...(document_type_id && {
+                documentTypeId: document_type_id,
+            }),
+            ...(search && {
+                OR: [
+                    {
+                        fileName: {
+                            contains: search,
+                            mode: "insensitive",
+                        },
+                    },
+                    {
+                        employee: {
+                            first_name: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                    {
+                        employee: {
+                            last_name: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                    {
+                        employee: {
+                            email: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                ],
+            }),
+        },
+
         include: {
             documentType: {
                 select: {
                     name: true,
                 },
             },
+
             employee: {
                 select: {
                     first_name: true,
                     last_name: true,
+                    email: true,
                     avatar_url: true,
-                    department: {
-                        select: {
-                            name: true,
-                        },
-                    },
                 },
             },
         },
+
         orderBy: {
             uploadedAt: "desc",
         },
@@ -205,19 +263,22 @@ export const getAllEmployeeDocuments = async () => {
     );
 };
 
-export const getEmployeeDocuments = async (employeeId: string, requestingUser: AuthenticatedUser) => {
-
-    if (requestingUser.role === 'employee' && requestingUser.id !== employeeId) {
+export const getEmployeeDocuments = async (
+    employeeId: string,
+    requestingUser: AuthenticatedUser
+) => {
+    if (
+        requestingUser.role === "employee" &&
+        requestingUser.id !== employeeId
+    ) {
         throw new AppError(
             "You are not authorized to view this employee's documents",
             401,
             "UNAUTHORIZED"
-        )
+        );
     }
 
-    // If the requesting user is a manager, check if they are the manager of the employee
     if (requestingUser.role === "manager") {
-
         const employee = await prisma.employee.findUnique({
             where: { id: employeeId },
             select: {
@@ -242,12 +303,19 @@ export const getEmployeeDocuments = async (employeeId: string, requestingUser: A
         }
     }
 
-
     const documents = await prisma.employeeDocument.findMany({
         where: {
-            employeeId: employeeId,
+            employeeId,
         },
         include: {
+            employee: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                    department: true,
+                },
+            },
             documentType: {
                 select: {
                     id: true,
@@ -267,43 +335,60 @@ export const getEmployeeDocuments = async (employeeId: string, requestingUser: A
     });
 
     const now = new Date();
-    const thirtyDaysFromNow = new Date()
-    thirtyDaysFromNow.setDate(now.getDate() + 30)
 
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
 
-    const formattedDocuments = documents.map((document) => {
-        let expiry_status = 'ok'
+    const formattedDocuments = await Promise.all(
+        documents.map(async (document) => {
+            let expiry_status = "ok";
 
-        if (document.expiryDate) {
-            if (document.expiryDate < now) {
-                expiry_status = "expired";
-            } else if (document.expiryDate < thirtyDaysFromNow) {
-                expiry_status = "expiring_soon";
+            if (document.expiryDate) {
+                if (document.expiryDate < now) {
+                    expiry_status = "expired";
+                } else if (document.expiryDate < thirtyDaysFromNow) {
+                    expiry_status = "expiring_soon";
+                }
             }
-        }
+            const avatarUrl = document.employee.avatar_url
+                ? await getPresignedUrl(document.employee.avatar_url)
+                : null;
+                
+            return {
+                id: document.id,
+                employeeId: document.employeeId,
 
-        return {
-            id: document.id,
-            employeeId: document.employeeId,
-            fileName: document.fileName,
-            fileUrl: document.fileUrl,
-            fileSizeMb: document.fileSizeMb,
-            status: document.status,
-            expiryDate: document.expiryDate,
-            notes: document.notes,
-            uploadedAt: document.uploadedAt,
-            // document_type_name: document.documentType.name
-            verified_by_name: document.verifier
-                ? `${document.verifier.first_name} ${document.verifier.last_name}`
-                : null,
-            expiry_status,
-        };
+                employee: {
+                    first_name: document.employee.first_name,
+                    last_name: document.employee.last_name,
+                    avatar_url: avatarUrl,
+                    department: document.employee.department,
+                },
 
-    })
+                fileName: document.fileName,
+                fileUrl: document.fileUrl,
+                fileSizeMb: document.fileSizeMb,
+                status: document.status,
+                expiryDate: document.expiryDate,
+                notes: document.notes,
+                uploadedAt: document.uploadedAt,
 
-    return formattedDocuments
+                documentType: {
+                    id: document.documentType.id,
+                    name: document.documentType.name,
+                },
 
-}
+                verified_by_name: document.verifier
+                    ? `${document.verifier.first_name} ${document.verifier.last_name}`
+                    : null,
+
+                expiry_status,
+            };
+        })
+    );
+
+    return formattedDocuments;
+};
 
 export const getDocumentDownloadUrl = async (docId: string, requestingUser: AuthenticatedUser) => {
 
