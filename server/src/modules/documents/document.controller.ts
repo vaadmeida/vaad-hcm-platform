@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createDocumentTypeSchema, getDocumentDownloadSchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
+import { createDocumentTypeSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
 import { createDocumentType, getAllEmployeeDocuments, getDocumentDownloadUrl, getDocumentsStats, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
 
 
@@ -67,7 +67,9 @@ export const uploadDocumentController = async (req: Request, res: Response) => {
 
 export const getAllEmployeeDocumentsController = async (req: Request, res: Response) => {
 
-    const documents = await getAllEmployeeDocuments();
+     const query = getEmployeeDocumentsQuerySchema.parse(req.query);
+
+    const documents = await getAllEmployeeDocuments(query);
 
     return res.status(200).json({
         success: true,
@@ -120,6 +122,7 @@ export const verifyDocumentController = async (req: Request, res: Response) => {
 
 
 export const getDocumentsStatsController = async (req: Request, res: Response) => {
+
     const stats = await getDocumentsStats();
 
     return res.status(200).json({
