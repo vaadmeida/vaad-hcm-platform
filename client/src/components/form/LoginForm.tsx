@@ -1,5 +1,5 @@
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import vaadLogo from "@/assets/vaad_logo.png";
+import loginHeader from "@/assets/login_header.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { loginSchema, type LoginFormData } from "@/features/auth/validations/login.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogin } from "@/features/auth/hooks/useLogin";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDashboardRoute } from "@/utils/getDashboardRoute";
 import ButtonLoader from "../common/ButtonLoader";
@@ -38,22 +38,16 @@ const LoginForm = () => {
             },
         });
     };
-    useEffect(() => {
-        console.log("✅ LoginForm mounted");
 
-        return () => {
-            console.log("❌ LoginForm unmounted");
-        };
-    }, []);
 
     return (
         <Card className="w-full max-w-md rounded-lg border-0 shadow-none">
             <CardHeader className="space-y-1 px-4 pt-6 pb-4 text-center">
                 <div className="flex justify-center">
                     <img
-                        src={vaadLogo}
+                        src={loginHeader}
                         alt="VAAD HR"
-                        className="h-10 w-auto"
+                        className="h-20 w-auto"
                     />
                 </div>
 
@@ -70,7 +64,6 @@ const LoginForm = () => {
 
             <CardContent className="px-8 pb-4">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                    {/* Email */}
                     {/* Email */}
                     <div className="space-y-2">
                         <Label htmlFor="email">Email Address</Label>
