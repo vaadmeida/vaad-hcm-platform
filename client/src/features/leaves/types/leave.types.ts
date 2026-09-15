@@ -80,6 +80,7 @@ export interface LeaveRequestFilters {
   status?: string;
   leave_type_id?: string;
 }
+
 export interface LeaveBalanceFilters {
   search?: string;
   departmentId?: string;
