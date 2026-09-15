@@ -1,9 +1,9 @@
 import { useState } from "react";
 import LeaveRequestFilters from "./LeaveRequestFilters";
-import LeavesCardList from "./LeavesCardList";
 import LeaveRequestTable from "./LeaveTable";
 import { useGetLeaveRequests } from "@/features/leaves/hooks/useGetLeaveRequests";
 import LeaveRequestDetails from "./LeaveRequestDetails";
+import LeavesCardList from "./LeavesCardList";
 
 const LeaveRequests = () => {
   const [search, setSearch] = useState("");
