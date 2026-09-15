@@ -1,3 +1,4 @@
+import { DocumentStatus } from "@prisma/client";
 import { z } from "zod";
 
 export const createDocumentTypeSchema = z.object({
@@ -18,6 +19,12 @@ export const createDocumentTypeSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+export const getEmployeeDocumentsQuerySchema = z.object({
+    status: z.nativeEnum(DocumentStatus).optional(),
+    employee_id: z.string().uuid().optional(),
+    search: z.string().trim().optional(),
+    document_type_id: z.string().uuid().optional(),
+});
 
 export const uploadDocumentSchema = z.object({
   documentTypeId: z.uuid({message: "Invalid document type ID"}),
