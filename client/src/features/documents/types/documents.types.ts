@@ -50,3 +50,68 @@ export interface ExpiringDocumentsResponse {
   message: string;
   data: ExpiringDocument[];
 }
+
+export interface DocumentType {
+  name: string;
+}
+
+export interface DocumentEmployee {
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+}
+
+
+
+export interface Document {
+  id: string;
+  employeeId: string;
+  fileName: string;
+  fileUrl: string;
+  fileSizeMb: string;
+  uploadedAt: string;
+  expiryDate: string | null;
+  status: "pending" | "approved" | "rejected";
+  documentType: DocumentType;
+  employee: DocumentEmployee;
+}
+
+export interface DocumentsResponse {
+  success: boolean;
+  message: string;
+  data: Document[];
+}
+
+export interface DocsFilters {
+  search?: string;
+  status?: string;
+  document_type_id?: string;
+}
+
+
+
+export interface DocumentDetailsResponse {
+  id: string;
+  employeeId: string;
+  employee: {
+    first_name: string;
+    last_name: string;
+    avatar_url: string;
+    department: string | null;
+  };
+
+  fileName: string;
+  fileUrl: string;
+  fileSizeMb: string;
+  status: DocumentStatus;
+  expiryDate: string | null;
+  notes: string | null;
+  uploadedAt: string;
+
+  documentType: {
+    id: string;
+    name: string;
+  };
+  verified_by_name: string | null;
+  expiry_status: "ok" | "expired" | "expiring_soon";
+}
