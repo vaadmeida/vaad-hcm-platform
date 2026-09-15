@@ -11,13 +11,10 @@ import {
 interface LeaveRequestFiltersProps {
   search: string;
   onSearch: (value: string) => void;
-
   status: string;
   onStatusChange: (value: string) => void;
-
   leaveType: string;
   onLeaveTypeChange: (value: string) => void;
-
   total: number;
   pending: number;
   approved: number;
@@ -36,6 +33,7 @@ const LeaveRequestFilters = ({
   approved,
   rejected,
 }: LeaveRequestFiltersProps) => {
+  
   const statusFilters = [
     { value: "all", label: "All", count: total },
     { value: "pending", label: "Pending", count: pending },
