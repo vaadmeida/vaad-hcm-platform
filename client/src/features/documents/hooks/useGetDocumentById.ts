@@ -3,7 +3,7 @@ import { getDocumentById } from "../api/documents.api";
 
 export const useGetDocumentById = (id: string) => {
   return useQuery({
-    queryKey: ["leave-request", id],
+    queryKey: ["document", id],
     queryFn: () => getDocumentById(id),
     enabled: !!id,
   });

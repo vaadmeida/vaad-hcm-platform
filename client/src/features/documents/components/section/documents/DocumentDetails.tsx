@@ -24,15 +24,13 @@ const DocumentDetails = ({
   onClose,
 }: DocumentDetailsProps) => {
 
-  const { data, isLoading, isError } = useGetDocumentById(
-    documentId ?? ""
-  );
+  const { data, isLoading, isError } = useGetDocumentById(documentId ?? "");
 
-  const document = data
+  const document = data?.data;
 
- const employeeName = document?.employee
-  ? `${document.employee.first_name} ${document.employee.last_name}`
-  : "Unknown Employee";
+const employeeName = document?.employee.name ?? "Unknown Employee";
+
+  console.log(employeeName)
 
   const initials = employeeName
     .split(" ")
@@ -151,7 +149,7 @@ const DocumentDetails = ({
               <section>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 shrink-0">
-                    {document.employee.avatar_url && (
+                    {document.employee?.avatar_url && (
                       <AvatarImage
                         src={document.employee.avatar_url}
                         alt={employeeName}
@@ -188,7 +186,7 @@ const DocumentDetails = ({
                     </p>
 
                     <p className="mt-1 text-sm font-medium text-gray-900">
-                      {document.documentType.name}
+                      {document.documentType?.name}
                     </p>
                   </div>
 
