@@ -3,18 +3,9 @@ import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
 import { getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
 import { AuthenticatedUser } from "../../middlewares/auth.ts";
+import { CreateDocumentTypeDto, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
 
 
-interface CreateDocumentTypeDto {
-    name: string;
-    category: DocumentCategory;
-    description?: string;
-    isRequired?: boolean;
-    hasExpiry?: boolean;
-    allowedExtensions?: string[];
-    maxSizeMb?: number;
-    isActive?: boolean;
-}
 
 const VALID_EXTENSIONS = [
     "pdf",
@@ -86,13 +77,25 @@ export const createDocumentType = async (data: CreateDocumentTypeDto) => {
     return documentType;
 }
 
-interface UploadDocumentDto {
-    employeeId: string;
-    documentTypeId: string;
-    file: Express.Multer.File;
-    uploadedBy: string;
-    allowedExtensions?: string[];
-}
+
+export const getDocumentTypes = async () => {
+    const documentTypes = await prisma.documentType.findMany({
+        select: {
+            id: true,
+            name: true,
+        },
+        where: {
+            isActive: true,
+        },
+        orderBy: {
+            name: "asc",
+        },
+    });
+
+    return documentTypes;
+};
+
+
 export const uploadDocument = async (data: UploadDocumentDto) => {
 
     // Validate document type
@@ -151,13 +154,6 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
 
     return document;
 
-}
-
-interface GetEmployeeDocumentsInput {
-    status?: string;
-    employee_id?: string;
-    search?: string;
-    document_type_id?: string;
 }
 
 
@@ -353,7 +349,7 @@ export const getEmployeeDocuments = async (
             const avatarUrl = document.employee.avatar_url
                 ? await getPresignedUrl(document.employee.avatar_url)
                 : null;
-                
+
             return {
                 id: document.id,
                 employeeId: document.employeeId,
@@ -422,15 +418,16 @@ export const getDocumentDownloadUrl = async (docId: string, requestingUser: Auth
     };
 
 }
+
 export const verifyDocument = async (
     documentId: string,
-    status: "verified" | "rejected",
+    status: "approved" | "rejected",
     notes: string | undefined,
     requestingUser: AuthenticatedUser
 
 ) => {
 
-    if (requestingUser.role !== "admin") {
+    if (!["admin", "hr"].includes(requestingUser.role)) {
         throw new AppError(
             "You are not authorized to verify documents",
             401,
@@ -481,15 +478,15 @@ export const verifyDocument = async (
 
 export const getDocumentsStats = async () => {
 
-    const [total, pending, verified, rejected] = await Promise.all([
+    const [total, pending, approved, rejected] = await Promise.all([
         prisma.employeeDocument.count(),
         prisma.employeeDocument.count({ where: { status: "pending" } }),
-        prisma.employeeDocument.count({ where: { status: "verified" } }),
+        prisma.employeeDocument.count({ where: { status: "approved" } }),
         prisma.employeeDocument.count({ where: { status: "rejected" } })
     ]);
 
 
-    return { total, pending, verified, rejected };
+    return { total, pending, approved, rejected };
 
 }
 
@@ -626,4 +623,51 @@ export const getExpiringDocuments = async () => {
             documentType: doc.documentType.name,
         }))
     );
+};
+
+export const getDocumentById = async (documentId: string) => {
+    const employeeDocument = await prisma.employeeDocument.findFirst({
+        where: {
+            id: documentId,
+        },
+        include: {
+            documentType: {
+                select: {
+                    name: true,
+                },
+            },
+            employee: {
+                select: {
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    avatar_url: true,
+                },
+            },
+        },
+    });
+
+    if (!employeeDocument) {
+        return null;
+    }
+
+    return {
+        id: employeeDocument.id,
+        fileName: employeeDocument.fileName,
+        fileUrl: await getPresignedUrl(employeeDocument.fileUrl),
+        fileSizeMb: employeeDocument.fileSizeMb,
+        uploadedAt: employeeDocument.uploadedAt,
+        expiryDate: employeeDocument.expiryDate,
+        status: employeeDocument.status,
+        employee: {
+            name: `${employeeDocument.employee.first_name} ${employeeDocument.employee.last_name}`,
+            email: employeeDocument.employee.email,
+            avatar: employeeDocument.employee.avatar_url
+                ? await getPresignedUrl(employeeDocument.employee.avatar_url)
+                : null,
+        },
+        documentType: {
+            name: employeeDocument.documentType.name,
+        },
+    };
 };
