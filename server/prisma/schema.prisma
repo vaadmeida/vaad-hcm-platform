@@ -242,7 +242,7 @@ enum DepartmentStatus {
 
 enum DocumentStatus {
   pending
-  verified
+  approved
   rejected
 }
 
