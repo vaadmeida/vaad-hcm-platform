@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { createDocumentTypeSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
-import { createDocumentType, getAllEmployeeDocuments, getDocumentDownloadUrl, getDocumentsStats, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
+import { createDocumentTypeSchema, documentIdSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
+import { createDocumentType, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
 
 
 export const createDocumentTypeController = async (req: Request, res: Response) => {
@@ -24,6 +24,15 @@ export const createDocumentTypeController = async (req: Request, res: Response) 
 
 };
 
+export const getDocumentTypesController = async (req: Request,res: Response) => {
+    const documentTypes = await getDocumentTypes();
+
+    return res.status(200).json({
+        success: true,
+        message: "Document types retrieved successfully",
+        data: documentTypes,
+    });
+};
 
 export const uploadDocumentController = async (req: Request, res: Response) => {
     //console.log(req.body);
@@ -67,7 +76,7 @@ export const uploadDocumentController = async (req: Request, res: Response) => {
 
 export const getAllEmployeeDocumentsController = async (req: Request, res: Response) => {
 
-     const query = getEmployeeDocumentsQuerySchema.parse(req.query);
+    const query = getEmployeeDocumentsQuerySchema.parse(req.query);
 
     const documents = await getAllEmployeeDocuments(query);
 
@@ -94,30 +103,33 @@ export const getEmployeeDocumentsController = async (req: Request, res: Response
     });
 }
 export const getDocumentDownloadUrlController = async (req: Request, res: Response) => {
-        const { documentId } = getDocumentDownloadSchema.parse(req.params);
+    const { documentId } = getDocumentDownloadSchema.parse(req.params);
 
-        const result = await getDocumentDownloadUrl(
-            documentId,
-            req.user!
-        );
+    const result = await getDocumentDownloadUrl(
+        documentId,
+        req.user!
+    );
 
-        return res.status(200).json({
-            success: true,
-            message: "Download URL generated successfully",
-            data: result,
-        });
+    return res.status(200).json({
+        success: true,
+        message: "Download URL generated successfully",
+        data: result,
+    });
 }
+
 export const verifyDocumentController = async (req: Request, res: Response) => {
-     const { documentId } = verifyDocumentParamsSchema.parse(req.params);
-     const { status, notes } = verifyDocumentSchema.parse(req.body);
 
-     const document = await verifyDocument(documentId, status, notes, req.user!);
+    const { documentId } = verifyDocumentParamsSchema.parse(req.params);
 
-     return res.status(200).json({
-         success: true,
-         message: "Document verified successfully",
-         data: document,
-     });
+    const { status, notes } = verifyDocumentSchema.parse(req.body);
+
+    const document = await verifyDocument(documentId, status, notes, req.user!);
+
+    return res.status(200).json({
+        success: true,
+        message: "Document verified successfully",
+        data: document,
+    });
 }
 
 
@@ -168,3 +180,18 @@ export const getExpiredDocumentsController = async (req: Request, res: Response)
     });
 
 }
+
+export const getDocumentByIdController = async (
+    req: Request,
+    res: Response
+) => {
+    const { documentId } = documentIdSchema.parse(req.params);
+
+    const document = await getDocumentById(documentId);
+
+    return res.status(200).json({
+        success: true,
+        message: "Document retrieved successfully",
+        data: document,
+    });
+};
