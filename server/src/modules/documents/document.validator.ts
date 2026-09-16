@@ -46,6 +46,10 @@ export const verifyDocumentParamsSchema = z.object({
 });
 
 export const verifyDocumentSchema = z.object({
-    status: z.enum(["verified", "rejected"]),
+    status: z.enum(["approved", "rejected"]),
     notes: z.string().optional(),
+});
+
+export const documentIdSchema = z.object({
+  documentId: z.string().uuid(),
 });
