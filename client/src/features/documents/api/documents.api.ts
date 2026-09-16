@@ -1,5 +1,6 @@
 import { api } from "@/lib";
-import type { DocsFilters, DocumentDetailsResponse, DocumentsResponse, DocumentStatsResponse, ExpiringDocumentsResponse, RecentDocumentsResponse } from "../types/documents.types";
+import type { DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentTypesResponse, ExpiringDocumentsResponse, RecentDocumentsResponse } from "../types/documents.types";
+import type { ApiResponse } from "@/features/employees/types/employee.types";
 
 export const getDocumentStats = async (): Promise<DocumentStatsResponse> => {
   try {
@@ -21,8 +22,6 @@ export const getRecentDocuments = async (): Promise<RecentDocumentsResponse> => 
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     const response = await api.get<RecentDocumentsResponse>("/api/documents/recent");
-
-    console.log(response.data);
 
     return response.data;
     
@@ -64,15 +63,18 @@ export const getDocuments = async (filters?: DocsFilters ): Promise<DocumentsRes
   }
 };
 
-export const getDocumentById = async (id: string): Promise< DocumentDetailsResponse> => {
-  try {
-    const response = await api.get(`api/documents/employee/${id}`);
+export const getDocumentById = async (
+  id: string
+): Promise<ApiResponse<DocumentDetails>> => {
+  const response = await api.get(`api/documents/${id}`);
+
+  return response.data;
+};
+
+
+
+export const getDocumentTypes = async (): Promise<DocumentTypesResponse> => {
+    const response = await api.get<DocumentTypesResponse>("/api/documents/types");
 
     return response.data;
-  } catch (error) {
-
-    console.error("Getting Documents Details By ID API Error:", error);
-
-    throw error;
-  }
 };
