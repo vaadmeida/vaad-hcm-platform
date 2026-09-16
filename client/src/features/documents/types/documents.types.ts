@@ -90,12 +90,11 @@ export interface DocsFilters {
 
 
 
-export interface DocumentDetailsResponse {
+export interface DocumentDetails {
   id: string;
   employeeId: string;
   employee: {
-    first_name: string;
-    last_name: string;
+    name:string
     avatar_url: string;
     department: string | null;
   };
@@ -114,4 +113,15 @@ export interface DocumentDetailsResponse {
   };
   verified_by_name: string | null;
   expiry_status: "ok" | "expired" | "expiring_soon";
+}
+
+export interface DocumentType {
+    id: string;
+    name: string;
+}
+
+export interface DocumentTypesResponse {
+    success: boolean;
+    message: string;
+    data: DocumentType[];
 }
