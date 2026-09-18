@@ -18,6 +18,7 @@ export interface UploadDocumentDto {
     file: Express.Multer.File;
     uploadedBy: string;
     allowedExtensions?: string[];
+    uploadedByRole?: string;
 }
 
 
