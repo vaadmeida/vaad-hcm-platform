@@ -12,7 +12,7 @@ export interface DocumentStatsResponse {
 }
 
 
-export type DocumentStatus = "pending" | "verified" | "rejected";
+export type DocumentStatus = "pending" | "approved" | "rejected";
 
 export interface RecentDocumentEmployee {
     name: string;
@@ -98,7 +98,6 @@ export interface DocumentDetails {
     avatar_url: string;
     department: string | null;
   };
-
   fileName: string;
   fileUrl: string;
   fileSizeMb: string;
@@ -106,7 +105,6 @@ export interface DocumentDetails {
   expiryDate: string | null;
   notes: string | null;
   uploadedAt: string;
-
   documentType: {
     id: string;
     name: string;
@@ -124,4 +122,47 @@ export interface DocumentTypesResponse {
     success: boolean;
     message: string;
     data: DocumentType[];
+}
+
+export interface DocumentType {
+  id: string;
+  name: string;
+}
+
+export interface EmployeeDocument {
+  id: string;
+  employeeId: string;
+  documentTypeId: string;
+  fileName: string;
+  fileUrl: string | null;
+  fileSizeMb: number;
+  expiryDate: string | null;
+  notes: string | null;
+  uploadedBy: string;
+  verifiedBy: string | null;
+  verifiedAt: string | null;
+  uploadedAt: string;
+  updatedAt: string;
+  status: DocumentStatus;
+  documentType: DocumentType;
+  employee?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_url: string | null;
+  };
+}
+
+export interface UploadDocumentResponse {
+  success: boolean;
+  message: string;
+  data: EmployeeDocument;
+}
+
+export interface UploadDocumentPayload {
+  employeeId: string;
+  documentTypeId: string;
+  file: File;
+  expiryDate?: string;
+  notes?: string;
 }
