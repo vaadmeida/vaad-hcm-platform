@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -19,6 +20,9 @@ import {
 import { FileUp, Upload } from "lucide-react";
 import { useEmployee } from "@/features/employees/hooks/useEmployee";
 import { useDocumentTypes } from "../hooks/useDocumentTypes";
+import { useUploadEmployeeDocument } from "../hooks/useUploadEmployeeDocuments";
+import ButtonLoader from "@/components/common/ButtonLoader";
+import { toast } from "sonner";
 
 interface UploadDocumentDialogProps {
     open: boolean;
@@ -30,84 +34,149 @@ const UploadDocumentDialog = ({
     onOpenChange,
 }: UploadDocumentDialogProps) => {
 
-
-
-    const { data: employees } = useEmployee({})
+    const { data: employees } = useEmployee({});
     const { data: documentTypes } = useDocumentTypes();
+    const uploadDocumentMutation = useUploadEmployeeDocument();
 
+    const [employeeId, setEmployeeId] = useState("");
+    const [documentTypeId, setDocumentTypeId] = useState("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [expiryDate, setExpiryDate] = useState("");
+    const [notes, setNotes] = useState("");
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+        const file = event.target.files?.[0];
+
+        if (file) {
+            setSelectedFile(file);
+        }
+
+    };
+
+    const handleUpload = () => {
+
+        if (!employeeId || !documentTypeId || !selectedFile) {
+            toast.error("Please select an employee, document type, and file.");
+            return;
+        }
+
+        uploadDocumentMutation.mutate(
+            {
+                employeeId,
+                documentTypeId,
+                file: selectedFile,
+                expiryDate: expiryDate || undefined,
+                notes: notes || undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Document uploaded successfully.");
+                    setEmployeeId("");
+                    setDocumentTypeId("");
+                    setSelectedFile(null);
+                    setExpiryDate("");
+                    setNotes("");
+                    onOpenChange(false);
+                },
+
+                onError: (error) => {
+                    toast.error(
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to upload document."
+                    );
+                },
+            }
+        );
+    };
+
+    const isUploading = uploadDocumentMutation.isPending;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[calc(100%-2rem)] max-w-xl gap-0 overflow-hidden rounded-2xl bg-white p-0 shadow-2xl">
+            <DialogContent className="w-[calc(100%-2rem)] max-w-lg gap-0 overflow-hidden rounded-xl bg-white p-0 shadow-2xl">
                 {/* Header */}
-                <DialogHeader className="border-b bg-gray-50/70 px-6 py-5">
-                    <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <FileUp className="h-5 w-5" />
+                <DialogHeader className="border-b bg-gray-50/70 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <FileUp className="h-4 w-4" />
                         </div>
 
-                        <div className="space-y-1">
-                            <DialogTitle className="text-lg font-semibold text-gray-900">
+                        <div>
+                            <DialogTitle className="text-base font-semibold text-gray-900">
                                 Upload Document
                             </DialogTitle>
 
-                            <DialogDescription className="text-sm leading-5 text-gray-500">
-                                Add an employee document to their personnel record.
+                            <DialogDescription className="mt-0.5 text-xs text-gray-500">
+                                Add a document to an employee's personnel record.
                             </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
 
                 {/* Form */}
-                <div className="space-y-6 px-6 py-6">
+                <div className="space-y-4 px-5 py-4">
                     {/* Employee & Document Type */}
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        {/* Employee */}
-                        <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
                             <Label
                                 htmlFor="employee"
-                                className="text-sm font-medium text-gray-700"
+                                className="text-xs font-medium text-gray-700"
                             >
                                 Employee
                             </Label>
-                            <Select>
+
+                            <Select
+                                value={employeeId}
+                                onValueChange={setEmployeeId}
+                            >
                                 <SelectTrigger
                                     id="employee"
-                                    className="h-11 w-full rounded-lg border-gray-200 bg-white px-3.5 text-sm shadow-sm cursor-pointer"
+                                    className="h-10 w-full rounded-lg border-gray-200 bg-white text-sm"
                                 >
                                     <SelectValue placeholder="Select employee" />
                                 </SelectTrigger>
 
                                 <SelectContent>
                                     {employees?.data.map((employee) => (
-                                        <SelectItem key={employee.id} value={employee.id}>
-                                            {employee.first_name} {employee.last_name}
+                                        <SelectItem
+                                            key={employee.id}
+                                            value={employee.id}
+                                        >
+                                            {employee.first_name}{" "}
+                                            {employee.last_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {/* Document Type */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <Label
                                 htmlFor="documentType"
-                                className="text-sm font-medium text-gray-700"
+                                className="text-xs font-medium text-gray-700"
                             >
                                 Document Type
                             </Label>
 
-                            <Select>
+                            <Select
+                                value={documentTypeId}
+                                onValueChange={setDocumentTypeId}
+                            >
                                 <SelectTrigger
                                     id="documentType"
-                                    className="h-11 w-full rounded-lg border-gray-200 bg-white px-3.5 text-sm shadow-sm transition focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                                    className="h-10 w-full rounded-lg border-gray-200 bg-white text-sm"
                                 >
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
 
-                                <SelectContent className="cursor-pointer">
+                                <SelectContent>
                                     {documentTypes?.data.map((type) => (
-                                        <SelectItem key={type.id} value={type.id}>
+                                        <SelectItem
+                                            key={type.id}
+                                            value={type.id}
+                                        >
                                             {type.name}
                                         </SelectItem>
                                     ))}
@@ -117,61 +186,108 @@ const UploadDocumentDialog = ({
                     </div>
 
                     {/* File Upload */}
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <Label
                             htmlFor="file"
-                            className="text-sm font-medium text-gray-700"
+                            className="text-xs font-medium text-gray-700"
                         >
                             Document File
                         </Label>
 
                         <label
                             htmlFor="file"
-                            className="group flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/60 px-6 text-center transition hover:border-primary/40 hover:bg-primary/2"
+                            className="group flex h-20 cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/60 px-4 transition hover:border-primary/40 hover:bg-primary/5"
                         >
-                            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm ring-1 ring-gray-100 transition group-hover:text-primary">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm ring-1 ring-gray-100 group-hover:text-primary">
                                 <Upload className="h-4 w-4" />
                             </div>
 
-                            <p className="text-sm font-medium text-gray-700">
-                                Click to upload
-                            </p>
+                            <div className="min-w-0 text-left">
+                                <p className="truncate text-sm font-medium text-gray-700">
+                                    {selectedFile
+                                        ? selectedFile.name
+                                        : "Click to upload"}
+                                </p>
 
-                            <p className="mt-0.5 text-xs text-gray-500">
-                                PDF, JPG, JPEG or PNG
-                            </p>
+                                <p className="text-xs text-gray-500">
+                                    PDF, JPG, JPEG or PNG
+                                </p>
+                            </div>
 
                             <Input
                                 id="file"
                                 type="file"
                                 accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={handleFileChange}
                                 className="hidden"
                             />
                         </label>
-
-                        <p className="text-xs text-gray-400">
-                            Maximum file size depends on the selected document type.
-                        </p>
                     </div>
+
+                    {/* Expiry & Notes */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label
+                                htmlFor="expiryDate"
+                                className="text-xs font-medium text-gray-700"
+                            >
+                                Expiry Date
+                            </Label>
+
+                            <Input
+                                id="expiryDate"
+                                type="date"
+                                value={expiryDate}
+                                onChange={(event) => setExpiryDate(event.target.value)}
+                                className="h-10 rounded-lg border-gray-200 text-sm"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label
+                                htmlFor="notes"
+                                className="text-xs font-medium text-gray-700"
+                            >
+                                Notes
+                            </Label>
+
+                            <Input
+                                id="notes"
+                                value={notes}
+                                onChange={(event) => setNotes(event.target.value)}
+                                placeholder="Optional note"
+                                maxLength={500}
+                                className="h-10 rounded-lg border-gray-200 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <p className="-mt-1 text-[11px] text-gray-400">
+                        Maximum file size depends on the selected document type.
+                    </p>
                 </div>
 
                 {/* Footer */}
-                <DialogFooter className="border-t bg-gray-50/50 px-8 py-5">
+                <DialogFooter className="border-t bg-gray-50/50 px-8 py-6">
                     <Button
                         type="button"
                         variant="outline"
                         onClick={() => onOpenChange(false)}
-                        className="h-10 rounded-lg border-gray-200 bg-white px-5"
+                        disabled={isUploading}
+                        className="h-9 rounded-lg border-gray-200 bg-white px-4 text-sm cursor-pointer"
                     >
                         Cancel
                     </Button>
 
                     <Button
                         type="button"
-                        className="h-10 rounded-lg px-5 text-white shadow-sm transition hover:bg-primary/90"
+                        onClick={handleUpload}
+                        disabled={!employeeId || !documentTypeId || !selectedFile || isUploading
+                        }
+                        className="h-9 rounded-lg px-4 text-sm text-white shadow-sm"
                     >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Document
+                        <Upload className="mr-2 h-3.5 w-3.5" />
+                        {isUploading ? <ButtonLoader text="Uploading..." /> : "Upload Document"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
