@@ -24,7 +24,7 @@ export const createDocumentTypeController = async (req: Request, res: Response) 
 
 };
 
-export const getDocumentTypesController = async (req: Request,res: Response) => {
+export const getDocumentTypesController = async (req: Request, res: Response) => {
     const documentTypes = await getDocumentTypes();
 
     return res.status(200).json({
@@ -34,10 +34,11 @@ export const getDocumentTypesController = async (req: Request,res: Response) => 
     });
 };
 
-export const uploadDocumentController = async (req: Request, res: Response) => {
-    //console.log(req.body);
-    //console.log(req.file);
 
+export const selfUploadDocumentController = async (
+    req: Request,
+    res: Response
+) => {
     const data = uploadDocumentSchema.parse(req.body);
 
     if (!req.file) {
@@ -61,17 +62,62 @@ export const uploadDocumentController = async (req: Request, res: Response) => {
         employeeId,
         file: req.file,
         documentTypeId: data.documentTypeId,
-        uploadedBy
+        uploadedBy,
     });
-
 
     return res.status(201).json({
         success: true,
         message: "Document uploaded successfully",
         data: document,
     });
+};
 
-}
+export const uploadEmployeeDocumentController = async (req: Request,res: Response) => {
+
+    const data = uploadDocumentSchema.parse(req.body);
+
+    if (!req.file) {
+        return res.status(400).json({
+            success: false,
+            message: "Document file is required",
+        });
+    }
+
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized",
+        });
+    }
+
+    console.log("UPLOADER ROLE:", req.user.role);
+
+    const employeeId = Array.isArray(req.params.employeeId)
+        ? req.params.employeeId[0]
+        : req.params.employeeId;
+
+    if (!employeeId) {
+        return res.status(400).json({
+            success: false,
+            message: "Employee ID is required",
+        });
+    }
+
+    const uploadedBy = req.user.id;
+    const document = await uploadDocument({
+        employeeId,
+        file: req.file,
+        documentTypeId: data.documentTypeId,
+        uploadedBy,
+        uploadedByRole: req.user.role,
+    });
+
+    return res.status(201).json({
+        success: true,
+        message: "Document uploaded successfully",
+        data: document,
+    });
+};
 
 
 export const getAllEmployeeDocumentsController = async (req: Request, res: Response) => {
