@@ -1,3 +1,4 @@
+import path from "path";
 import { DocumentCategory, DocumentStatus } from "@prisma/client";
 import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
@@ -96,9 +97,9 @@ export const getDocumentTypes = async () => {
 };
 
 
-export const uploadDocument = async (data: UploadDocumentDto) => {
 
-    // Validate document type
+export const uploadDocument = async (data: UploadDocumentDto) => {
+    // 1. Validate document type
     const documentType = await prisma.documentType.findUnique({
         where: {
             id: data.documentTypeId,
@@ -113,9 +114,11 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
         );
     }
 
-    const extensions = data.allowedExtensions ?? ["pdf", "jpg", "jpeg", "png"];
+    // 2. Get actual file extension
+    const extension = path.extname(data.file.originalname).replace(".", "").toLowerCase();
 
-    if (!documentType.allowedExtensions.includes(extensions[0].toLowerCase())) {
+    // 3. Validate file extension
+    if (!documentType.allowedExtensions.includes(extension)) {
         throw new AppError(
             "Invalid file type",
             400,
@@ -123,6 +126,7 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
         );
     }
 
+    // 4. Validate file size
     const fileSizeMb = Math.round(data.file.size / (1024 * 1024));
 
     if (fileSizeMb > documentType.maxSizeMb) {
@@ -133,13 +137,17 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
         );
     }
 
+    // 5. Create S3 key
     const key = `employees/${data.employeeId}/documents/${data.documentTypeId}/${Date.now()}-${data.file.originalname}`;
 
+    // 6. Upload file to S3
     await uploadFileToS3(
         key,
         data.file.buffer,
         data.file.mimetype
     );
+
+    const isHrOrAdmin = data.uploadedByRole === "hr" || data.uploadedByRole === "admin";
 
     const document = await prisma.employeeDocument.create({
         data: {
@@ -147,15 +155,16 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
             documentTypeId: data.documentTypeId,
             fileName: data.file.originalname,
             fileUrl: key,
-            fileSizeMb: fileSizeMb,
+            fileSizeMb,
             uploadedBy: data.uploadedBy,
+            status: isHrOrAdmin ? "approved" : "pending",
+            verifiedBy: isHrOrAdmin ? data.uploadedBy : null,
+            verifiedAt: isHrOrAdmin ? new Date() : null,
         },
     });
 
     return document;
-
-}
-
+};
 
 export const getAllEmployeeDocuments = async ({
     status,
@@ -236,26 +245,32 @@ export const getAllEmployeeDocuments = async ({
     });
 
 
+
     return Promise.all(
-        documents.map(async (document) => ({
-            id: document.id,
-            employeeId: document.employeeId,
-            fileName: document.fileName,
-            fileUrl: document.fileUrl
-                ? await getPresignedUrl(document.fileUrl)
-                : null,
-            fileSizeMb: document.fileSizeMb,
-            uploadedAt: document.uploadedAt,
-            expiryDate: document.expiryDate,
-            status: document.status,
-            documentType: document.documentType,
-            employee: {
-                ...document.employee,
-                avatar_url: document.employee.avatar_url
-                    ? await getPresignedUrl(document.employee.avatar_url)
-                    : null,
-            },
-        }))
+        documents.map(async (document) => {
+            const fileUrl = document.fileUrl?.startsWith("http")
+                ? document.fileUrl
+                : document.fileUrl
+                    ? await getPresignedUrl(document.fileUrl)
+                    : null;
+            return {
+                id: document.id,
+                employeeId: document.employeeId,
+                fileName: document.fileName,
+                fileUrl,
+                fileSizeMb: document.fileSizeMb,
+                uploadedAt: document.uploadedAt,
+                expiryDate: document.expiryDate,
+                status: document.status,
+                documentType: document.documentType,
+                employee: {
+                    ...document.employee,
+                    avatar_url: document.employee.avatar_url
+                        ? await getPresignedUrl(document.employee.avatar_url)
+                        : null,
+                },
+            };
+        })
     );
 };
 
@@ -346,6 +361,13 @@ export const getEmployeeDocuments = async (
                     expiry_status = "expiring_soon";
                 }
             }
+
+            const fileUrl = document.fileUrl?.startsWith("http")
+                ? document.fileUrl
+                : document.fileUrl
+                    ? await getPresignedUrl(document.fileUrl)
+                    : null;
+
             const avatarUrl = document.employee.avatar_url
                 ? await getPresignedUrl(document.employee.avatar_url)
                 : null;
@@ -362,7 +384,7 @@ export const getEmployeeDocuments = async (
                 },
 
                 fileName: document.fileName,
-                fileUrl: document.fileUrl,
+                fileUrl,
                 fileSizeMb: document.fileSizeMb,
                 status: document.status,
                 expiryDate: document.expiryDate,
