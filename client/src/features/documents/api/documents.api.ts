@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentTypesResponse, ExpiringDocumentsResponse, RecentDocumentsResponse } from "../types/documents.types";
+import type { DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentTypesResponse, EmployeeDocument, ExpiringDocumentsResponse, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
 import type { ApiResponse } from "@/features/employees/types/employee.types";
 
 export const getDocumentStats = async (): Promise<DocumentStatsResponse> => {
@@ -24,7 +24,7 @@ export const getRecentDocuments = async (): Promise<RecentDocumentsResponse> => 
     const response = await api.get<RecentDocumentsResponse>("/api/documents/recent");
 
     return response.data;
-    
+
 
   } catch (error) {
     console.error("Recent Documents API Error:", error);
@@ -46,7 +46,7 @@ export const getExpiringDocuments = async (): Promise<ExpiringDocumentsResponse>
   }
 };
 
-export const getDocuments = async (filters?: DocsFilters ): Promise<DocumentsResponse> => {
+export const getDocuments = async (filters?: DocsFilters): Promise<DocumentsResponse> => {
   try {
 
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -74,7 +74,47 @@ export const getDocumentById = async (
 
 
 export const getDocumentTypes = async (): Promise<DocumentTypesResponse> => {
-    const response = await api.get<DocumentTypesResponse>("/api/documents/types");
+  const response = await api.get<DocumentTypesResponse>("/api/documents/types");
 
-    return response.data;
+  return response.data;
+};
+
+
+export const uploadEmployeeDocument = async (
+  data: UploadDocumentPayload
+): Promise<EmployeeDocument> => {
+  const formData = new FormData();
+
+  formData.append("file", data.file);
+  formData.append("documentTypeId", data.documentTypeId);
+
+  if (data.expiryDate) {
+    formData.append("expiry_date", data.expiryDate);
+  }
+
+  if (data.notes) {
+    formData.append("notes", data.notes);
+  }
+
+  const response = await api.post<EmployeeDocument>(
+    `/api/documents/employee/${data.employeeId}`,
+    formData
+  );
+
+  return response.data;
+};
+
+export const verifyDocument = async (documentId: string,
+  status: "approved" | "rejected",
+  notes?: string
+) => {
+  const response = await api.patch(
+    `/documents/verify/${documentId}`,
+    {
+      status,
+      notes,
+    }
+  );
+
+  return response.data;
 };
