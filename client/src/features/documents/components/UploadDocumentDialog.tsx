@@ -172,7 +172,7 @@ const UploadDocumentDialog = ({
                                 </SelectTrigger>
 
                                 <SelectContent>
-                                    {documentTypes?.data.map((type) => (
+                                    {documentTypes?.map((type) => (
                                         <SelectItem
                                             key={type.id}
                                             value={type.id}
