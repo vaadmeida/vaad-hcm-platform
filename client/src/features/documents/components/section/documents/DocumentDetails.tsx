@@ -120,6 +120,7 @@ const DocumentDetails = ({
     };
 
     const handleReview = (status: "approved" | "rejected") => {
+
         if (!documentId) return;
 
         if (status === "rejected" && !reviewNotes.trim()) {
@@ -144,6 +145,7 @@ const DocumentDetails = ({
                     );
 
                     setReviewNotes("");
+                    onClose()
                 },
 
                 onError: (error) => {
