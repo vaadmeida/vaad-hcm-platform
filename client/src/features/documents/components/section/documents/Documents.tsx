@@ -4,11 +4,7 @@ import DocumentTable from "./DocumentTable";
 import DocumentDetails from "./DocumentDetails";
 import DocumentsCardList from "./DocumentsCardList";
 import { useGetDocuments } from "@/features/documents/hooks/useGetDocuments";
-//import DocumentFilters from "./DocumentFilters";
-//import DocumentTable from "./DocumentTable";
-//import DocumentDetails from "./DocumentDetails";
-//import DocumentsCardList from "./DocumentsCardList";
-//import { useGetDocuments } from "@/features/documents/hooks/useGetDocuments";
+
 
 const Documents = () => {
   const [search, setSearch] = useState("");
