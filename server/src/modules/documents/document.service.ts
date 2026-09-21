@@ -84,9 +84,12 @@ export const getDocumentTypes = async () => {
         select: {
             id: true,
             name: true,
-        },
-        where: {
+            description: true,
+            isRequired: true,
+            hasExpiry: true,
             isActive: true,
+            createdAt: true,
+            updatedAt: true,
         },
         orderBy: {
             name: "asc",
@@ -95,7 +98,6 @@ export const getDocumentTypes = async () => {
 
     return documentTypes;
 };
-
 
 
 export const uploadDocument = async (data: UploadDocumentDto) => {
@@ -480,6 +482,15 @@ export const verifyDocument = async (
     }
 
 
+    if (status === "rejected" && !notes?.trim()) {
+        throw new AppError(
+            "A rejection reason is required",
+            400,
+            "REJECTION_REASON_REQUIRED"
+        );
+    }
+
+
     const document = await prisma.employeeDocument.update({
         where: {
             id: documentId,
@@ -488,7 +499,7 @@ export const verifyDocument = async (
             status,
             verifiedBy: requestingUser.id,
             verifiedAt: new Date(),
-            notes,
+            notes: notes?.trim() || null,
         },
     });
 
