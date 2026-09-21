@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentTypesResponse, EmployeeDocument, ExpiringDocumentsResponse, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
+import type { DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
 import type { ApiResponse } from "@/features/employees/types/employee.types";
 
 export const getDocumentStats = async (): Promise<DocumentStatsResponse> => {
@@ -71,15 +71,6 @@ export const getDocumentById = async (
   return response.data;
 };
 
-
-
-export const getDocumentTypes = async (): Promise<DocumentTypesResponse> => {
-  const response = await api.get<DocumentTypesResponse>("/api/documents/types");
-
-  return response.data;
-};
-
-
 export const uploadEmployeeDocument = async (
   data: UploadDocumentPayload
 ): Promise<EmployeeDocument> => {
@@ -108,8 +99,7 @@ export const verifyDocument = async (documentId: string,
   status: "approved" | "rejected",
   notes?: string
 ) => {
-  const response = await api.patch(
-    `/documents/verify/${documentId}`,
+  const response = await api.patch(`/api/documents/verify/${documentId}`, 
     {
       status,
       notes,
@@ -117,4 +107,13 @@ export const verifyDocument = async (documentId: string,
   );
 
   return response.data;
+};
+
+
+export const getDocumentTypes = async (): Promise<DocumentType[]> => {
+    const response = await api.get<GetDocumentTypesResponse>(
+        "/api/documents/types"
+    );
+
+    return response.data.data;
 };
