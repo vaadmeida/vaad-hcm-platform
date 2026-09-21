@@ -118,17 +118,6 @@ export interface DocumentType {
     name: string;
 }
 
-export interface DocumentTypesResponse {
-    success: boolean;
-    message: string;
-    data: DocumentType[];
-}
-
-export interface DocumentType {
-  id: string;
-  name: string;
-}
-
 export interface EmployeeDocument {
   id: string;
   employeeId: string;
@@ -165,4 +154,21 @@ export interface UploadDocumentPayload {
   file: File;
   expiryDate?: string;
   notes?: string;
+}
+
+export interface DocumentType {
+    id: string;
+    name: string;
+    description: string | null;
+    isRequired: boolean;
+    hasExpiry: boolean;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetDocumentTypesResponse {
+    success: boolean;
+    message: string;
+    data: DocumentType[];
 }
