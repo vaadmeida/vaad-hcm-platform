@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
+import type { CreateDocumentTypeDto, DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, MyDocument, MyDocumentsResponse, MyDocumentStats, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
 import type { ApiResponse } from "@/features/employees/types/employee.types";
 
 export const getDocumentStats = async (): Promise<DocumentStatsResponse> => {
@@ -114,6 +114,29 @@ export const getDocumentTypes = async (): Promise<DocumentType[]> => {
     const response = await api.get<GetDocumentTypesResponse>(
         "/api/documents/types"
     );
+
+    return response.data.data;
+};
+
+
+
+export const createDocumentType = async (payload: CreateDocumentTypeDto): Promise<DocumentType> => {
+    const response = await api.post("/api/documents", payload);
+    return response.data.data;
+};
+
+export const getMyDocumentStats = async (): Promise<MyDocumentStats> => {
+    const response = await api.get("/api/documents/my/stats");
+    return response.data.data;
+};
+
+export const getMyDocuments = async(filters?: DocsFilters ): Promise<MyDocument[]> => {
+    const response = await api.get<MyDocumentsResponse>("/api/documents/my",
+        {
+            params: filters,
+        },
+    );
+ 
 
     return response.data.data;
 };
