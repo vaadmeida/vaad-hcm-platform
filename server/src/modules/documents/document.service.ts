@@ -4,7 +4,7 @@ import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
 import { getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
 import { AuthenticatedUser } from "../../middlewares/auth.ts";
-import { CreateDocumentTypeDto, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
+import { CreateDocumentTypeDto, EmployeeDocumentFilters, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
 
 
 
@@ -276,50 +276,43 @@ export const getAllEmployeeDocuments = async ({
     );
 };
 
-export const getEmployeeDocuments = async (
+
+const fetchEmployeeDocuments = async (
     employeeId: string,
-    requestingUser: AuthenticatedUser
+    filters?: EmployeeDocumentFilters,
 ) => {
-    if (
-        requestingUser.role === "employee" &&
-        requestingUser.id !== employeeId
-    ) {
-        throw new AppError(
-            "You are not authorized to view this employee's documents",
-            401,
-            "UNAUTHORIZED"
-        );
-    }
-
-    if (requestingUser.role === "manager") {
-        const employee = await prisma.employee.findUnique({
-            where: { id: employeeId },
-            select: {
-                manager_id: true,
-            },
-        });
-
-        if (!employee) {
-            throw new AppError(
-                "Employee not found",
-                404,
-                "EMPLOYEE_NOT_FOUND"
-            );
-        }
-
-        if (employee.manager_id !== requestingUser.id) {
-            throw new AppError(
-                "You are not authorized to view this employee's documents",
-                403,
-                "UNAUTHORIZED"
-            );
-        }
-    }
-
     const documents = await prisma.employeeDocument.findMany({
         where: {
             employeeId,
+
+            ...(filters?.status && {
+                status: filters.status,
+            }),
+
+            ...(filters?.document_type_id && {
+                documentTypeId: filters.document_type_id,
+            }),
+
+            ...(filters?.search && {
+                OR: [
+                    {
+                        fileName: {
+                            contains: filters.search,
+                            mode: "insensitive",
+                        },
+                    },
+                    {
+                        documentType: {
+                            name: {
+                                contains: filters.search,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                ],
+            }),
         },
+
         include: {
             employee: {
                 select: {
@@ -329,12 +322,14 @@ export const getEmployeeDocuments = async (
                     department: true,
                 },
             },
+
             documentType: {
                 select: {
                     id: true,
                     name: true,
                 },
             },
+
             verifier: {
                 select: {
                     first_name: true,
@@ -342,6 +337,7 @@ export const getEmployeeDocuments = async (
                 },
             },
         },
+
         orderBy: {
             uploadedAt: "desc",
         },
@@ -354,7 +350,10 @@ export const getEmployeeDocuments = async (
 
     const formattedDocuments = await Promise.all(
         documents.map(async (document) => {
-            let expiry_status = "ok";
+            let expiry_status:
+                | "ok"
+                | "expired"
+                | "expiring_soon" = "ok";
 
             if (document.expiryDate) {
                 if (document.expiryDate < now) {
@@ -404,10 +403,86 @@ export const getEmployeeDocuments = async (
 
                 expiry_status,
             };
-        })
+        }),
     );
 
     return formattedDocuments;
+};
+
+export const getMyDocuments = async (
+    requestingUser: AuthenticatedUser,
+    filters?: EmployeeDocumentFilters,
+) => {
+    const employee = await prisma.employee.findUnique({
+        where: {
+            id: requestingUser.id,
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (!employee) {
+        throw new AppError(
+            "Employee record not found",
+            404,
+            "EMPLOYEE_NOT_FOUND",
+        );
+    }
+
+    return fetchEmployeeDocuments(
+        employee.id,
+        filters,
+    );
+};
+
+export const getEmployeeDocuments = async (
+    employeeId: string,
+    requestingUser: AuthenticatedUser,
+    filters?: EmployeeDocumentFilters,
+) => {
+    if (
+        requestingUser.role === "employee" &&
+        requestingUser.id !== employeeId
+    ) {
+        throw new AppError(
+            "You are not authorized to view this employee's documents",
+            403,
+            "FORBIDDEN",
+        );
+    }
+
+    if (requestingUser.role === "manager") {
+        const employee = await prisma.employee.findUnique({
+            where: {
+                id: employeeId,
+            },
+            select: {
+                manager_id: true,
+            },
+        });
+
+        if (!employee) {
+            throw new AppError(
+                "Employee not found",
+                404,
+                "EMPLOYEE_NOT_FOUND",
+            );
+        }
+
+        if (employee.manager_id !== requestingUser.id) {
+            throw new AppError(
+                "You are not authorized to view this employee's documents",
+                403,
+                "FORBIDDEN",
+            );
+        }
+    }
+
+    return fetchEmployeeDocuments(
+        employeeId,
+        filters,
+    );
 };
 
 export const getDocumentDownloadUrl = async (docId: string, requestingUser: AuthenticatedUser) => {
@@ -702,5 +777,37 @@ export const getDocumentById = async (documentId: string) => {
         documentType: {
             name: employeeDocument.documentType.name,
         },
+    };
+};
+
+export const getMyDocumentStats = async (employeeId: string) => {
+    const documents = await prisma.employeeDocument.findMany({
+        where: {
+            employeeId,
+        },
+        select: {
+            status: true,
+        },
+    });
+
+    const total = documents.length;
+
+    const approved = documents.filter(
+        (document) => document.status === "approved",
+    ).length;
+
+    const pending = documents.filter(
+        (document) => document.status === "pending",
+    ).length;
+
+    const needsAttention = documents.filter(
+        (document) => document.status === "rejected",
+    ).length;
+
+    return {
+        total,
+        approved,
+        pending,
+        needsAttention,
     };
 };
