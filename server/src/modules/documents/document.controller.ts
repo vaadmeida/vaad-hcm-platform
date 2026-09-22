@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { createDocumentTypeSchema, documentIdSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
-import { createDocumentType, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
+import { createDocumentTypeSchema, documentIdSchema, employeeDocumentFiltersSchema, employeeIdSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
+import { createDocumentType, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getMyDocuments, getMyDocumentStats, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
+import { AppError } from "../../errors/appError.ts";
 
 
 export const createDocumentTypeController = async (req: Request, res: Response) => {
@@ -72,7 +73,7 @@ export const selfUploadDocumentController = async (
     });
 };
 
-export const uploadEmployeeDocumentController = async (req: Request,res: Response) => {
+export const uploadEmployeeDocumentController = async (req: Request, res: Response) => {
 
     const data = uploadDocumentSchema.parse(req.body);
 
@@ -133,21 +134,51 @@ export const getAllEmployeeDocumentsController = async (req: Request, res: Respo
     });
 };
 
-export const getEmployeeDocumentsController = async (req: Request, res: Response) => {
+export const getEmployeeDocumentsController = async (
+    req: Request,
+    res: Response,
+) => {
+    const { employeeId } = employeeIdSchema.parse(
+        req.params,
+    );
 
-    const { employeeId } = getEmployeeDocumentsSchema.parse(req.params);
+    const filters = employeeDocumentFiltersSchema.parse(
+        req.query,
+    );
 
     const documents = await getEmployeeDocuments(
         employeeId,
-        req.user!
+        req.user!,
+        filters,
     );
 
     return res.status(200).json({
         success: true,
-        message: "Documents retrieved successfully",
+        message: "Employee documents fetched successfully",
         data: documents,
     });
-}
+};
+
+export const getMyDocumentsController = async (
+    req: Request,
+    res: Response,
+) => {
+    const filters = employeeDocumentFiltersSchema.parse(
+        req.query,
+    );
+
+    const documents = await getMyDocuments(
+        req.user!,
+        filters,
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: "My documents fetched successfully",
+        data: documents,
+    });
+};
+
 export const getDocumentDownloadUrlController = async (req: Request, res: Response) => {
     const { documentId } = getDocumentDownloadSchema.parse(req.params);
 
@@ -177,7 +208,6 @@ export const verifyDocumentController = async (req: Request, res: Response) => {
         data: document,
     });
 }
-
 
 export const getDocumentsStatsController = async (req: Request, res: Response) => {
 
@@ -239,5 +269,26 @@ export const getDocumentByIdController = async (
         success: true,
         message: "Document retrieved successfully",
         data: document,
+    });
+};
+
+
+export const getMyDocumentStatsController = async (
+    req: Request,
+    res: Response,
+) => {
+
+    const employeeId = req.user?.id;
+
+    if (typeof employeeId !== "string") {
+        throw new Error("Employee ID is required.");
+    }
+
+    const stats = await getMyDocumentStats(employeeId);
+
+    return res.status(200).json({
+        success: true,
+        message: "Document statistics fetched successfully",
+        data: stats,
     });
 };
