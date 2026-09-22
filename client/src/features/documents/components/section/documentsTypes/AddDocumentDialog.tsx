@@ -88,7 +88,7 @@ const AddDocumentDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[440px] gap-0 overflow-hidden p-0 bg-white">
+            <DialogContent className="max-w-110 gap-0 overflow-hidden p-0 bg-white">
                 {/* Header */}
                 <DialogHeader className="border-b px-5 py-4">
                     <div className="flex items-center gap-3">
@@ -176,7 +176,7 @@ const AddDocumentDialog = ({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Brief description..."
-                            className="min-h-[60px] resize-none text-sm"
+                            className="min-h-15 resize-none text-sm"
                         />
                     </div>
 
