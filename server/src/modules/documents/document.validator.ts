@@ -53,3 +53,17 @@ export const verifyDocumentSchema = z.object({
 export const documentIdSchema = z.object({
   documentId: z.string().uuid(),
 });
+
+export const employeeIdSchema = z.object({
+    employeeId: z.string().uuid("Invalid employee ID"),
+});
+
+export const employeeDocumentFiltersSchema = z.object({
+    search: z.string().trim().optional(),
+    status: z.enum(["pending", "approved", "rejected"]).optional(),
+    document_type_id: z.string().optional(),
+});
+
+export type EmployeeDocumentFilters = z.infer<
+    typeof employeeDocumentFiltersSchema
+>;
