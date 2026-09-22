@@ -1,4 +1,4 @@
-import { DocumentCategory } from "@prisma/client";
+import { DocumentCategory, DocumentStatus } from "@prisma/client";
 
 export interface CreateDocumentTypeDto {
     name: string;
@@ -26,5 +26,11 @@ export interface GetEmployeeDocumentsInput {
     status?: string;
     employee_id?: string;
     search?: string;
+    document_type_id?: string;
+}
+
+export interface EmployeeDocumentFilters {
+    search?: string;
+    status?: DocumentStatus;
     document_type_id?: string;
 }
