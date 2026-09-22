@@ -19,7 +19,7 @@ const Documents = () => {
   });
 
   const total = documents?.data?.length ?? 0;
-
+  
   const pending = documents?.data.filter((document) => document.status === "pending").length ?? 0;
 
   const approved = documents?.data.filter((document) => document.status === "approved").length ?? 0;
