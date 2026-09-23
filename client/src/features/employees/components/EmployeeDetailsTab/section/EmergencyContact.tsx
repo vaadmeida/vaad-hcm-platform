@@ -19,7 +19,7 @@ const EmergencyContact = ({
         <ShieldUser className="h-4 w-4 shrink-0 text-[#1078A9]" />
 
         <h2 className="text-sm font-semibold text-[#121417]">
-          Emergency Contact
+          Guarantor Information
         </h2>
       </div>
 
