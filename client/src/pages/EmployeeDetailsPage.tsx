@@ -3,7 +3,9 @@ import EmployeeEditModal from "@/features/employees/components/EditEmployeeModal
 import EmployeeDetailsHeader from "@/features/employees/components/EmployeeDetailsHeader";
 import type { EmployeeDetailsTab } from "@/features/employees/components/EmployeeDetailsTab/EmployeeDetailsTabs";
 import EmployeeDetailsTabs from "@/features/employees/components/EmployeeDetailsTab/EmployeeDetailsTabs";
+import EmployeeDocuments from "@/features/employees/components/EmployeeDetailsTab/EmployeeDocuments";
 import EmployeeOverview from "@/features/employees/components/EmployeeDetailsTab/EmployeeOverview";
+import EmployeeSalaryStructure from "@/features/employees/components/EmployeeDetailsTab/EmployeeSalaryStructure";
 import { useEmployeeDetails } from "@/features/employees/hooks/useEmployeeDetails";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
@@ -41,15 +43,17 @@ const EmployeeDetailsPage = () => {
         <EmployeeOverview employee={employee} />
       )}
 
-      {/*
+  
       {activeTab === "documents" && (
         <EmployeeDocuments employee={employee} />
       )}
 
+
+
       {activeTab === "salary" && (
         <EmployeeSalaryStructure employee={employee} />
       )}
-      */}
+  
 
       {open && (
         <EmployeeEditModal
