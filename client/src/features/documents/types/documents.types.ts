@@ -82,6 +82,7 @@ export interface DocsFilters {
   search?: string;
   status?: string;
   document_type_id?: string;
+  employeeId?: string;
 }
 
 
