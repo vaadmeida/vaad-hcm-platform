@@ -4,6 +4,7 @@ import { useGetMyProfile } from "@/features/my-profile/hooks/useGetMyProfile";
 import EmployeeEditModal from "@/features/employees/components/EditEmployeeModal/EditEmployeeModal";
 import EmployeeDetailsTabs, { type EmployeeDetailsTab } from "@/features/employees/components/EmployeeDetailsTab/EmployeeDetailsTabs";
 import EmployeeOverview from "@/features/employees/components/EmployeeDetailsTab/EmployeeOverview";
+import MyDocumentsDisplay from "@/features/employees/components/EmployeeDetailsTab/MyDocumentsDisplay";
 
 const MyProfile = () => {
 
@@ -38,6 +39,11 @@ const MyProfile = () => {
             {activeTab === "overview" && (
                 <EmployeeOverview employee={employee} />
             )}
+
+            {activeTab === "documents" && (
+                <MyDocumentsDisplay/>
+            )}
+
 
 
             {/* Edit Employee Modal */}
