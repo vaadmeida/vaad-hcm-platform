@@ -11,6 +11,7 @@ import departmentRouter from './modules/department/department.route.ts';
 import locationRouter from './modules/location/location.route.ts';
 import settingRouter from './modules/settings/settings.route.ts';
 import documentRouter from './modules/documents/document.route.ts';
+import salaryRouter from './modules/salary/salary.routes.ts';
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/dashboard' , dashboardRouter)
 app.use('/api/departments' , departmentRouter)
 app.use('/api/locations' , locationRouter)
 app.use('/api/settings' , settingRouter)
+app.use("/api/salaries", salaryRouter);
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
