@@ -296,48 +296,51 @@ enum NotificationType {
   SYSTEM
 }
 
-
 model EmployeeSalary {
-  id                  String   @id @default(uuid())
-  employeeId          String
-  annualBaseSalary    Decimal  @db.Decimal(15, 2)
-  effectiveDate       DateTime
-  endDate             DateTime?
-  monthlyGross        Decimal  @db.Decimal(15, 2)
-  paye                Decimal  @db.Decimal(15, 2) @default(0)
-  netPay              Decimal  @db.Decimal(15, 2)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  employee            Employee              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  components          SalaryComponent[]
-  additionalEarnings  AdditionalEarning[]
- 
+  id                 String   @id @default(uuid()) @db.Uuid
+  employeeId         String   @db.Uuid
+  annualBaseSalary   Decimal  @db.Decimal(15, 2)
+  effectiveDate      DateTime
+  endDate            DateTime?
+  monthlyGross       Decimal  @db.Decimal(15, 2)
+  paye               Decimal  @db.Decimal(15, 2) @default(0)
+  netPay             Decimal  @db.Decimal(15, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  employee           Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  components         SalaryComponent[]
+  additionalEarnings AdditionalEarning[]
 
   @@index([employeeId])
   @@index([effectiveDate])
 }
 
 model SalaryComponent {
-  id          String   @id @default(uuid())
-  salaryId    String
-  name        String
-  percentage  Decimal  @db.Decimal(5, 2)
-  annualAmount Decimal @db.Decimal(15, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  salary      EmployeeSalary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid()) @db.Uuid
+  salaryId     String   @db.Uuid
+  name         String
+  percentage   Decimal  @db.Decimal(5, 2)
+  annualAmount Decimal  @db.Decimal(15, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  salary EmployeeSalary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
+
   @@index([salaryId])
 }
 
 model AdditionalEarning {
-  id          String   @id @default(uuid())
-  salaryId    String
-  name        String
-  amount      Decimal  @db.Decimal(15, 2)
-  frequency   EarningFrequency @default(ANNUAL)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  salary      EmployeeSalary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
+  id        String          @id @default(uuid()) @db.Uuid
+  salaryId  String          @db.Uuid
+  name      String
+  amount    Decimal         @db.Decimal(15, 2)
+  frequency EarningFrequency @default(ANNUAL)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  salary EmployeeSalary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
+
   @@index([salaryId])
 }
 
