@@ -137,6 +137,16 @@ export const getMyDocuments = async(filters?: DocsFilters ): Promise<MyDocument[
         },
     );
  
-
     return response.data.data;
+};
+
+
+export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
+  const response = await api.get<{
+    success: boolean;
+    message: string;
+    data: EmployeeDocument[];
+  }>(`/api/documents/employee/${employeeId}`);
+
+  return response.data.data;
 };
