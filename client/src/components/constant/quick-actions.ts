@@ -61,19 +61,19 @@ export const quickActions = {
     {
       label: "Approve Leave",
       icon: ClipboardCheck,
-      path: "/manager/leave-requests",
+      path: "/leave",
       color: "action-icon-purple",
     },
     {
       label: "Upload Document",
       icon: FileText,
-      path: "/manager/documents/upload",
+      path: "/my-documents",
       color: "action-icon-amber",
     },
     {
       label: "View Team",
       icon: Users,
-      path: "/manager/team",
+      path: "/employees",
       color: "action-icon-green",
     },
   ],
