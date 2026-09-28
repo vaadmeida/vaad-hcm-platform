@@ -43,3 +43,23 @@ export type EmployeeSalaryResponse = {
   message: string;
   data: EmployeeSalary;
 };
+
+export type CreateSalaryComponentDTO = Omit<
+   SalaryComponent,
+  "id" | "salaryId" | "createdAt" | "updatedAt"
+>;
+
+export type CreateAdditionalEarningDTO = Omit<
+  AdditionalEarning,
+  "id" | "salaryId" | "createdAt" | "updatedAt"
+>;
+
+export type CreateEmployeeSalaryDTO = {
+  annualBaseSalary: number;
+  effectiveDate: string;
+  monthlyGross: number;
+  paye: number;
+  netPay: number;
+  components: CreateSalaryComponentDTO[];
+  additionalEarnings: CreateAdditionalEarningDTO[];
+};
