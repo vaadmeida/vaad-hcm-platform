@@ -8,8 +8,7 @@ import { useGetCities } from "@/features/location/hooks/useGetCities";
 interface FormInfoProps {
   form: UpdateEmployeeDTO;
   handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => void;
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   isMyProfile?: boolean;
 }
 
