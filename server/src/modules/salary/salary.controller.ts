@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { createEmployeeSalary, getEmployeeSalary } from "./salary.service.ts";
+import { createEmployeeSalary, getEmployeeSalary, updateEmployeeSalary } from "./salary.service.ts";
 import { AppError } from "../../errors/appError.ts";
-import { createSalarySchema } from "./salary.validator.ts";
+import { createSalarySchema, updateSalarySchema } from "./salary.validator.ts";
 
 export const getEmployeeSalaryController = async (
     req: Request,
@@ -70,13 +70,14 @@ export const createEmployeeSalaryController = async (
     const validation = createSalarySchema.safeParse(req.body);
 
     if (!validation.success) {
+        console.error("Salary validation errors:", validation.error.flatten());
+
         throw new AppError(
             "Invalid salary data.",
             400,
             "INVALID_SALARY_DATA"
         );
     }
-
     const salary = await createEmployeeSalary(
         employeeId,
         validation.data
@@ -89,3 +90,42 @@ export const createEmployeeSalaryController = async (
     });
 };
 
+export const updateEmployeeSalaryController = async (
+    req: Request,
+    res: Response
+) => {
+    const { employeeId } = req.params;
+
+    const result = updateSalarySchema.safeParse(req.body);
+
+    if (!result.success) {
+        console.error(
+            "Salary update validation errors:",
+            result.error.flatten()
+        );
+
+        throw new AppError(
+            JSON.stringify(result.error.flatten()),
+            400,
+            "INVALID_SALARY_UPDATE_DATA"
+        );
+    }
+    if (typeof employeeId !== "string") {
+        throw new AppError(
+            "Invalid employee ID.",
+            400,
+            "INVALID_EMPLOYEE_ID"
+        );
+    }
+
+    const salary = await updateEmployeeSalary(
+        employeeId,
+        result.data
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: "Salary structure updated successfully.",
+        data: salary,
+    });
+};
