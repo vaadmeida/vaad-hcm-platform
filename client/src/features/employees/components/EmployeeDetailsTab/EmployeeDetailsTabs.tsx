@@ -1,6 +1,6 @@
 import { FileText, LayoutDashboard, Wallet } from 'lucide-react';
 
-export type EmployeeDetailsTab = "overview" | "documents" | "salary";
+export type EmployeeDetailsTab = "overview" | "documents" | "salary" | "onboarding";
 
 interface EmployeeDetailsTabsProps {
   activeTab: EmployeeDetailsTab;
@@ -23,6 +23,11 @@ const tabs = [
     label: "Salary Structure",
     icon: Wallet,
   },
+  {
+    id: "onboarding" as const,
+    label: "Onboarding",
+    icon: Wallet,
+  },
 ];
 
 
@@ -42,7 +47,7 @@ const EmployeeDetailsTabs = ({
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex shrink-0 items-center gap-2 pb-3 text-sm font-medium transition-colors ${
+              className={`relative flex shrink-0 items-center gap-2 pb-3 text-sm font-medium transition-colors cursor-pointer ${
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
