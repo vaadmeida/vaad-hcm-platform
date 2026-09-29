@@ -82,19 +82,19 @@ export const quickActions = {
     {
       label: "Request Leave",
       icon: CalendarPlus,
-      path: "/employee/leave-request",
+      path: "/my-leave",
       color: "action-icon-purple",
     },
     {
       label: "Upload Document",
       icon: FileText,
-      path: "/employee/documents/upload",
+      path: "/my-documents",
       color: "action-icon-amber",
     },
     {
       label: "My Profile",
       icon: User,
-      path: "/employee/profile",
+      path: "/profile",
       color: "action-icon-blue",
     },
   ],
