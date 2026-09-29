@@ -12,34 +12,29 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.2.2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
-            cd /home/ec2-user/vaad-hcm-platform/server
-
-            echo "Pulling latest code..."
-            git pull origin main
-
-            echo "Installing dependencies..."
-            pnpm install --frozen-lockfile
-
-            echo "Generating Prisma client..."
-            pnpm prisma generate
-
-            echo "Running database migrations..."
-            pnpm dotenv -e .env.production -- prisma migrate deploy
-
-            echo "Building backend..."
-            pnpm build
-
-            echo "Restarting API..."
-            pm2 restart vaad-hr-api
-
-            echo "Deployment completed successfully!"
+      - name: Deploy via AWS SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids "i-0e4104c34807b3936" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy VAAD backend from GitHub Actions" \
+            --parameters 'commands=[
+              "cd /home/ec2-user/vaad-hcm-platform/server",
+              "git pull origin main",
+              "pnpm install --frozen-lockfile",
+              "pnpm prisma generate",
+              "pnpm dotenv -e .env.production -- prisma migrate deploy",
+              "pnpm build",
+              "pm2 restart vaad-hr-api --update-env"
+            ]'
