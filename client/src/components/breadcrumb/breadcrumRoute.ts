@@ -143,4 +143,10 @@ export const breadcrumbRoutes = [
       { label: "Integrations" },
     ],
   },
+   {
+    match: /^\/onboarding$/,
+    breadcrumbs: [
+      { label: "Onboarding", path: "/onboarding" },
+    ],
+  },
 ];
