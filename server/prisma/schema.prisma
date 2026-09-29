@@ -349,3 +349,15 @@ enum EarningFrequency {
   ANNUAL
   ONE_TIME
 }
+
+model OnboardingMaterial {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  documentKey String
+  type        String   @default("DOCUMENT")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
