@@ -18,6 +18,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://hr.vaad.com.ng",
+  "https://vaad-hcm-platform.vercel.app",
   process.env.CLIENT_URL,
 ].filter((origin): origin is string => Boolean(origin));
 
@@ -26,7 +27,7 @@ app.use(
     origin: (origin, callback) => {
       console.log("CORS Origin:", origin);
 
-      if (!origin || origin === "https://hr.vaad.com.ng" ||origin === "http://localhost:5173") {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
