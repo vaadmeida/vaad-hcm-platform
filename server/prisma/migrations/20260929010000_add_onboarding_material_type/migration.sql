@@ -1,0 +1,2 @@
+ALTER TABLE "OnboardingMaterial"
+ADD COLUMN "type" TEXT NOT NULL DEFAULT 'DOCUMENT';
