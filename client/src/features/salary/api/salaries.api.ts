@@ -35,3 +35,12 @@ export const updateEmployeeSalary = async (
 
   return response.data;
 };
+
+
+export const getMySalary = async (): Promise<EmployeeSalaryResponse> => {
+  const response = await api.get<EmployeeSalaryResponse>(
+    "/api/salaries/me"
+  );
+
+  return response.data;
+};
