@@ -24,7 +24,7 @@ const QuickActionDropdown = () => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button className="h-9 gap-2 rounded-lg px-3 text-sm text-white">
+                <Button className="h-9 gap-2 rounded-lg px-3 text-sm text-white cursor-pointer">
                     <PlusIcon className="h-4 w-4" />
                     Quick Action
                 </Button>
