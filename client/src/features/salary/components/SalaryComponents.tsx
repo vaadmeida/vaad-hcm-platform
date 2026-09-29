@@ -72,7 +72,7 @@ const SalaryComponents = ({
                             >
                                 <td className="px-6 py-4">
                                     <p className="text-sm font-medium text-gray-900">
-                                        {component.name} allowance
+                                        {component.name} 
                                     </p>
                                 </td>
 
