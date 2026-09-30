@@ -5,6 +5,7 @@ import QuickActionDropdown from "../common/QuickActionDropdown";
 import MobileMenu from "./sidebar/MobileMenu";
 import { Breadcrumb } from "../breadcrumb/BreadCrumb";
 import { useState } from "react";
+import NotificationDialog from "../common/NotificationDialog";
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -22,6 +23,8 @@ const Navbar = ({ setSidebarOpen }: NavbarProps) => {
   const initials = `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`;
 
   const hasAvatar = Boolean(user?.avatar_url) && !avatarError;
+
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface px-4 md:px-6">
@@ -49,10 +52,21 @@ const Navbar = ({ setSidebarOpen }: NavbarProps) => {
         </div>
 
         {/* Notification */}
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted-light">
+        {/* Notification */}
+        <button
+          type="button"
+          onClick={() => setNotificationOpen(true)}
+          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted-light"
+        >
           <Bell className="h-4 w-4" />
+
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
         </button>
+
+        <NotificationDialog
+          open={notificationOpen}
+          onOpenChange={setNotificationOpen}
+        />
 
         {/* Quick Action */}
         <div className="hidden sm:block">
