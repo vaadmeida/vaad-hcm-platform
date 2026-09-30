@@ -25,11 +25,11 @@ const AuthBranding = () => {
           </div>
 
           <h1 className="text-5xl font-semibold leading-tight tracking-tight text-white">
-            Empower your workforce.
+            Our People
           </h1>
 
-          <p className="mt-4 text-lg text-white/75">
-            Everything you need to manage your people effectively.
+          <p className="mt-4 text-xl text-white/75">
+             Our most important assest
           </p>
 
           {/* Mini stat card */}
