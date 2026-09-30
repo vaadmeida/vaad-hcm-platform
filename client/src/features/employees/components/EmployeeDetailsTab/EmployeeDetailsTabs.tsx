@@ -1,4 +1,4 @@
-import { FileText, LayoutDashboard, Wallet } from 'lucide-react';
+import { FileText, GraduationCap, LayoutDashboard, Wallet } from 'lucide-react';
 
 export type EmployeeDetailsTab = "overview" | "documents" | "salary" | "onboarding";
 
@@ -26,7 +26,7 @@ const tabs = [
   {
     id: "onboarding" as const,
     label: "Onboarding",
-    icon: Wallet,
+    icon: GraduationCap,
   },
 ];
 
