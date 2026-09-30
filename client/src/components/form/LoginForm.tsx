@@ -1,5 +1,5 @@
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import loginHeader from "@/assets/login_header.png";
+import vaad_logo from "@/assets/vaad_logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,9 +45,9 @@ const LoginForm = () => {
             <CardHeader className="space-y-1 px-4 pt-6 pb-4 text-center">
                 <div className="flex justify-center">
                     <img
-                        src={loginHeader}
+                        src={vaad_logo}
                         alt="VAAD HR"
-                        className="h-20 w-auto"
+                        className="h-9 w-auto"
                     />
                 </div>
 
