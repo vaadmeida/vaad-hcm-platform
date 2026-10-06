@@ -23,58 +23,74 @@ model Department {
 }
 
 model Employee {
-  id                             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  first_name                     String             @db.VarChar(100)
-  last_name                      String             @db.VarChar(100)
-  email                          String             @unique @db.VarChar(255)
-  phone                          String?            @db.VarChar(20)
-  job_title                      String?            @db.VarChar(150)
+  id                             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  first_name                     String               @db.VarChar(100)
+  last_name                      String               @db.VarChar(100)
+  email                          String               @unique @db.VarChar(255)
+  phone                          String?              @db.VarChar(20)
+  job_title                      String?              @db.VarChar(150)
   job_description                String?
-  department_id                  String?            @db.Uuid
-  manager_id                     String?            @db.Uuid
-  status                         String             @default("probation") @db.VarChar(20)
-  employment_type                String             @default("full-time") @db.VarChar(50)
-  hire_date                      DateTime?          @db.Date
-  probation_end_date             DateTime?          @db.Date
-  work_email                     String?            @db.VarChar(255)
-  owns_personal_computer         Boolean            @default(false)
-  password_hash                  String             @db.VarChar(255)
-  role                           String             @default("employee") @db.VarChar(20)
-  created_at                     DateTime           @default(now())
-  updated_at                     DateTime           @default(now())
-  employee_code                  String?            @unique @db.VarChar(30)
+  department_id                  String?              @db.Uuid
+  manager_id                     String?              @db.Uuid
+  status                         String               @default("probation") @db.VarChar(20)
+  employment_type                String               @default("full-time") @db.VarChar(50)
+  hire_date                      DateTime?            @db.Date
+  probation_end_date             DateTime?            @db.Date
+  work_email                     String?              @db.VarChar(255)
+  owns_personal_computer         Boolean              @default(false)
+  password_hash                  String               @db.VarChar(255)
+  role                           String               @default("employee") @db.VarChar(20)
+  created_at                     DateTime             @default(now())
+  updated_at                     DateTime             @default(now())
+  employee_code                  String?              @unique @db.VarChar(30)
   avatar_url                     String?
-  account_name                   String?            @db.VarChar(150)
-  account_number                 String?            @db.VarChar(20)
-  alternate_phone                String?            @db.VarChar(20)
-  bank_name                      String?            @db.VarChar(100)
-  city                           String?            @db.VarChar(100)
-  date_exited                    DateTime?          @db.Date
-  date_of_birth                  DateTime?          @db.Date
-  emergency_contact_name         String?            @db.VarChar(150)
-  emergency_contact_number       String?            @db.VarChar(20)
-  emergency_contact_relationship String?            @db.VarChar(50)
-  gender                         String?            @db.VarChar(20)
-  nationality                    String?            @db.VarChar(100)
-  paye_id                        String?            @db.VarChar(50)
+  account_name                   String?              @db.VarChar(150)
+  account_number                 String?              @db.VarChar(20)
+  alternate_phone                String?              @db.VarChar(20)
+  bank_name                      String?              @db.VarChar(100)
+  city                           String?              @db.VarChar(100)
+  date_exited                    DateTime?            @db.Date
+  date_of_birth                  DateTime?            @db.Date
+  emergency_contact_name         String?              @db.VarChar(150)
+  emergency_contact_number       String?              @db.VarChar(20)
+  emergency_contact_relationship String?              @db.VarChar(50)
+  gender                         String?              @db.VarChar(20)
+  nationality                    String?              @db.VarChar(100)
+  paye_id                        String?              @db.VarChar(50)
   residential_address            String?
-  state_of_residence             String?            @db.VarChar(100)
-  middle_name                    String?            @db.VarChar(100)
+  state_of_residence             String?              @db.VarChar(100)
+  middle_name                    String?              @db.VarChar(100)
   activity_logs                  ActivityLog[]
   notifications                  Notification[]
-  managedDepartment              Department?        @relation("DepartmentManager")
-  documents                      EmployeeDocument[] @relation("EmployeeDocuments")
-  uploadedDocuments              EmployeeDocument[] @relation("UploadedDocuments")
-  verifiedDocuments              EmployeeDocument[] @relation("VerifiedDocuments")
-  department                     Department?        @relation("DepartmentEmployees", fields: [department_id], references: [id])
-  manager                        Employee?          @relation("EmployeeManager", fields: [manager_id], references: [id])
-  subordinates                   Employee[]         @relation("EmployeeManager")
+  managedDepartment              Department?          @relation("DepartmentManager")
+  documents                      EmployeeDocument[]   @relation("EmployeeDocuments")
+  uploadedDocuments              EmployeeDocument[]   @relation("UploadedDocuments")
+  verifiedDocuments              EmployeeDocument[]   @relation("VerifiedDocuments")
+  department                     Department?          @relation("DepartmentEmployees", fields: [department_id], references: [id])
+  manager                        Employee?            @relation("EmployeeManager", fields: [manager_id], references: [id])
+  subordinates                   Employee[]           @relation("EmployeeManager")
   leaveBalances                  LeaveBalance[]
-  approvedLeaveRequests          LeaveRequest[]     @relation("ApprovedLeaveRequests")
-  leaveRequests                  LeaveRequest[]     @relation("EmployeeLeaveRequests")
+  approvedLeaveRequests          LeaveRequest[]       @relation("ApprovedLeaveRequests")
+  leaveRequests                  LeaveRequest[]       @relation("EmployeeLeaveRequests")
   salaries                       EmployeeSalary[]
+  passwordResetTokens            PasswordResetToken[]
 
   @@map("employees")
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  employeeId String    @db.Uuid
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model LeaveType {
@@ -297,18 +313,18 @@ enum NotificationType {
 }
 
 model EmployeeSalary {
-  id                 String   @id @default(uuid()) @db.Uuid
-  employeeId         String   @db.Uuid
-  annualBaseSalary   Decimal  @db.Decimal(15, 2)
-  effectiveDate      DateTime
-  endDate            DateTime?
-  monthlyGross       Decimal  @db.Decimal(15, 2)
-  paye               Decimal  @db.Decimal(15, 2) @default(0)
-  netPay             Decimal  @db.Decimal(15, 2)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id               String    @id @default(uuid()) @db.Uuid
+  employeeId       String    @db.Uuid
+  annualBaseSalary Decimal   @db.Decimal(15, 2)
+  effectiveDate    DateTime
+  endDate          DateTime?
+  monthlyGross     Decimal   @db.Decimal(15, 2)
+  paye             Decimal   @default(0) @db.Decimal(15, 2)
+  netPay           Decimal   @db.Decimal(15, 2)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  employee           Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee           Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   components         SalaryComponent[]
   additionalEarnings AdditionalEarning[]
 
@@ -331,13 +347,13 @@ model SalaryComponent {
 }
 
 model AdditionalEarning {
-  id        String          @id @default(uuid()) @db.Uuid
-  salaryId  String          @db.Uuid
+  id        String           @id @default(uuid()) @db.Uuid
+  salaryId  String           @db.Uuid
   name      String
-  amount    Decimal         @db.Decimal(15, 2)
+  amount    Decimal          @db.Decimal(15, 2)
   frequency EarningFrequency @default(ANNUAL)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
   salary EmployeeSalary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
 
