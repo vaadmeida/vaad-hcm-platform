@@ -6,6 +6,7 @@ import EmployeeDetailsTabs, { type EmployeeDetailsTab } from "@/features/employe
 import EmployeeOverview from "@/features/employees/components/EmployeeDetailsTab/EmployeeOverview";
 import MyDocumentsDisplay from "@/features/employees/components/EmployeeDetailsTab/MyDocumentsDisplay";
 import MySalaryStructure from "@/features/salary/components/MySalaryStructure";
+import EmployeeOnboardingMaterials from "@/features/employees/components/EmployeeDetailsTab/EmployeeOnboardingMaterials";
 
 const MyProfile = () => {
 
@@ -42,13 +43,16 @@ const MyProfile = () => {
             )}
 
             {activeTab === "documents" && (
-                <MyDocumentsDisplay/>
+                <MyDocumentsDisplay />
             )}
 
             {activeTab === "salary" && (
-                <MySalaryStructure/>
+                <MySalaryStructure />
             )}
 
+            {activeTab === "onboarding" && (
+                <EmployeeOnboardingMaterials />
+            )}
 
 
             {/* Edit Employee Modal */}
