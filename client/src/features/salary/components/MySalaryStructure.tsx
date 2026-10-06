@@ -20,28 +20,24 @@ const MySalaryStructure = () => {
   }
 
   if (isError) {
-    return <ErrorState message="Failed to load your salary structure." />;
+    return (
+      <ErrorState message="Failed to load your salary structure." />
+    );
   }
 
   const salary = data?.data;
 
   if (!salary) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-        <h3 className="text-sm font-semibold text-gray-900">
-          No salary structure found
-        </h3>
-
-        <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
-          Your salary structure has not been set up yet.
-        </p>
-      </div>
+      <ErrorState
+        title="No salary structure found"
+        message="Your salary structure has not been set up yet."
+      />
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900">
           Salary Structure
