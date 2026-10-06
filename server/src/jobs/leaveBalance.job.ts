@@ -102,12 +102,8 @@ export const leaveBalanceResetJob = async () => {
 //    await leaveBalanceResetJob();
 //});
 
-// =======================================================
-// PRODUCTION
-// Uncomment this and remove the development schedule
-// Runs every January 1st at 12:00 AM
-// =======================================================
 
-// cron.schedule("0 0 1 1 *", async () => {
-//   await leaveBalanceResetJob();
-// });
+
+ cron.schedule("0 0 1 1 *", async () => {
+ await leaveBalanceResetJob();
+});
