@@ -129,7 +129,7 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
     }
 
     // 4. Validate file size
-    const fileSizeMb = Math.round(data.file.size / (1024 * 1024));
+    const fileSizeMb = data.file.size / (1024 * 1024);
 
     if (fileSizeMb > documentType.maxSizeMb) {
         throw new AppError(
