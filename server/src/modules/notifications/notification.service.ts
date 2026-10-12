@@ -1,15 +1,15 @@
+import { Prisma } from "@prisma/client/scripts/default-index.js";
 import prisma from "../../config/prisma.ts";
 import { CreateNotificationInput } from "./notification.types.ts";
 
+type NotificationClient = Prisma.TransactionClient;
 
 
-export const createNotification = async ({
-  userId,
-  title,
-  message,
-  type,
-}: CreateNotificationInput) => {
-  return prisma.notification.create({
+export const createNotification = async (
+  { userId, title, message, type }: CreateNotificationInput,
+  client: NotificationClient = prisma
+) => {
+  return client.notification.create({
     data: {
       user_id: userId,
       title,
@@ -18,7 +18,6 @@ export const createNotification = async ({
     },
   });
 };
-
 export const getNotifications = async (userId: string) => {
   return prisma.notification.findMany({
     where: {

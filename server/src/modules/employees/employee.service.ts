@@ -6,6 +6,8 @@ import { ActivityAction, Prisma } from "@prisma/client";
 import { UpdateEmployeeDTO } from "./employee.validator.ts";
 import { seedLeaveBalance } from "../leave/leave.service.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
+import { createNotification } from "../notifications/notification.service.ts";
+import { promise } from "zod/v4/mini";
 
 type UpdateEmployeeInput = {
     id: string;
@@ -46,88 +48,130 @@ const softDeactivate = async (id: string) => {
 
 
 export const createEmployee = async ({
-    first_name,
-    last_name,
-    email,
-    role = 'employee',
-    phone,
-    job_title,
-    hire_date,
+  first_name,
+  last_name,
+  email,
+  role = "employee",
+  phone,
+  job_title,
+  hire_date,
 }: CreateEmployeeType) => {
+  return prisma.$transaction(async (tx) => {
+    const existingEmployee = await tx.employee.findUnique({
+      where: { email },
+    });
 
+    if (existingEmployee) {
+      throw new AppError(
+        "Employee already exists",
+        409,
+        "EMPLOYEE_ALREADY_EXISTS"
+      );
+    }
 
-    return prisma.$transaction(async (tx) => {
+    if (!validator.isEmail(email)) {
+      throw new AppError(
+        "Invalid email format",
+        400,
+        "INVALID_EMAIL"
+      );
+    }
 
-        const existingEmployee = await tx.employee.findUnique({
-            where: { email }
-        })
+    if (!hire_date) {
+      throw new AppError(
+        "Hire date is required",
+        400,
+        "HIRE_DATE_REQUIRED"
+      );
+    }
 
-        if (existingEmployee) {
-            throw new AppError(
-                "Employee already exists",
-                409,
-                "EMPLOYEE_ALREADY_EXISTS"
-            );
-        }
+    const defaultPassword = "Vaad@123";
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-        if (!validator.isEmail(email)) {
-            throw new AppError("Invalid email format", 400, "INVALID_EMAIL");
-        }
+    const totalEmployees = await tx.employee.count();
+    const employeeCode = `VAAD-${String(totalEmployees + 1).padStart(4, "0")}`;
 
-        const defaultPassword = "Vaad@123";
+    const probationEndDate = new Date(hire_date);
+    probationEndDate.setMonth(probationEndDate.getMonth() + 6);
 
-        const hashedpassword = await bcrypt.hash(defaultPassword, 10);
+    const employee = await tx.employee.create({
+      data: {
+        first_name,
+        last_name,
+        email,
+        password_hash: hashedPassword,
+        role,
+        hire_date,
+        phone,
+        job_title,
+        employee_code: employeeCode,
+        probation_end_date: probationEndDate,
+      },
+    });
 
-        const totalEmployees = await prisma.employee.count();
+    await seedLeaveBalance(tx, employee.id);
 
-        const employeeCode = `VAAD-${String(totalEmployees + 1).padStart(4, "0")}`;
+    // Notify the new employee.
+    await createNotification(
+      {
+        userId: employee.id,
+        title: "Welcome to VAAD!",
+        message:
+          `Welcome, ${employee.first_name}! ` +
+          "Your employee account has been created successfully.",
+        type: "EMPLOYEE",
+      },
+      tx
+    );
 
-        if (!hire_date) {
-            throw new AppError(
-                "Hire date is required",
-                400,
-                "HIRE_DATE_REQUIRED"
-            );
-        }
+    // Find HR and admin recipients.
+    const hrAndAdmins = await tx.employee.findMany({
+      where: {
+        role: {
+          in: ["hr", "admin"],
+        },
+        status: "active",
+        id: {
+          not: employee.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
 
-        const probationEndDate = new Date(hire_date);
+    // Notify HR and admins.
+    await Promise.all(
+      hrAndAdmins.map((recipient) =>
+        createNotification(
+          {
+            userId: recipient.id,
+            title: "New Employee Added",
+            message:
+              `A new employee has been added: ` +
+              `${employee.first_name} ${employee.last_name}.`,
+            type: "EMPLOYEE",
+          },
+          tx
+        )
+      )
+    );
 
-        probationEndDate.setMonth(probationEndDate.getMonth() + 6)
-
-        const employee = await tx.employee.create({
-            data: {
-                first_name,
-                last_name,
-                email,
-                password_hash: hashedpassword,
-                role,
-                hire_date: hire_date || new Date(),
-                phone,
-                job_title,
-                employee_code: employeeCode,
-                probation_end_date: probationEndDate
-            },
-        });
-
-        await seedLeaveBalance(tx, employee.id)
-
-        return {
-            user: {
-                id: employee.id,
-                first_name: employee.first_name,
-                last_name: employee.last_name,
-                email: employee.email,
-                hire_date: employee.hire_date,
-                phone: employee.phone,
-                job_title: employee.job_title,
-                employeeCode: employee.employee_code,
-                probationEndDate: employee.probation_end_date
-            }
-        }
-    })
-
-}
-
+    return {
+      user: {
+        id: employee.id,
+        first_name: employee.first_name,
+        last_name: employee.last_name,
+        email: employee.email,
+        hire_date: employee.hire_date,
+        phone: employee.phone,
+        job_title: employee.job_title,
+        employeeCode: employee.employee_code,
+        probationEndDate: employee.probation_end_date,
+      },
+    };
+  });
+};
 
 export const getEmployee = async (id: string, user: User) => {
     const employee = await prisma.employee.findUnique({
@@ -580,8 +624,6 @@ export const updateEmployee = async ({
     data,
     user,
 }: UpdateEmployeeInput) => {
-
-
     const employee = await prisma.employee.findUnique({
         where: { id },
     });
@@ -598,10 +640,7 @@ export const updateEmployee = async ({
     const isHR = user.role === "hr";
     const isSelf = user.id === id;
 
-    // ─── Allowed Fields ──────────────────────────────────
-
     const employeeFields = [
-        // Personal Information
         "first_name",
         "last_name",
         "middle_name",
@@ -614,13 +653,9 @@ export const updateEmployee = async ({
         "residential_address",
         "city",
         "state_of_residence",
-
-        // Emergency Contact
         "emergency_contact_name",
         "emergency_contact_relationship",
         "emergency_contact_number",
-
-        // Employment Information
         "role",
         "job_title",
         "job_description",
@@ -633,8 +668,6 @@ export const updateEmployee = async ({
         "probation_end_date",
         "date_exited",
         "owns_personal_computer",
-
-        // Payroll
         "paye_id",
         "bank_name",
         "account_number",
@@ -653,11 +686,7 @@ export const updateEmployee = async ({
         "emergency_contact_number",
     ];
 
-    // ─── Authorization ───────────────────────────────────
-
-    // Admin and HR can edit any employee
-    // A user can only edit their own profile
-    // Managers and other employees cannot edit other employees
+    // Authorization
     if (!isAdmin && !isHR && !isSelf) {
         throw new AppError(
             "You are not allowed to update this employee",
@@ -666,16 +695,9 @@ export const updateEmployee = async ({
         );
     }
 
-    const allowedFields =
-        isAdmin || isHR
-            ? employeeFields
-            : selfAllowedFields;
+    const allowedFields = isAdmin || isHR ? employeeFields : selfAllowedFields;
 
-    // ─── Validate Fields ─────────────────────────────────
-
-    const inputKeys = Object.keys(data);
-
-    const invalidFields = inputKeys.filter(
+    const invalidFields = Object.keys(data).filter(
         (key) => !allowedFields.includes(key)
     );
 
@@ -687,18 +709,17 @@ export const updateEmployee = async ({
         );
     }
 
-    // ─── Department Changes ──────────────────────────────
-
     const isDepartmentChange =
         data.department_id !== undefined &&
         data.department_id !== employee.department_id;
 
     const isDepartmentRemoved =
-        employee.department_id !== null &&
-        employee.department_id !== undefined &&
+        employee.department_id != null &&
         data.department_id === null;
 
-    // ─── Update ──────────────────────────────────────────
+    const isManagerChange =
+        data.manager_id !== undefined &&
+        data.manager_id !== employee.manager_id;
 
     const result = await prisma.$transaction(async (tx) => {
         const updatedEmployee = await tx.employee.update({
@@ -713,25 +734,18 @@ export const updateEmployee = async ({
             `${updatedEmployee.last_name} was updated`;
 
         const performer = await tx.employee.findUnique({
-            where: {
-                id: user.id,
-            },
+            where: { id: user.id },
             select: {
                 first_name: true,
                 last_name: true,
             },
         });
 
-        // ─── Department Assigned ─────────────────────────
-
+        // Department assigned
         if (isDepartmentChange && updatedEmployee.department_id) {
             const department = await tx.department.findUnique({
-                where: {
-                    id: updatedEmployee.department_id,
-                },
-                select: {
-                    name: true,
-                },
+                where: { id: updatedEmployee.department_id },
+                select: { name: true },
             });
 
             action = "DEPARTMENT_ASSIGNED";
@@ -742,8 +756,7 @@ export const updateEmployee = async ({
                 `to ${department?.name ?? "a department"}`;
         }
 
-        // ─── Department Removed ──────────────────────────
-
+        // Department removed
         if (isDepartmentRemoved) {
             action = "DEPARTMENT_REMOVED";
 
@@ -753,8 +766,65 @@ export const updateEmployee = async ({
                 `from their department`;
         }
 
-        // ─── Activity Log ────────────────────────────────
+        // Notify the affected employee when someone else updates their profile
+        if (!isSelf) {
+            await createNotification(
+                {
+                    userId: updatedEmployee.id,
+                    title: "Employee Profile Updated",
+                    message: "Your employee profile has been updated.",
+                    type: "EMPLOYEE",
+                },
 
+            );
+        }
+
+        // Notify HR and Admin when an employee updates their own profile
+        if (isSelf) {
+            const hrAndAdmins = await tx.employee.findMany({
+                where: {
+                    role: { in: ["hr", "admin"] },
+                    id: { not: user.id },
+                },
+                select: { id: true },
+            });
+
+            await Promise.all(
+                hrAndAdmins.map((recipient) =>
+                    createNotification(
+                        {
+                            userId: recipient.id,
+                            title: "Employee Profile Updated",
+                            message:
+                                `${updatedEmployee.first_name} ` +
+                                `${updatedEmployee.last_name} updated their profile.`,
+                            type: "EMPLOYEE",
+                        },
+
+                    )
+                )
+            );
+        }
+
+        // Notify the new manager when the manager assignment changes
+        if (
+            isManagerChange &&
+            updatedEmployee.manager_id &&
+            updatedEmployee.manager_id !== updatedEmployee.id
+        ) {
+            await createNotification(
+                {
+                    userId: updatedEmployee.manager_id,
+                    title: "Employee Assigned to You",
+                    message:
+                        `${updatedEmployee.first_name} ` +
+                        `${updatedEmployee.last_name} has been assigned to you.`,
+                    type: "EMPLOYEE",
+                },
+            );
+        }
+
+        // Activity log
         await tx.activityLog.create({
             data: {
                 action,
@@ -769,59 +839,107 @@ export const updateEmployee = async ({
         return updatedEmployee;
     });
 
-    // ─── Remove Sensitive Data ───────────────────────────
-
-    const {
-        password_hash,
-        ...safeEmployee
-    } = result;
+    // Remove sensitive data
+    const { password_hash, ...safeEmployee } = result;
 
     return safeEmployee;
 };
 
 
 export const deactivateEmployee = async (id: string, user: User) => {
-
     const employee = await prisma.employee.findUnique({
         where: { id },
         select: {
             id: true,
+            first_name: true,
+            last_name: true,
             manager_id: true,
-            status: true
-        }
-    })
+            status: true,
+        },
+    });
 
     if (!employee) {
-        throw new AppError("Employee not found", 404, "EMPLOYEE_NOT_FOUND");
+        throw new AppError(
+            "Employee not found",
+            404,
+            "EMPLOYEE_NOT_FOUND"
+        );
     }
 
     if (employee.status === "inactive") {
-        throw new AppError("Already inactive", 400, "ALREADY_INACTIVE");
+        throw new AppError(
+            "Already inactive",
+            400,
+            "ALREADY_INACTIVE"
+        );
     }
 
     const isAdmin = user.role === "admin";
     const isHR = user.role === "hr";
     const isManager = user.role === "manager";
 
-    if (isAdmin || isHR) {
-        return await softDeactivate(id)
+    // Authorization must happen before deactivation.
+    if (isManager && employee.manager_id !== user.id) {
+        throw new AppError("Forbidden", 403, "FORBIDDEN");
     }
 
-    if (isManager) {
-        if (employee.manager_id !== user.id) {
-            throw new AppError("Forbidden", 403, "FORBIDDEN");
-        }
-        return await softDeactivate(id)
+    if (!isAdmin && !isHR && !isManager) {
+        throw new AppError("Forbidden", 403, "FORBIDDEN");
     }
 
-    throw new AppError("Forbidden", 403, "FORBIDDEN");
-}
+    // Deactivate only after authorization succeeds.
+    const result = await softDeactivate(id);
+
+    // Notify the deactivated employee.
+    const notificationTasks: Promise<unknown>[] = [
+        createNotification({
+            userId: employee.id,
+            title: "Account Deactivated",
+            message:
+                "Your VAAD account has been deactivated. " +
+                "Please contact HR if you believe this is a mistake.",
+            type: "EMPLOYEE",
+        }),
+    ];
+
+    // Notify active HR staff and admins, excluding the actor.
+    const hrAndAdmins = await prisma.employee.findMany({
+        where: {
+            role: { in: ["hr", "admin"] },
+            status: "active",
+            id: { not: user.id },
+        },
+        select: { id: true },
+    });
+
+    for (const recipient of hrAndAdmins) {
+        notificationTasks.push(
+            createNotification({
+                userId: recipient.id,
+                title: "Employee Deactivated",
+                message:
+                    `${employee.first_name} ${employee.last_name}'s ` +
+                    "account has been deactivated.",
+                type: "EMPLOYEE",
+            })
+        );
+    }
+
+    // Notification failures won't undo the deactivation.
+    await Promise.allSettled(notificationTasks);
+
+    return result;
+};
+
+
 
 export const terminateEmployee = async (id: string, user: User) => {
     const employee = await prisma.employee.findUnique({
         where: { id },
         select: {
             id: true,
+            first_name: true,
+            last_name: true,
             manager_id: true,
             status: true,
         },
@@ -847,31 +965,63 @@ export const terminateEmployee = async (id: string, user: User) => {
     const isHR = user.role === "hr";
     const isManager = user.role === "manager";
 
-    if (isAdmin || isHR) {
-        return await prisma.employee.update({
-            where: { id },
-            data: {
-                status: "terminated",
-            },
-        });
+    // Check permissions before making changes.
+    if (isManager && employee.manager_id !== user.id) {
+        throw new AppError("Forbidden", 403, "FORBIDDEN");
     }
 
-    if (isManager) {
-        if (employee.manager_id !== user.id) {
-            throw new AppError("Forbidden", 403, "FORBIDDEN");
-        }
-
-        return await prisma.employee.update({
-            where: { id },
-            data: {
-                status: "terminated",
-            },
-        });
+    if (!isAdmin && !isHR && !isManager) {
+        throw new AppError("Forbidden", 403, "FORBIDDEN");
     }
 
-    throw new AppError("Forbidden", 403, "FORBIDDEN");
+    // Terminate the employee.
+    const result = await prisma.employee.update({
+        where: { id },
+        data: {
+            status: "terminated",
+        },
+    });
+
+    // Notify the terminated employee.
+    const notificationTasks: Promise<unknown>[] = [
+        createNotification({
+            userId: employee.id,
+            title: "Employment Terminated",
+            message:
+                "Your employment status at VAAD has been marked as terminated. " +
+                "Please contact HR if you have questions.",
+            type: "EMPLOYEE",
+        }),
+    ];
+
+    // Notify active HR staff and admins, excluding the actor.
+    const hrAndAdmins = await prisma.employee.findMany({
+        where: {
+            role: { in: ["hr", "admin"] },
+            status: "active",
+            id: { not: user.id },
+        },
+        select: { id: true },
+    });
+
+    for (const recipient of hrAndAdmins) {
+        notificationTasks.push(
+            createNotification({
+                userId: recipient.id,
+                title: "Employee Terminated",
+                message:
+                    `${employee.first_name} ${employee.last_name}'s ` +
+                    "employment status has been marked as terminated.",
+                type: "EMPLOYEE",
+            })
+        );
+    }
+
+    // A notification failure should not undo termination.
+    await Promise.allSettled(notificationTasks);
+
+    return result;
 };
-
 
 export const getManagers = async (user: User) => {
     if (user.role !== "admin" && user.role !== "hr") {
