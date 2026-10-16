@@ -12,6 +12,9 @@ export const useDeactivateEmployee = () => {
       queryClient.invalidateQueries({
         queryKey: ["employees"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["notifications"],
+      });
     },
   });
 };
