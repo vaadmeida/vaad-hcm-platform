@@ -18,6 +18,9 @@ export const useUpdateEmployee = () => {
       queryClient.invalidateQueries({
         queryKey: ["employees", variables.employeeId],
       });
+        queryClient.invalidateQueries({
+        queryKey: ["notifications"],
+      });
     },
   })
 
