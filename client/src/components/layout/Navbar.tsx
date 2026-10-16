@@ -5,7 +5,8 @@ import QuickActionDropdown from "../common/QuickActionDropdown";
 import MobileMenu from "./sidebar/MobileMenu";
 import { Breadcrumb } from "../breadcrumb/BreadCrumb";
 import { useState } from "react";
-import NotificationDialog from "../common/NotificationDialog";
+import NotificationDialog from "@/features/notifications/components/NotificationDialog";
+
 
 interface NavbarProps {
   sidebarOpen: boolean;
