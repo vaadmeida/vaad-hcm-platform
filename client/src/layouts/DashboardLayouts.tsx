@@ -3,9 +3,14 @@ import Navbar from "@/components/layout/Navbar";
 import SideBar from "@/components/layout/sidebar/SideBar";
 import { useState } from "react";
 import ProfileSync from "@/components/common/ProfileSync";
+import { useNotificationSound } from "@/features/notifications/hooks/useNotificationSound";
 
 const DashboardLayout = () => {
+        console.log("DASHBOARD LAYOUT RENDERED");
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+      useNotificationSound();
 
     return (
         <div className="flex h-screen min-h-0 overflow-hidden bg-background">
