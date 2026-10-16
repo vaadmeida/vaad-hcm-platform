@@ -1,13 +1,13 @@
-import { Prisma } from "@prisma/client/scripts/default-index.js";
+import { Prisma } from "@prisma/client";
 import prisma from "../../config/prisma.ts";
 import { CreateNotificationInput } from "./notification.types.ts";
 
-type NotificationClient = Prisma.TransactionClient;
 
+type NotificationClient = Prisma.TransactionClient;
 
 export const createNotification = async (
   { userId, title, message, type }: CreateNotificationInput,
-  client: NotificationClient = prisma
+  client: NotificationClient | typeof prisma = prisma
 ) => {
   return client.notification.create({
     data: {
@@ -18,11 +18,14 @@ export const createNotification = async (
     },
   });
 };
+
+
 export const getNotifications = async (userId: string) => {
   return prisma.notification.findMany({
     where: {
       user_id: userId,
     },
+    take: 5,
     orderBy: {
       created_at: "desc",
     },
@@ -35,7 +38,7 @@ export const getUnreadNotificationCount = async (userId: string) => {
     where: {
       user_id: userId,
       is_read: false,
-    },
+    }
   });
 };
 
