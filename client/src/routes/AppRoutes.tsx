@@ -31,6 +31,7 @@ import NotificationSettings from "@/pages/settings/NotificationSettings";
 import SecuritySettings from "@/pages/settings/SecuritySettings";
 import IntegrationsSettings from "@/pages/settings/IntegrationsSettings";
 import OnboardingPage from "@/pages/OnboardingPage";
+import NotificationPage from "@/pages/NotificationPage";
 
 export const AppRoutes = () => {
    const token = useAuthStore((state) => state.token);
@@ -78,6 +79,7 @@ export const AppRoutes = () => {
                   }
                >
                   <Route path="/my-documents" element={<MyDocumentsPage />} />
+               
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["admin", "hr", "manager", "employee"]} />}>
@@ -90,6 +92,7 @@ export const AppRoutes = () => {
                      <Route path="integrations" element={<IntegrationsSettings />} />
                   </Route>
                   <Route path="/profile" element={<MyProfile />} />
+                  <Route path="/notifications" element={<NotificationPage />} />
                </Route>
 
                <Route element={<RoleRoute allowedRoles={["hr"]} />}>
