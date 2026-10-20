@@ -8,16 +8,29 @@ datasource db {
 }
 
 model Department {
-  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String           @unique @db.VarChar(255)
-  description   String?
-  status        DepartmentStatus @default(active)
-  manager_id    String?          @unique @db.Uuid
-  created_at    DateTime         @default(now())
-  updated_at    DateTime         @updatedAt
-  activity_logs ActivityLog[]
-  manager       Employee?        @relation("DepartmentManager", fields: [manager_id], references: [id])
-  employees     Employee[]       @relation("DepartmentEmployees")
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String           @unique @db.VarChar(255)
+  description           String?
+  status                DepartmentStatus @default(active)
+  manager_id            String?          @db.Uuid
+
+  // Department Profile
+  reports_to            String?
+  role_purpose          String?          @db.Text
+  core_responsibilities String[]         @default([])
+  key_outputs           String[]         @default([])
+  kpis                  String[]         @default([])
+  decision_authority    String?          @db.Text
+  backup_continuity     String?          @db.Text
+  
+  // Timestamps
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @updatedAt
+
+  // Relationships
+  activity_logs         ActivityLog[]
+  manager               Employee?        @relation("DepartmentManager", fields: [manager_id], references: [id])
+  employees             EmployeeDepartment[]
 
   @@map("departments")
 }
@@ -30,7 +43,6 @@ model Employee {
   phone                          String?              @db.VarChar(20)
   job_title                      String?              @db.VarChar(150)
   job_description                String?
-  department_id                  String?              @db.Uuid
   manager_id                     String?              @db.Uuid
   status                         String               @default("probation") @db.VarChar(20)
   employment_type                String               @default("full-time") @db.VarChar(50)
@@ -60,23 +72,40 @@ model Employee {
   residential_address            String?
   state_of_residence             String?              @db.VarChar(100)
   middle_name                    String?              @db.VarChar(100)
+
   activity_logs                  ActivityLog[]
   notifications                  Notification[]
-  managedDepartment              Department?          @relation("DepartmentManager")
-  documents                      EmployeeDocument[]   @relation("EmployeeDocuments")
-  uploadedDocuments              EmployeeDocument[]   @relation("UploadedDocuments")
-  verifiedDocuments              EmployeeDocument[]   @relation("VerifiedDocuments")
-  department                     Department?          @relation("DepartmentEmployees", fields: [department_id], references: [id])
-  manager                        Employee?            @relation("EmployeeManager", fields: [manager_id], references: [id])
-  subordinates                   Employee[]           @relation("EmployeeManager")
+  managedDepartments             Department[]          @relation("DepartmentManager")
+  departments                    EmployeeDepartment[]
+  documents                      EmployeeDocument[]    @relation("EmployeeDocuments")
+  uploadedDocuments              EmployeeDocument[]    @relation("UploadedDocuments")
+  verifiedDocuments              EmployeeDocument[]    @relation("VerifiedDocuments")
+  manager                        Employee?             @relation("EmployeeManager", fields: [manager_id], references: [id])
+  subordinates                   Employee[]            @relation("EmployeeManager")
   leaveBalances                  LeaveBalance[]
-  approvedLeaveRequests          LeaveRequest[]       @relation("ApprovedLeaveRequests")
-  leaveRequests                  LeaveRequest[]       @relation("EmployeeLeaveRequests")
+  approvedLeaveRequests          LeaveRequest[]        @relation("ApprovedLeaveRequests")
+  leaveRequests                  LeaveRequest[]        @relation("EmployeeLeaveRequests")
   salaries                       EmployeeSalary[]
   passwordResetTokens            PasswordResetToken[]
 
   @@map("employees")
 }
+
+
+
+model EmployeeDepartment {
+  employee_id  String   @db.Uuid
+  department_id String  @db.Uuid
+  assigned_at  DateTime @default(now())
+
+  employee   Employee   @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
+
+  @@id([employee_id, department_id])
+  @@index([department_id])
+  @@map("employee_departments")
+}
+
 
 model PasswordResetToken {
   id         String    @id @default(uuid()) @db.Uuid
