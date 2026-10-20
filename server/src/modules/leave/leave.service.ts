@@ -1494,38 +1494,42 @@ export const getAdminLeaveStats = async () => {
 };
 
 export const getManagerLeaveStats = async (managerId: string) => {
+    
     const today = new Date();
 
-    const [totalRequests, pendingRequests, approvedRequests, currentlyOnLeave] = await Promise.all([
-        prisma.leaveRequest.count({
-            where: {
-                employee: {
+    const employeeFilter = {
+        employee: {
+            departments: {
+                some: {
                     department: {
                         manager_id: managerId,
                     },
                 },
             },
+        },
+    };
+
+    const [
+        totalRequests,
+        pendingRequests,
+        approvedRequests,
+        currentlyOnLeave,
+    ] = await Promise.all([
+        prisma.leaveRequest.count({
+            where: employeeFilter,
         }),
 
         prisma.leaveRequest.count({
             where: {
                 status: "pending",
-                employee: {
-                    department: {
-                        manager_id: managerId,
-                    },
-                },
+                ...employeeFilter,
             },
         }),
 
         prisma.leaveRequest.count({
             where: {
                 status: "approved",
-                employee: {
-                    department: {
-                        manager_id: managerId,
-                    },
-                },
+                ...employeeFilter,
             },
         }),
 
@@ -1538,11 +1542,7 @@ export const getManagerLeaveStats = async (managerId: string) => {
                 end_date: {
                     gte: today,
                 },
-                employee: {
-                    department: {
-                        manager_id: managerId,
-                    },
-                },
+                ...employeeFilter,
             },
         }),
     ]);
@@ -1554,6 +1554,7 @@ export const getManagerLeaveStats = async (managerId: string) => {
         currentlyOnLeave,
     };
 };
+
 
 export const getEmployeeLeaveStats = async (employeeId: string) => {
     const today = new Date();
