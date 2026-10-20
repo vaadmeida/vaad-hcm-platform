@@ -1,3 +1,4 @@
+import DepartmentOverview from "@/features/departments/components/DepartmentOverview/DepartmentOverview";
 import DepartmentRecentActivity from "@/features/departments/components/DepartmentRecentActivity";
 import DepartmentDetailsTab, { type DepartmentDetailsTab as DepartmentDetailsTabType } from "@/features/departments/components/DepartmentsDetails/DepartmentDetailsTab";
 import DepartmentsDetailsHeader from "@/features/departments/components/DepartmentsDetails/DepartmentsDetailsHeader";
@@ -15,7 +16,7 @@ const DepartmentDetailsPage = () => {
     const { departmentId } = useParams();
 
     const [activeTab, setActiveTab] =
-        useState<DepartmentDetailsTabType>("team members");
+        useState<DepartmentDetailsTabType>("Overview");
 
     const { data: department, isPending } = useDepartmentsDetails(departmentId);
 
@@ -44,6 +45,11 @@ const DepartmentDetailsPage = () => {
                 activeTab={activeTab}
                 onTabChange={setActiveTab} />
 
+            {
+                activeTab === 'Overview' && (
+                    <DepartmentOverview department={department} />
+                )
+            }
             {
                 activeTab === 'team members' && (
                     <DepartmentTeamMembers departmentId={department.id} />
