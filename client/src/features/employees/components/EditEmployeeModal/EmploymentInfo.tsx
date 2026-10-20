@@ -10,13 +10,17 @@ import {
 
 import type { Manager, UpdateEmployeeDTO } from "../../types/employee.types";
 import type { Department } from "@/features/departments/types/departments.types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EmploymentInfoProps {
   form: UpdateEmployeeDTO;
 
   handleChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-  handleSelectChange: ( name: keyof UpdateEmployeeDTO,value: string | boolean) => void;
+  handleSelectChange: (name: keyof UpdateEmployeeDTO, value: string | boolean | string[]) => void;
   departments: Department[];
   managers: Manager[];
 }
@@ -49,30 +53,68 @@ const EmploymentInfo = ({
 
         {/* Department */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="department_id">Department</Label>
+          <Label>Departments</Label>
 
-          <Select
-            value={form.department_id ?? ""}
-            onValueChange={(value) =>
-              handleSelectChange("department_id", value)
-            }
-          >
-            <SelectTrigger
-              id="department_id"
-              className="w-full rounded-sm border-border text-sm"
-            >
-              <SelectValue placeholder="Select department" />
-            </SelectTrigger>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+               className="w-full justify-between rounded-sm border-border 
+               bg-white text-sm font-normal text-gray-900 hover:bg-gray-50 hover:text-gray-900"
+              >
+                {form.department_ids?.length
+                  ? `${form.department_ids.length} department(s) selected`
+                  : "Select departments"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
 
-            <SelectContent>
-              {departments.map((department) => (
-                <SelectItem key={department.id} value={department.id}>
-                  {department.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <PopoverContent className="w-(--radix-popover-trigger-width) p-2 bg-white">
+              <div className="max-h-60 space-y-1 overflow-y-auto">
+                {departments.map((department) => {
+                  const isSelected = form.department_ids?.includes(department.id);
 
+                  return (
+                    <label
+                      key={department.id}
+                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-muted/20"
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          const currentDepartments = form.department_ids ?? [];
+
+                          const updatedDepartments = checked
+                            ? [...currentDepartments, department.id]
+                            : currentDepartments.filter(
+                              (id) => id !== department.id
+                            );
+
+                          handleSelectChange(
+                            "department_ids",
+                            updatedDepartments
+                          );
+                        }}
+                      />
+                      <span>{department.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {form.department_ids?.length ? (
+            <p className="text-xs text-muted-foreground">
+              {departments
+                .filter((department) =>
+                  form.department_ids?.includes(department.id)
+                )
+                .map((department) => department.name)
+                .join(", ")}
+            </p>
+          ) : null}
         </div>
 
         {/* Role */}
@@ -161,7 +203,7 @@ const EmploymentInfo = ({
             id="hire_date"
             name="hire_date"
             type="date"
-           value={form.hire_date?.slice(0, 10) ?? ""}
+            value={form.hire_date?.slice(0, 10) ?? ""}
             onChange={handleChange}
             className="w-full rounded-sm border-border text-sm text-secondary"
           />
