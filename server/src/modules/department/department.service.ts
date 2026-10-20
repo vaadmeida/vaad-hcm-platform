@@ -31,6 +31,7 @@ export const createDepartment = async (data: CreateDepartmentDto) => {
 
 }
 
+
 export const getDepartmentById = async (id: string, user: User) => {
     if (user.role !== "admin" && user.role !== "hr") {
         throw new AppError(
@@ -53,10 +54,14 @@ export const getDepartmentById = async (id: string, user: User) => {
             },
             employees: {
                 select: {
-                    id: true,
-                    first_name: true,
-                    last_name: true,
-                    avatar_url: true,
+                    employee: {
+                        select: {
+                            id: true,
+                            first_name: true,
+                            last_name: true,
+                            avatar_url: true,
+                        },
+                    },
                 },
             },
         },
@@ -74,15 +79,15 @@ export const getDepartmentById = async (id: string, user: User) => {
 
     const formattedManager = manager
         ? {
-            ...manager,
-            avatar_url: manager.avatar_url
-                ? await getPresignedUrl(manager.avatar_url)
-                : null,
-        }
+              ...manager,
+              avatar_url: manager.avatar_url
+                  ? await getPresignedUrl(manager.avatar_url)
+                  : null,
+          }
         : null;
 
     const formattedEmployees = await Promise.all(
-        employees.map(async (employee) => ({
+        employees.map(async ({ employee }) => ({
             ...employee,
             avatar_url: employee.avatar_url
                 ? await getPresignedUrl(employee.avatar_url)
@@ -94,17 +99,18 @@ export const getDepartmentById = async (id: string, user: User) => {
         ...departmentData,
         manager: formattedManager,
         employees: formattedEmployees,
-        employee_count: employees.length,
+        employee_count: formattedEmployees.length,
     };
 };
 
-export const getDepartments = async (user: User) => {
 
+export const getDepartments = async (user: User) => {
     if (user.role !== "admin" && user.role !== "hr") {
         throw new AppError(
             "You do not have permission to access this resource.",
             403,
-            "FORBIDDEN");
+            "FORBIDDEN"
+        );
     }
 
     const departments = await prisma.department.findMany({
@@ -117,41 +123,43 @@ export const getDepartments = async (user: User) => {
                     avatar_url: true,
                 },
             },
-            _count: {
+            employees: {
+                where: {
+                    employee: {
+                        status: {
+                            not: "terminated",
+                        },
+                    },
+                },
                 select: {
-                    employees: {
-                        where: {
-                            status: {
-                                not: "terminated"
-                            }
-                        }
-                    }
+                    employee_id: true,
                 },
             },
         },
     });
 
     const formattedDepartments = await Promise.all(
-        departments.map(async ({ _count, manager, ...department }) => {
+        departments.map(async ({ employees, manager, ...department }) => {
             const managerAvatarUrl = manager?.avatar_url
                 ? await getPresignedUrl(manager.avatar_url)
                 : null;
 
             return {
                 ...department,
-                employee_count: _count.employees,
+                employee_count: employees.length,
                 manager: manager
                     ? {
-                        ...manager,
-                        avatar_url: managerAvatarUrl,
-                    }
+                          ...manager,
+                          avatar_url: managerAvatarUrl,
+                      }
                     : null,
             };
         })
     );
 
     return formattedDepartments;
-}
+};
+
 
 type UpdateDepartmentInput = {
     id: string;
@@ -203,6 +211,7 @@ type AssignDepartmentManagerInput = {
     data: AssignDepartmentManagerDto;
     user: User;
 };
+
 
 export const assignDepartmentManager = async ({
     id,
@@ -257,7 +266,7 @@ export const assignDepartmentManager = async ({
         );
     }
 
-    // Department managers can be managers or HR
+    // 4. Only managers and HR can manage departments
     if (employee.role !== "manager" && employee.role !== "hr") {
         throw new AppError(
             "Only employees with manager or HR role can be assigned as department managers",
@@ -266,25 +275,8 @@ export const assignDepartmentManager = async ({
         );
     }
 
-    // 4. Check if employee already manages another department
-    const existingDepartment = await prisma.department.findFirst({
-        where: {
-            manager_id,
-            NOT: {
-                id,
-            },
-        },
-    });
-
-    if (existingDepartment) {
-        throw new AppError(
-            "This employee is already managing another department",
-            409,
-            "ALREADY_DEPARTMENT_MANAGER"
-        );
-    }
-
     // 5. Assign manager
+    // An employee can manage multiple departments.
     const updatedDepartment = await prisma.department.update({
         where: { id },
         data: {
@@ -298,7 +290,6 @@ export const assignDepartmentManager = async ({
             manager_id: true,
             created_at: true,
             updated_at: true,
-
             manager: {
                 select: {
                     id: true,
@@ -319,8 +310,6 @@ export const assignDepartmentManager = async ({
     return updatedDepartment;
 };
 
-
-
 export const teamMembers = async (departmentId: string) => {
     const department = await prisma.department.findUnique({
         where: {
@@ -339,12 +328,16 @@ export const teamMembers = async (departmentId: string) => {
             },
             employees: {
                 select: {
-                    id: true,
-                    first_name: true,
-                    last_name: true,
-                    job_title: true,
-                    avatar_url: true,
-                    status: true,
+                    employee: {
+                        select: {
+                            id: true,
+                            first_name: true,
+                            last_name: true,
+                            job_title: true,
+                            avatar_url: true,
+                            status: true,
+                        },
+                    },
                 },
             },
         },
@@ -360,15 +353,16 @@ export const teamMembers = async (departmentId: string) => {
 
     const manager = department.manager
         ? {
-            ...department.manager,
-            avatar_url: department.manager.avatar_url
-                ? await getPresignedUrl(department.manager.avatar_url)
-                : null,
-        }
+              ...department.manager,
+              avatar_url: department.manager.avatar_url
+                  ? await getPresignedUrl(department.manager.avatar_url)
+                  : null,
+          }
         : null;
 
     const members = await Promise.all(
         department.employees
+            .map(({ employee }) => employee)
             .filter((employee) => employee.id !== department.manager_id)
             .map(async (employee) => ({
                 ...employee,
@@ -382,15 +376,14 @@ export const teamMembers = async (departmentId: string) => {
         manager,
         members,
     };
-};;
+};
+
 
 
 export const removeDepartmentManager = async (
     departmentId: string,
     user: User
 ) => {
-
-    console.log("SERVICE DEPARTMENT ID:", departmentId);
 
     if (user.role !== "admin" && user.role !== "hr") {
         throw new AppError(
