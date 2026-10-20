@@ -72,7 +72,11 @@ const EmploymentInformation = ({
 
         <InfoItem
           label="Department"
-          value={employment.department?.name}
+          value={
+            employment.departments
+              ?.map((department) => department.name)
+              .join(", ") || "No department assigned"
+          }
         />
 
         <InfoItem
