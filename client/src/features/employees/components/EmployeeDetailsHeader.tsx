@@ -167,8 +167,9 @@ const EmployeeDetailsHeader = ({
                 <span className="text-muted-foreground">•</span>
 
                 <span className="text-muted-foreground">
-                  {employee.employment.department?.name ||
-                    "No department assigned"}
+                  {employee.employment.departments
+                    ?.map((department) => department.name)
+                    .join(", ") || "No department assigned"}
                 </span>
               </div>
 
