@@ -209,14 +209,16 @@ export const getEmployee = async (id: string, user: User) => {
             date_exited: true,
             work_email: true,
             owns_personal_computer: true,
-
-            department: {
+            departments: {
                 select: {
-                    id: true,
-                    name: true,
+                    department: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
                 },
             },
-
             manager: {
                 select: {
                     id: true,
@@ -291,12 +293,12 @@ export const getEmployee = async (id: string, user: User) => {
             date_exited: employee.date_exited,
             work_email: employee.work_email,
             owns_personal_computer: employee.owns_personal_computer,
-            department: employee.department
-                ? {
-                    id: employee.department.id,
-                    name: employee.department.name,
-                }
-                : null,
+
+            departments: employee.departments.map((assignment) => ({
+                id: assignment.department.id,
+                name: assignment.department.name,
+            })),
+
             manager: employee.manager
                 ? {
                     id: employee.manager.id,
@@ -309,21 +311,19 @@ export const getEmployee = async (id: string, user: User) => {
             relationship: employee.emergency_contact_relationship,
             phone: employee.emergency_contact_number,
         },
-
         payroll: {
             paye_id: employee.paye_id,
             bank_name: employee.bank_name,
             account_number: employee.account_number,
             account_name: employee.account_name,
         },
-
         created_at: employee.created_at,
         updated_at: employee.updated_at,
     };
 };
 
-export const getMyProfile = async (user: User) => {
 
+export const getMyProfile = async (user: User) => {
     const employee = await prisma.employee.findUnique({
         where: { id: user.id },
         select: {
@@ -362,10 +362,14 @@ export const getMyProfile = async (user: User) => {
             work_email: true,
             owns_personal_computer: true,
 
-            department: {
+            departments: {
                 select: {
-                    id: true,
-                    name: true,
+                    department: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
                 },
             },
 
@@ -433,12 +437,12 @@ export const getMyProfile = async (user: User) => {
             work_email: employee.work_email,
             owns_personal_computer: employee.owns_personal_computer,
 
-            department: employee.department
-                ? {
-                    id: employee.department.id,
-                    name: employee.department.name,
-                }
-                : null,
+            departments: employee.departments.map(
+                (assignment) => ({
+                    id: assignment.department.id,
+                    name: assignment.department.name,
+                })
+            ),
 
             manager: employee.manager
                 ? {
@@ -467,14 +471,16 @@ export const getMyProfile = async (user: User) => {
 };
 
 
+
+
 export const getAllEmployees = async (
     user: User,
     filters: {
         search?: string;
         department?: string;
         status?: string;
-    }) => {
-
+    }
+) => {
     const { search, department, status } = filters;
 
     const isManager = user.role?.toLowerCase() === "manager";
@@ -485,10 +491,12 @@ export const getAllEmployees = async (
         },
     };
 
+    // Managers can only see employees who report directly to them.
     if (isManager) {
         whereClause.manager_id = user.id;
     }
 
+    // Search employee details and all assigned department names.
     if (search) {
         whereClause.OR = [
             {
@@ -514,36 +522,34 @@ export const getAllEmployees = async (
                     contains: search,
                     mode: "insensitive",
                 },
-
             },
             {
-                employee_code: {
-                    contains: search,
-                    mode: "insensitive",
-                },
-
-            },
-            {
-                department: {
-                    name: {
-                        contains: search,
-                        mode: "insensitive",
+                departments: {
+                    some: {
+                        department: {
+                            name: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
                     },
                 },
             },
         ];
     }
 
+    // Filter employees belonging to the selected department.
+    // The department filter expects a department ID.
     if (department && department !== "all") {
-        whereClause.department_id = department;
+        whereClause.departments = {
+            some: {
+                department_id: department,
+            },
+        };
     }
 
     if (status && status !== "all") {
         whereClause.status = status;
-    }
-
-    if (isManager) {
-        whereClause.manager_id = user.id;
     }
 
     const employees = await prisma.employee.findMany({
@@ -562,18 +568,24 @@ export const getAllEmployees = async (
             employment_type: true,
             hire_date: true,
             created_at: true,
-            department: {
+
+            departments: {
                 select: {
-                    name: true,
-                    id: true
+                    department: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
                 },
             },
+
             manager: {
                 select: {
                     id: true,
                     first_name: true,
                     last_name: true,
-                    middle_name: true
+                    middle_name: true,
                 },
             },
         },
@@ -589,9 +601,11 @@ export const getAllEmployees = async (
             first_name: emp.first_name,
             last_name: emp.last_name,
             middle_name: emp.middle_name,
+
             avatar_url: emp.avatar_url
                 ? await getPresignedUrl(emp.avatar_url)
                 : null,
+
             email: emp.email,
             phone: emp.phone,
             role: emp.role,
@@ -601,16 +615,22 @@ export const getAllEmployees = async (
             hire_date: emp.hire_date,
             created_at: emp.created_at,
 
-            department: emp.department
-                ? {
-                    id: emp.department.id,
-                    name: emp.department.name,
-                }
-                : null,
+            departments: emp.departments.map(
+                (assignment) => ({
+                    id: assignment.department.id,
+                    name: assignment.department.name,
+                })
+            ),
+
             manager: emp.manager
                 ? {
                     id: emp.manager.id,
-                    name: `${emp.manager.first_name} ${emp.manager.last_name}`,
+                    name: [
+                        emp.manager.first_name,
+                        emp.manager.last_name,
+                    ]
+                        .filter(Boolean)
+                        .join(" "),
                 }
                 : null,
         }))
@@ -618,6 +638,7 @@ export const getAllEmployees = async (
 
     return employeesWithAvatar;
 };
+
 
 export const updateEmployee = async ({
     id,
@@ -659,7 +680,7 @@ export const updateEmployee = async ({
         "role",
         "job_title",
         "job_description",
-        "department_id",
+        "department_ids",
         "manager_id",
         "work_email",
         "status",
@@ -695,7 +716,8 @@ export const updateEmployee = async ({
         );
     }
 
-    const allowedFields = isAdmin || isHR ? employeeFields : selfAllowedFields;
+    const allowedFields =
+        isAdmin || isHR ? employeeFields : selfAllowedFields;
 
     const invalidFields = Object.keys(data).filter(
         (key) => !allowedFields.includes(key)
@@ -709,25 +731,88 @@ export const updateEmployee = async ({
         );
     }
 
-    const isDepartmentChange =
-        data.department_id !== undefined &&
-        data.department_id !== employee.department_id;
-
-    const isDepartmentRemoved =
-        employee.department_id != null &&
-        data.department_id === null;
+    // Separate department assignments from ordinary employee fields.
+    const { department_ids, ...employeeData } = data;
 
     const isManagerChange =
         data.manager_id !== undefined &&
         data.manager_id !== employee.manager_id;
 
-
-
     const result = await prisma.$transaction(async (tx) => {
+        // Read the existing department assignments.
+        const existingAssignments =
+            await tx.employeeDepartment.findMany({
+                where: { employee_id: id },
+                include: {
+                    department: {
+                        select: { id: true, name: true },
+                    },
+                },
+            });
+
+        const previousDepartmentIds = existingAssignments.map(
+            (assignment) => assignment.department_id
+        );
+
+        let assignedDepartmentNames: string[] = [];
+        let removedDepartmentNames: string[] = [];
+
+        // Update ordinary employee fields.
         const updatedEmployee = await tx.employee.update({
             where: { id },
-            data,
+            data: employeeData,
         });
+
+        // Update department assignments only when the field is supplied.
+        if (department_ids !== undefined) {
+            // Remove duplicate IDs before validating or inserting.
+            const uniqueDepartmentIds = [...new Set(department_ids)];
+
+            const departments = await tx.department.findMany({
+                where: {
+                    id: { in: uniqueDepartmentIds },
+                },
+                select: {
+                    id: true,
+                    name: true,
+                },
+            });
+
+            if (departments.length !== uniqueDepartmentIds.length) {
+                throw new AppError(
+                    "One or more departments do not exist",
+                    400,
+                    "INVALID_DEPARTMENTS"
+                );
+            }
+
+            const previousIdSet = new Set(previousDepartmentIds);
+            const nextIdSet = new Set(uniqueDepartmentIds);
+
+            assignedDepartmentNames = departments
+                .filter((department) => !previousIdSet.has(department.id))
+                .map((department) => department.name);
+
+            removedDepartmentNames = existingAssignments
+                .filter(
+                    (assignment) => !nextIdSet.has(assignment.department_id)
+                )
+                .map((assignment) => assignment.department.name);
+
+            // Replace the previous assignments.
+            await tx.employeeDepartment.deleteMany({
+                where: { employee_id: id },
+            });
+
+            if (uniqueDepartmentIds.length > 0) {
+                await tx.employeeDepartment.createMany({
+                    data: uniqueDepartmentIds.map((department_id) => ({
+                        employee_id: id,
+                        department_id,
+                    })),
+                });
+            }
+        }
 
         let action: ActivityAction = "UPDATED";
 
@@ -743,34 +828,29 @@ export const updateEmployee = async ({
             },
         });
 
-        // Department assigned
-        if (isDepartmentChange && updatedEmployee.department_id) {
-            const department = await tx.department.findUnique({
-                where: { id: updatedEmployee.department_id },
-                select: { name: true },
-            });
+        const performerName =
+            `${performer?.first_name ?? "Unknown"} ` +
+            `${performer?.last_name ?? "User"}`;
 
+        // Log department changes without using the removed department_id
+        // field on the Employee model.
+        if (assignedDepartmentNames.length > 0) {
             action = "DEPARTMENT_ASSIGNED";
 
             description =
-                `${performer?.first_name ?? "Unknown"} ` +
-                `${performer?.last_name ?? "User"} assigned ` +
+                `${performerName} assigned ` +
                 `${updatedEmployee.first_name} ${updatedEmployee.last_name} ` +
-                `to ${department?.name ?? "a department"}`;
-        }
-
-        // Department removed
-        if (isDepartmentRemoved) {
+                `to ${assignedDepartmentNames.join(", ")}`;
+        } else if (removedDepartmentNames.length > 0) {
             action = "DEPARTMENT_REMOVED";
 
             description =
-                `${performer?.first_name ?? "Unknown"} ` +
-                `${performer?.last_name ?? "User"} removed ` +
+                `${performerName} removed ` +
                 `${updatedEmployee.first_name} ${updatedEmployee.last_name} ` +
-                `from their department`;
+                `from ${removedDepartmentNames.join(", ")}`;
         }
 
-        // 1. Always notify the employee whose profile was updated.
+        // 1. Notify the employee whose profile was updated.
         await createNotification(
             {
                 userId: updatedEmployee.id,
@@ -781,8 +861,8 @@ export const updateEmployee = async ({
             tx
         );
 
-        // 2. Notify all active HR/Admin users, including the actor.
-        // Exclude the affected employee to prevent duplicate notifications.
+        // 2. Notify all active HR/Admin users, excluding the employee
+        // whose profile was updated.
         const hrAndAdmins = await tx.employee.findMany({
             where: {
                 role: { in: ["hr", "admin"] },
@@ -808,30 +888,33 @@ export const updateEmployee = async ({
             )
         );
 
-        // 3. Notify the new manager when the assignment changes.
+        // 3. Notify the new reporting manager when the assignment changes.
         if (
             isManagerChange &&
             updatedEmployee.manager_id &&
             updatedEmployee.manager_id !== updatedEmployee.id
         ) {
-            // Avoid duplicating the employee's own notification if
-            // the affected employee is also set as their own manager.
-            if (updatedEmployee.manager_id !== updatedEmployee.id) {
-                await createNotification(
-                    {
-                        userId: updatedEmployee.manager_id,
-                        title: "Employee Assigned to You",
-                        message:
-                            `${updatedEmployee.first_name} ` +
-                            `${updatedEmployee.last_name} has been assigned to you.`,
-                        type: "EMPLOYEE",
-                    },
-                    tx
-                );
-            }
+            await createNotification(
+                {
+                    userId: updatedEmployee.manager_id,
+                    title: "Employee Assigned to You",
+                    message:
+                        `${updatedEmployee.first_name} ` +
+                        `${updatedEmployee.last_name} has been assigned to you.`,
+                    type: "EMPLOYEE",
+                },
+                tx
+            );
         }
 
-        // 4. Activity log
+        // 4. Activity log.
+        // ActivityLog still has its own department_id field, so use the
+        // first current department when available, otherwise null.
+        const currentDepartmentIds =
+            department_ids !== undefined
+                ? [...new Set(department_ids)]
+                : previousDepartmentIds;
+
         await tx.activityLog.create({
             data: {
                 action,
@@ -839,15 +922,40 @@ export const updateEmployee = async ({
                 entity_id: updatedEmployee.id,
                 description,
                 performed_by: user.id,
-                department_id: updatedEmployee.department_id,
+                department_id: currentDepartmentIds[0] ?? null,
             },
         });
 
-        return updatedEmployee;
+        // Return the employee together with their assigned departments.
+        const employeeWithDepartments = await tx.employee.findUnique({
+            where: { id },
+            include: {
+                departments: {
+                    include: {
+                        department: true,
+                    },
+                },
+            },
+        });
+
+        if (!employeeWithDepartments) {
+            throw new AppError(
+                "Employee not found",
+                404,
+                "EMPLOYEE_NOT_FOUND"
+            );
+        }
+
+        // Return department objects, not join-table records.
+        return {
+            ...employeeWithDepartments,
+            departments: employeeWithDepartments.departments.map(
+                (assignment) => assignment.department
+            ),
+        };
     });
 
-
-    // Remove sensitive data
+    // Remove sensitive data.
     const { password_hash, ...safeEmployee } = result;
 
     return safeEmployee;
