@@ -78,7 +78,8 @@ const mapEmployeeToForm = (
     role: employee.employment.role ?? "employee",
     job_title: employee.employment.job_title ?? "",
     job_description: employee.employment.job_description ?? "",
-    department_id: employee.employment.department?.id ?? "",
+    department_ids:
+        employee.employment.departments?.map((department) => department.id) ?? [],
     manager_id: employee.employment.manager?.id ?? "",
     work_email: employee.employment.work_email ?? "",
     status: employee.employment.status ?? "probation",
@@ -144,21 +145,20 @@ const EmployeeEditModal = ({
             [name]: value,
         }));
     };
-
-    const handleSelectChange = (name: keyof UpdateEmployeeDTO, value: string | boolean) => {
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+    
+    const handleSelectChange = (
+        name: keyof UpdateEmployeeDTO,
+        value: string | boolean | string[]
+    ) => {
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
 
-
-    const payload = isMyProfile
+    const payload: Partial<UpdateEmployeeDTO> = isMyProfile
         ? selfPayload
         : {
             ...form,
-            department_id: form.department_id || undefined,
+            department_ids: form.department_ids ?? [],
             manager_id: form.manager_id || undefined,
         };
 
