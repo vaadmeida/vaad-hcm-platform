@@ -45,3 +45,9 @@ coverage/
 # =========================
 # Database backup
 server/hr_platform_backup.dump
+
+
+# Local database backups and schema comparisons
+server/*.backup
+server/schema-diff.txt
+/chema-diff.txt
