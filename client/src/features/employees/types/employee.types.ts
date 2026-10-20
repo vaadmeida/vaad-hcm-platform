@@ -1,20 +1,20 @@
 export type EmployeeRole =
-    | "employee"
-    | "manager"
-    | "hr"
-    | "admin";
+  | "employee"
+  | "manager"
+  | "hr"
+  | "admin";
 
 export type EmployeeStatus =
-    | "active"
-    | "inactive"
-    | "probation"
-    | "terminated";
+  | "active"
+  | "inactive"
+  | "probation"
+  | "terminated";
 
 export type EmploymentType =
-    | "full-time"
-    | "part-time"
-    | "contract"
-    | "intern";
+  | "full-time"
+  | "part-time"
+  | "contract"
+  | "intern";
 
 export interface Employee {
   id: string;
@@ -46,10 +46,10 @@ export interface Employee {
     date_exited: string | null;
     work_email: string | null;
     owns_personal_computer?: boolean;
-    department: {
+    departments: {
       id: string;
       name: string;
-    } | null;
+    }[];
     manager: {
       id: string;
       name: string;
@@ -111,10 +111,10 @@ export interface EmployeeFormValues {
   status: "active" | "probation" | "inactive";
   job_title: string;
   employment_type:
-    | "full-time"
-    | "part-time"
-    | "contract"
-    | "intern";
+  | "full-time"
+  | "part-time"
+  | "contract"
+  | "intern";
   hire_date: string;
   avatar?: File | null;
   password: string;
@@ -147,53 +147,53 @@ export interface EmployeeResponse {
 }
 
 export interface UpdateEmployeeDTO {
-    first_name?: string;
-    last_name?: string;
+  first_name?: string;
+  last_name?: string;
 
-    gender?: string;
-    date_of_birth?: string;
-    nationality?: string;
+  gender?: string;
+  date_of_birth?: string;
+  nationality?: string;
 
-    phone?: string;
-    alternate_phone?: string;
-    email?: string;
+  phone?: string;
+  alternate_phone?: string;
+  email?: string;
 
-    residential_address?: string;
-    city?: string;
-    state_of_residence?: string;
+  residential_address?: string;
+  city?: string;
+  state_of_residence?: string;
 
-    emergency_contact_name?: string;
-    emergency_contact_relationship?: string;
-    emergency_contact_number?: string;
+  emergency_contact_name?: string;
+  emergency_contact_relationship?: string;
+  emergency_contact_number?: string;
 
-    role?: "employee" | "manager" | "hr" | "admin";
+  role?: "employee" | "manager" | "hr" | "admin";
 
-    job_title?: string;
-    job_description?: string;
+  job_title?: string;
+  job_description?: string;
 
-    department_id?: string;
-    manager_id?: string;
+  department_ids?: string[];
+  manager_id?: string;
 
-    work_email?: string;
+  work_email?: string;
 
-    status?: "active" | "inactive" | "probation" | "terminated";
+  status?: "active" | "inactive" | "probation" | "terminated";
 
-    employment_type?:
-        | "full-time"
-        | "part-time"
-        | "contract"
-        | "intern";
+  employment_type?:
+  | "full-time"
+  | "part-time"
+  | "contract"
+  | "intern";
 
-    hire_date?: string;
-    probation_end_date?: string;
-    date_exited?: string;
+  hire_date?: string;
+  probation_end_date?: string;
+  date_exited?: string;
 
-    owns_personal_computer?: boolean;
+  owns_personal_computer?: boolean;
 
-    paye_id?: string;
-    bank_name?: string;
-    account_number?: string;
-    account_name?: string;
+  paye_id?: string;
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
 }
 
 export interface Manager {
