@@ -118,9 +118,6 @@ export const teamMembersController = async (req: Request, res: Response) => {
 
 export const removeDepartmentManagerController = async (req: Request, res: Response) => {
 
-    console.log("PARAMS:", req.params);
-    console.log("DEPARTMENT ID:", req.params.departmentId);
-
     const { departmentId } = req.params
 
     if (Array.isArray(departmentId)) {
