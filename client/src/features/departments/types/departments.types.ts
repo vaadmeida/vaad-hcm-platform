@@ -4,16 +4,28 @@ export interface Department {
   description: string | null;
   status: "active" | "inactive";
   manager_id: string | null;
+
+  // Department profile fields
+  reports_to: string | null;
+  role_purpose: string | null;
+  core_responsibilities: string[];
+  key_outputs: string[];
+  kpis: string[];
+  decision_authority: string | null;
+  backup_continuity: string | null;
+
   manager: {
     id: string;
     first_name: string;
     last_name: string;
     avatar_url: string | null;
   } | null;
+
   employee_count: number;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface UpdateDepartmentDto {
   name?: string;
