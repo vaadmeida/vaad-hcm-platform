@@ -39,7 +39,7 @@ export const updateEmployeeSchema = z.object({
   job_title: z.string().optional(),
   job_description: z.string().optional(),
 
-  department_id: z.string().check(z.uuid()).optional(),
+  department_ids: z.array(z.string().check(z.uuid())).optional(),
   manager_id: z.string().check(z.uuid()).optional(),
   work_email: z.email().optional().or(z.literal("")),
 
