@@ -319,10 +319,18 @@ const fetchEmployeeDocuments = async (
                     first_name: true,
                     last_name: true,
                     avatar_url: true,
-                    department: true,
+                    departments: {
+                        select: {
+                            department: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
                 },
             },
-
             documentType: {
                 select: {
                     id: true,
@@ -354,7 +362,6 @@ const fetchEmployeeDocuments = async (
                 | "ok"
                 | "expired"
                 | "expiring_soon" = "ok";
-
             if (document.expiryDate) {
                 if (document.expiryDate < now) {
                     expiry_status = "expired";
@@ -362,13 +369,11 @@ const fetchEmployeeDocuments = async (
                     expiry_status = "expiring_soon";
                 }
             }
-
             const fileUrl = document.fileUrl?.startsWith("http")
                 ? document.fileUrl
                 : document.fileUrl
                     ? await getPresignedUrl(document.fileUrl)
                     : null;
-
             const avatarUrl = document.employee.avatar_url
                 ? await getPresignedUrl(document.employee.avatar_url)
                 : null;
@@ -376,14 +381,14 @@ const fetchEmployeeDocuments = async (
             return {
                 id: document.id,
                 employeeId: document.employeeId,
-
                 employee: {
                     first_name: document.employee.first_name,
                     last_name: document.employee.last_name,
                     avatar_url: avatarUrl,
-                    department: document.employee.department,
+                    departments: document.employee.departments.map(
+                        (item) => item.department,
+                    ),
                 },
-
                 fileName: document.fileName,
                 fileUrl,
                 fileSizeMb: document.fileSizeMb,
