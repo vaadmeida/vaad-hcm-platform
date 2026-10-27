@@ -81,7 +81,7 @@ const DocumentTableRow = ({
       </td>
 
       {/* Document */}
-      <td className="hidden max-w-55 px-3 py-3 xl:table-cell">
+      <td className="hidden max-w-40 px-3 py-3 xl:table-cell">
         <span
           title={document.fileName}
           className="block truncate font-medium text-gray-900"

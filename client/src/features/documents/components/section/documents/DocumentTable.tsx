@@ -15,11 +15,11 @@ const DocumentTable = ({
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-y border-border bg-muted/10 text-left text-xs font-medium text-muted-foreground">
-            <th className="px-4 py-3 pr-2">
+            <th className="w-[25%] px-3 py-3 pr-5">
               Employee
             </th>
 
-            <th className="hidden px-4 py-3 xl:table-cell">
+            <th className="hidden w-[20%] px-3 py-3 xl:table-cell">
               Document
             </th>
 
