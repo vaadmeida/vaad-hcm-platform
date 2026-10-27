@@ -27,7 +27,7 @@ const DocumentTable = ({
               Document Type
             </th>
 
-            <th className="px-4 py-3">
+            <th className="hidden px-4 py-3 xl:table-cell">
               Uploaded
             </th>
 
