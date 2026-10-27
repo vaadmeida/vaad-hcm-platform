@@ -31,6 +31,7 @@ import { useUpdateEmployee } from "../../hooks/useUpdateEmployee";
 import { toast } from "sonner";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
 import { useManagers } from "../../hooks/useManagers";
+import axios from "axios";
 
 
 interface EmployeeEditModalProps {
@@ -82,7 +83,7 @@ const mapEmployeeToForm = (
         employee.employment.departments?.map((department) => department.id) ?? [],
     manager_id: employee.employment.manager?.id ?? "",
     work_email: employee.employment.work_email ?? "",
-    status: employee.employment.status ?? "probation",
+    status: employee.employment.status ?? "unconfirmed",
     employment_type: employee.employment.employment_type ?? "full-time",
     hire_date: employee.employment.hire_date ?? "",
     probation_end_date: employee.employment.probation_end_date ?? "",
@@ -145,7 +146,7 @@ const EmployeeEditModal = ({
             [name]: value,
         }));
     };
-    
+
     const handleSelectChange = (
         name: keyof UpdateEmployeeDTO,
         value: string | boolean | string[]
@@ -168,9 +169,6 @@ const EmployeeEditModal = ({
     ) => {
         e.preventDefault();
 
-        console.log("isMyProfile:", isMyProfile);
-        console.log("PAYLOAD BEING SENT:", payload);
-
         try {
             await mutateAsync({
                 employeeId: employee.id,
@@ -183,10 +181,20 @@ const EmployeeEditModal = ({
                 `${employee.full_name}'s details updated successfully!`
             );
         } catch (error) {
-            console.error(error);
-            toast.error("Failed to update employee");
+            console.error("Employee update failed:", error);
+
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message
+                : undefined;
+
+            toast.error(
+                message || "Unable to update employee details. Please try again."
+            );
         }
+
     };
+
+
     const handleOpenChange = (value: boolean) => {
         if (value) {
             setForm(mapEmployeeToForm(employee));
