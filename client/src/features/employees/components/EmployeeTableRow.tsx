@@ -50,9 +50,22 @@ const EmployeeTableRow = ({
 
         </div>
       </td>
-      {/* Department */}
+      {/* Departments */}
       <td className="px-3 py-2">
-        {employee.department?.name ?? "-"}
+        <div className="flex max-w-70 flex-wrap gap-1.5">
+          {employee.departments?.length ? (
+            employee.departments.map((department) => (
+              <span
+                key={department.id}
+                className="inline-flex rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700"
+              >
+                {department.name}
+              </span>
+            ))
+          ) : (
+            <span className="text-sm text-gray-400">-</span>
+          )}
+        </div>
       </td>
 
 

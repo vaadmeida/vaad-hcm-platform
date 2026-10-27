@@ -10,10 +10,9 @@ export const createEmployeeSchema = z.object({
 });
 
 const optionalDate = z.preprocess(
-  (value) => value === "" ? undefined : value,
-  z.coerce.date().optional()
+  (value) => (value === "" ? undefined : value),
+  z.coerce.date().nullable().optional()
 );
-
 
 export const updateEmployeeSchema = z.object({
   // Personal information
@@ -43,7 +42,7 @@ export const updateEmployeeSchema = z.object({
   manager_id: z.string().check(z.uuid()).optional(),
   work_email: z.email().optional().or(z.literal("")),
 
-  status: z.enum(["active", "inactive", "probation", "terminated"]).optional(),
+  status: z.enum(["active", "inactive","unconfirmed","resigned","dismissed","terminated"]).optional(),
   employment_type: z.enum(["full-time", "part-time", "contract", "intern"]).optional(),
 
   hire_date: optionalDate,

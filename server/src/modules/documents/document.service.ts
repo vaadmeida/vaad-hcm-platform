@@ -246,9 +246,6 @@ export const getAllEmployeeDocuments = async ({
         },
     });
 
-
-console.log("[Documents] Database result count:", documents.length);
-
  const result =  await Promise.all(
         documents.map(async (document) => {
             const fileUrl = document.fileUrl?.startsWith("http")
@@ -275,8 +272,6 @@ console.log("[Documents] Database result count:", documents.length);
             };
         })
     );
-
-console.log("[Documents] API result count:", result.length);
 
 return result;
 

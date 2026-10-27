@@ -98,7 +98,19 @@ const EmploymentInformation = ({
               : "No"
           }
         />
-
+        <InfoItem
+          label="Date Exited"
+          value={
+            employment.date_exited
+              ? new Date(employment.date_exited).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                timeZone: "UTC",
+              })
+              : "—"
+          }
+        />
         {/* Full width */}
         <div className="sm:col-span-2">
           <InfoItem

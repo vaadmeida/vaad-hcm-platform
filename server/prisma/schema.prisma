@@ -44,7 +44,7 @@ model Employee {
   job_title                      String?              @db.VarChar(150)
   job_description                String?
   manager_id                     String?              @db.Uuid
-  status                         String               @default("probation") @db.VarChar(20)
+  status                         String               @default("unconfirmed") @db.VarChar(20)
   employment_type                String               @default("full-time") @db.VarChar(50)
   hire_date                      DateTime?            @db.Date
   probation_end_date             DateTime?            @db.Date

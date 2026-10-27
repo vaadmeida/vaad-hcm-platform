@@ -7,7 +7,7 @@ import { UpdateEmployeeDTO } from "./employee.validator.ts";
 import { seedLeaveBalance } from "../leave/leave.service.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 import { createNotification } from "../notifications/notification.service.ts";
-import { promise } from "zod/v4/mini";
+
 
 type UpdateEmployeeInput = {
     id: string;
@@ -640,11 +640,14 @@ export const getAllEmployees = async (
 };
 
 
+
 export const updateEmployee = async ({
     id,
     data,
     user,
 }: UpdateEmployeeInput) => {
+
+    // 1. Find the employee being updated.
     const employee = await prisma.employee.findUnique({
         where: { id },
     });
@@ -657,10 +660,12 @@ export const updateEmployee = async ({
         );
     }
 
+    // 2. Determine the user's permissions.
     const isAdmin = user.role === "admin";
     const isHR = user.role === "hr";
     const isSelf = user.id === id;
 
+    // Fields that HR and Admin users can update.
     const employeeFields = [
         "first_name",
         "last_name",
@@ -695,6 +700,7 @@ export const updateEmployee = async ({
         "account_name",
     ];
 
+    // Fields an employee can update on their own profile.
     const selfAllowedFields = [
         "avatar_url",
         "phone",
@@ -707,7 +713,7 @@ export const updateEmployee = async ({
         "emergency_contact_number",
     ];
 
-    // Authorization
+    // Reject users who are neither HR/Admin nor the employee themselves.
     if (!isAdmin && !isHR && !isSelf) {
         throw new AppError(
             "You are not allowed to update this employee",
@@ -716,6 +722,7 @@ export const updateEmployee = async ({
         );
     }
 
+    // Validate the fields the current user is allowed to update.
     const allowedFields =
         isAdmin || isHR ? employeeFields : selfAllowedFields;
 
@@ -731,21 +738,75 @@ export const updateEmployee = async ({
         );
     }
 
+    // 3. Validate employee exit status and exit date.
+    const exitStatuses = [
+        "resigned",
+        "terminated",
+        "dismissed",
+    ] as const;
+
+    const nextStatus = data.status ?? employee.status;
+
+    const isExitStatus = exitStatuses.includes(
+        nextStatus as (typeof exitStatuses)[number]
+    );
+
+    const nextExitDate =
+        data.date_exited !== undefined
+            ? data.date_exited
+            : employee.date_exited;
+
+    // Require an exit date for exit statuses.
+    if (isExitStatus && !nextExitDate) {
+        throw new AppError(
+            "An exit date is required for resigned, terminated, or dismissed employees",
+            400,
+            "EXIT_DATE_REQUIRED"
+        );
+    }
+
+    // Reject a newly supplied exit date for non-exit statuses.
+    if (!isExitStatus && data.date_exited) {
+        throw new AppError(
+            "An exit date can only be set for resigned, terminated, or dismissed employees",
+            400,
+            "INVALID_EXIT_DATE"
+        );
+    }
+    // Track whether the employee's status is changing.
+    const statusChanged =
+        data.status !== undefined &&
+        data.status !== employee.status;
+
     // Separate department assignments from ordinary employee fields.
     const { department_ids, ...employeeData } = data;
 
+
+    // Clear the exit date when reactivating an inactive employee.
+if (
+    data.status === "active" &&
+    employee.status === "inactive"
+) {
+    employeeData.date_exited = null;
+}
+
+    // Track whether the reporting manager is changing.
     const isManagerChange =
         data.manager_id !== undefined &&
         data.manager_id !== employee.manager_id;
 
+    // 4. Perform all database updates and related records in one transaction.
     const result = await prisma.$transaction(async (tx) => {
-        // Read the existing department assignments.
+        // Load the employee's existing department assignments.
         const existingAssignments =
             await tx.employeeDepartment.findMany({
                 where: { employee_id: id },
                 include: {
                     department: {
-                        select: { id: true, name: true },
+                        select: {
+                            id: true,
+                            name: true,
+                        },
                     },
                 },
             });
@@ -757,17 +818,18 @@ export const updateEmployee = async ({
         let assignedDepartmentNames: string[] = [];
         let removedDepartmentNames: string[] = [];
 
-        // Update ordinary employee fields.
+        // Update the employee's ordinary fields.
         const updatedEmployee = await tx.employee.update({
             where: { id },
             data: employeeData,
         });
 
-        // Update department assignments only when the field is supplied.
+        // 5. Update department assignments when department_ids is provided.
         if (department_ids !== undefined) {
-            // Remove duplicate IDs before validating or inserting.
+            // Remove duplicate department IDs.
             const uniqueDepartmentIds = [...new Set(department_ids)];
 
+            // Verify that every requested department exists.
             const departments = await tx.department.findMany({
                 where: {
                     id: { in: uniqueDepartmentIds },
@@ -786,20 +848,24 @@ export const updateEmployee = async ({
                 );
             }
 
+            // Compare old and new assignments to identify changes.
             const previousIdSet = new Set(previousDepartmentIds);
             const nextIdSet = new Set(uniqueDepartmentIds);
 
             assignedDepartmentNames = departments
-                .filter((department) => !previousIdSet.has(department.id))
+                .filter(
+                    (department) => !previousIdSet.has(department.id)
+                )
                 .map((department) => department.name);
 
             removedDepartmentNames = existingAssignments
                 .filter(
-                    (assignment) => !nextIdSet.has(assignment.department_id)
+                    (assignment) =>
+                        !nextIdSet.has(assignment.department_id)
                 )
                 .map((assignment) => assignment.department.name);
 
-            // Replace the previous assignments.
+            // Replace existing assignments with the new assignments.
             await tx.employeeDepartment.deleteMany({
                 where: { employee_id: id },
             });
@@ -814,12 +880,14 @@ export const updateEmployee = async ({
             }
         }
 
+        // 6. Prepare the activity log.
         let action: ActivityAction = "UPDATED";
 
         let description =
             `Employee ${updatedEmployee.first_name} ` +
             `${updatedEmployee.last_name} was updated`;
 
+        // Retrieve the name of the person performing the update.
         const performer = await tx.employee.findUnique({
             where: { id: user.id },
             select: {
@@ -832,8 +900,7 @@ export const updateEmployee = async ({
             `${performer?.first_name ?? "Unknown"} ` +
             `${performer?.last_name ?? "User"}`;
 
-        // Log department changes without using the removed department_id
-        // field on the Employee model.
+        // Record department assignments or removals in the activity log.
         if (assignedDepartmentNames.length > 0) {
             action = "DEPARTMENT_ASSIGNED";
 
@@ -850,19 +917,56 @@ export const updateEmployee = async ({
                 `from ${removedDepartmentNames.join(", ")}`;
         }
 
-        // 1. Notify the employee whose profile was updated.
+        // 7. Prepare specific notifications for resignation and dismissal.
+        // These notifications are used only when the status actually changes.
+        const exitNotificationConfig = {
+            resigned: {
+                title: "Employee Resignation Recorded",
+                message:
+                    `${updatedEmployee.first_name} ` +
+                    `${updatedEmployee.last_name} has been marked as resigned.`,
+            },
+            dismissed: {
+                title: "Employee Dismissed",
+                message:
+                    `${updatedEmployee.first_name} ` +
+                    `${updatedEmployee.last_name} has been dismissed.`,
+            },
+        } as const;
+
+        const exitNotification =
+            statusChanged &&
+                (updatedEmployee.status === "resigned" ||
+                    updatedEmployee.status === "dismissed")
+                ? exitNotificationConfig[
+                updatedEmployee.status as "resigned" | "dismissed"
+                ]
+                : null;
+
+        // Use specific exit notifications or fall back to generic updates.
+        const notificationTitle =
+            exitNotification?.title ?? "Employee Profile Updated";
+
+        const employeeNotificationMessage =
+            exitNotification?.message ??
+            "Your employee profile has been updated.";
+
+        const hrNotificationMessage =
+            exitNotification?.message ??
+            `${updatedEmployee.first_name} ${updatedEmployee.last_name}'s profile has been updated.`;
+
+        // 8. Notify the employee whose profile was updated.
         await createNotification(
             {
                 userId: updatedEmployee.id,
-                title: "Employee Profile Updated",
-                message: "Your employee profile has been updated.",
+                title: notificationTitle,
+                message: employeeNotificationMessage,
                 type: "EMPLOYEE",
             },
             tx
         );
 
-        // 2. Notify all active HR/Admin users, excluding the employee
-        // whose profile was updated.
+        // 9. Notify all active HR/Admin users except the affected employee.
         const hrAndAdmins = await tx.employee.findMany({
             where: {
                 role: { in: ["hr", "admin"] },
@@ -877,10 +981,8 @@ export const updateEmployee = async ({
                 createNotification(
                     {
                         userId: recipient.id,
-                        title: "Employee Profile Updated",
-                        message:
-                            `${updatedEmployee.first_name} ` +
-                            `${updatedEmployee.last_name}'s profile has been updated.`,
+                        title: notificationTitle,
+                        message: hrNotificationMessage,
                         type: "EMPLOYEE",
                     },
                     tx
@@ -888,7 +990,7 @@ export const updateEmployee = async ({
             )
         );
 
-        // 3. Notify the new reporting manager when the assignment changes.
+        // 10. Notify the new manager when the reporting manager changes.
         if (
             isManagerChange &&
             updatedEmployee.manager_id &&
@@ -907,9 +1009,9 @@ export const updateEmployee = async ({
             );
         }
 
-        // 4. Activity log.
-        // ActivityLog still has its own department_id field, so use the
-        // first current department when available, otherwise null.
+        // 11. Create an activity log entry.
+        // ActivityLog still uses department_id, so use the first assigned
+        // department or null when the employee has no department.
         const currentDepartmentIds =
             department_ids !== undefined
                 ? [...new Set(department_ids)]
@@ -926,17 +1028,18 @@ export const updateEmployee = async ({
             },
         });
 
-        // Return the employee together with their assigned departments.
-        const employeeWithDepartments = await tx.employee.findUnique({
-            where: { id },
-            include: {
-                departments: {
-                    include: {
-                        department: true,
+        // 12. Fetch the updated employee with their department details.
+        const employeeWithDepartments =
+            await tx.employee.findUnique({
+                where: { id },
+                include: {
+                    departments: {
+                        include: {
+                            department: true,
+                        },
                     },
                 },
-            },
-        });
+            });
 
         if (!employeeWithDepartments) {
             throw new AppError(
@@ -946,7 +1049,7 @@ export const updateEmployee = async ({
             );
         }
 
-        // Return department objects, not join-table records.
+        // Return department objects rather than join-table records.
         return {
             ...employeeWithDepartments,
             departments: employeeWithDepartments.departments.map(
@@ -955,12 +1058,11 @@ export const updateEmployee = async ({
         };
     });
 
-    // Remove sensitive data.
+    // 13. Remove sensitive data before returning the employee.
     const { password_hash, ...safeEmployee } = result;
 
     return safeEmployee;
 };
-
 
 export const deactivateEmployee = async (id: string, user: User) => {
     const employee = await prisma.employee.findUnique({

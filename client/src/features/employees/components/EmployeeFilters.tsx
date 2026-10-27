@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDepartments } from "@/features/departments/hooks/useDepartments";
 
 
 interface EmployeeFiltersProps {
@@ -22,9 +23,11 @@ interface EmployeeFiltersProps {
 const statusWidths = {
   all: "w-[155px]",
   active: "w-[90px]",
-  probation: "w-[120px]",
+  unconfirmed: "w-[130px]",
   inactive: "w-[115px]",
+  resigned: "w-[110px]",
   terminated: "w-[125px]",
+  dismissed: "w-[115px]",
 } as const;
 
 const EmployeeFilters = ({
@@ -38,6 +41,9 @@ const EmployeeFilters = ({
 }: EmployeeFiltersProps) => {
 
 
+
+  const { data: departmentsData, isLoading: departmentsLoading } =
+    useDepartments();
 
   return (
     <div className="flex flex-col gap-4 border-b border-border p-4 xl:flex-row xl:items-center xl:justify-between">
@@ -56,13 +62,11 @@ const EmployeeFilters = ({
           />
         </div>
 
-        {/* Department */}
         <Select
           value={department}
           onValueChange={onDepartmentChange}
-
         >
-          <SelectTrigger className="h-10 w-full sm:w-52 border border-slate-200 bg-white">
+          <SelectTrigger className="h-10 w-full border border-slate-200 bg-white sm:w-52">
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
 
@@ -72,21 +76,19 @@ const EmployeeFilters = ({
             align="start"
             className="border border-gray-200"
           >
-            <SelectItem value="all">
-              All Departments
-            </SelectItem>
+            <SelectItem value="all">All Departments</SelectItem>
 
-            <SelectItem value="technology">
-              Technology
-            </SelectItem>
-
-            <SelectItem value="hr">
-              Human Resources
-            </SelectItem>
-
-            <SelectItem value="research">
-              Research & Innovation
-            </SelectItem>
+            {departmentsLoading ? (
+              <SelectItem value="loading" disabled>
+                Loading departments...
+              </SelectItem>
+            ) : (
+              departmentsData?.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
 
@@ -108,9 +110,11 @@ const EmployeeFilters = ({
           >
             <SelectItem value="all">Current Employees</SelectItem>
             <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="probation">Probation</SelectItem>
+            <SelectItem value="unconfirmed">Unconfirmed</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="resigned">Resigned</SelectItem>
             <SelectItem value="terminated">Terminated</SelectItem>
+            <SelectItem value="dismissed">Dismissed</SelectItem>
           </SelectContent>
         </Select>
       </div>

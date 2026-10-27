@@ -7,7 +7,9 @@ export type EmployeeRole =
 export type EmployeeStatus =
   | "active"
   | "inactive"
-  | "probation"
+  | "unconfirmed"
+  | "resigned"
+  | "dismissed"
   | "terminated";
 
 export type EmploymentType =
@@ -70,6 +72,7 @@ export interface Employee {
   updated_at: string;
 }
 
+
 export interface EmployeeListItem {
   id: string;
   first_name: string;
@@ -83,16 +86,16 @@ export interface EmployeeListItem {
   employment_type: EmploymentType;
   hire_date: string;
   created_at: string;
-  department: {
+  departments: {
     id: string;
     name: string;
-  } | null;
-
+  }[];
   manager: {
     id: string;
     name: string;
   } | null;
 }
+
 
 export interface EmployeeListResponse {
   success: boolean;
@@ -176,7 +179,13 @@ export interface UpdateEmployeeDTO {
 
   work_email?: string;
 
-  status?: "active" | "inactive" | "probation" | "terminated";
+  status?:
+  | "active"
+  | "unconfirmed"
+  | "inactive"
+  | "resigned"
+  | "terminated"
+  | "dismissed";
 
   employment_type?:
   | "full-time"
