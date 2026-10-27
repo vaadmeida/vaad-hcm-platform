@@ -52,9 +52,8 @@ const EmployeeCard = ({
             <span className="text-muted-foreground">
               Department
             </span>
-
             <span className="font-medium text-right">
-              {employee.department?.name ?? "-"}
+              {employee.departments?.map((department) => department.name).join(", ") || "-"}
             </span>
           </div>
 
