@@ -297,20 +297,6 @@ const EmploymentInfo = ({
           </Select>
         </div>
 
-        {/* Date Exited */}
-        <div className="min-w-0 space-y-2">
-          <Label htmlFor="date_exited">Date Exited</Label>
-
-          <Input
-            id="date_exited"
-            name="date_exited"
-            type="date"
-            value={form.date_exited?.slice(0, 10) ?? ""}
-            onChange={handleChange}
-            className="w-full rounded-sm border-border text-sm text-secondary"
-          />
-        </div>
-
         {/* Job Description */}
         <div className="min-w-0 space-y-2 sm:col-span-2">
           <Label htmlFor="job_description">Job Description</Label>
