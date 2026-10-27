@@ -101,7 +101,7 @@ const DocumentTableRow = ({
       </td>
 
       {/* Uploaded Date */}
-      <td className="px-3 py-3">
+      <td className="hidden px-3 py-3 xl:table-cell">
         <span className="whitespace-nowrap text-sm">
           {formatDate(document.uploadedAt)}
         </span>
