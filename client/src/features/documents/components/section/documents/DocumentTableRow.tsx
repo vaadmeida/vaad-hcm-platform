@@ -1,6 +1,7 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from "@/components/ui/avatar";
 import type { Document } from "@/features/documents/types/documents.types";
 import { MoreHorizontal } from "lucide-react";
@@ -55,9 +56,18 @@ const DocumentTableRow = ({
     >
       {/* Employee */}
       <td className="px-3 py-3">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-[#1078A9]/10 text-xs font-medium text-[#1078A9]">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="h-9 w-9 shrink-0">
+            <AvatarImage
+              src={document.employee?.avatar_url ?? undefined}
+              alt={
+                document.employee
+                  ? `${document.employee.first_name} ${document.employee.last_name}`
+                  : "Unknown Employee"
+              }
+            />
+
+            <AvatarFallback className="bg-primary/10 font-medium text-primary">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -71,15 +81,22 @@ const DocumentTableRow = ({
       </td>
 
       {/* Document */}
-      <td className="hidden px-3 py-3 xl:table-cell">
-        <span className="font-medium text-gray-900">
+      {/* Document */}
+      <td className="hidden max-w-55 px-3 py-3 xl:table-cell">
+        <span
+          title={document.fileName}
+          className="block truncate font-medium text-gray-900"
+        >
           {document.fileName}
         </span>
       </td>
 
       {/* Document Type */}
-      <td className="px-3 py-3">
-        <span className="text-sm text-gray-700">
+      <td className="max-w-40 px-3 py-3">
+        <span
+          title={document.documentType.name}
+          className="block truncate text-sm text-gray-700"
+        >
           {document.documentType.name}
         </span>
       </td>
@@ -99,15 +116,14 @@ const DocumentTableRow = ({
           )}`}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              document.status === "approved"
-                ? "bg-green-500"
-                : document.status === "pending"
-                  ? "bg-amber-500"
-                  : document.status === "rejected"
-                    ? "bg-red-500"
-                    : "bg-gray-400"
-            }`}
+            className={`h-1.5 w-1.5 rounded-full ${document.status === "approved"
+              ? "bg-green-500"
+              : document.status === "pending"
+                ? "bg-amber-500"
+                : document.status === "rejected"
+                  ? "bg-red-500"
+                  : "bg-gray-400"
+              }`}
           />
 
           {document.status}
