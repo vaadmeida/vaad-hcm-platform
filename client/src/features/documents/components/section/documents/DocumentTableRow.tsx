@@ -81,7 +81,6 @@ const DocumentTableRow = ({
       </td>
 
       {/* Document */}
-      {/* Document */}
       <td className="hidden max-w-55 px-3 py-3 xl:table-cell">
         <span
           title={document.fileName}
@@ -137,7 +136,7 @@ const DocumentTableRow = ({
             title="Document actions"
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground"
           >
-            <MoreHorizontal className="h-4 w-4 lg:ml-6 xl:ml-5" />
+            <MoreHorizontal className="h-4 w-4" />
           </span>
         </div>
       </td>
