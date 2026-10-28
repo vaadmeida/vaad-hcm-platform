@@ -53,7 +53,7 @@ const EmployeeTableRow = ({
 
       {/* Departments */}
       <td className="px-3 py-2">
-        <div className="flex max-w-55 flex-wrap gap-1.5">
+        <div className="flex max-w-35 flex-wrap gap-1.5">
           {employee.departments?.length ? (
             employee.departments.map((department) => (
               <span
@@ -71,8 +71,13 @@ const EmployeeTableRow = ({
       </td>
 
       {/* Email */}
-      <td className="px-3 py-2 hidden xl:block">
-        {employee.email}
+      <td className="max-w-40 px-3 py-2">
+        <span
+          className="block truncate"
+          title={employee.email}
+        >
+          {employee.email}
+        </span>
       </td>
 
       {/* Status */}
