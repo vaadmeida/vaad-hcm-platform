@@ -18,6 +18,7 @@ export type EmploymentType =
   | "contract"
   | "intern";
 
+
 export interface Employee {
   id: string;
   employee_code: string | null;
@@ -62,6 +63,13 @@ export interface Employee {
     relationship: string | null;
     phone: string | null;
   };
+  next_of_kin: {
+    name: string | null;
+    relationship: string | null;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+  };
   payroll: {
     paye_id: string | null;
     bank_name: string | null;
@@ -71,8 +79,6 @@ export interface Employee {
   created_at: string;
   updated_at: string;
 }
-
-
 export interface EmployeeListItem {
   id: string;
   first_name: string;
@@ -96,11 +102,20 @@ export interface EmployeeListItem {
   } | null;
 }
 
+export interface EmployeePagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
 
 export interface EmployeeListResponse {
   success: boolean;
   count: number;
   data: EmployeeListItem[];
+  pagination: EmployeePagination;
 }
 
 export interface EmployeeFormValues {
@@ -140,8 +155,10 @@ export interface CreateEmployeeResponse {
 
 export interface EmployeeFilters {
   search?: string;
-  department?: string;
   status?: string;
+  department?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface EmployeeResponse {
@@ -149,9 +166,11 @@ export interface EmployeeResponse {
   data: Employee;
 }
 
+
 export interface UpdateEmployeeDTO {
   first_name?: string;
   last_name?: string;
+  middle_name? : string;
 
   gender?: string;
   date_of_birth?: string;
@@ -169,6 +188,13 @@ export interface UpdateEmployeeDTO {
   emergency_contact_relationship?: string;
   emergency_contact_number?: string;
 
+  // Next of Kin
+  next_of_kin_name?: string;
+  next_of_kin_relationship?: string;
+  next_of_kin_phone?: string;
+  next_of_kin_email?: string;
+  next_of_kin_address?: string;
+
   role?: "employee" | "manager" | "hr" | "admin";
 
   job_title?: string;
@@ -180,18 +206,18 @@ export interface UpdateEmployeeDTO {
   work_email?: string;
 
   status?:
-  | "active"
-  | "unconfirmed"
-  | "inactive"
-  | "resigned"
-  | "terminated"
-  | "dismissed";
+    | "active"
+    | "unconfirmed"
+    | "inactive"
+    | "resigned"
+    | "terminated"
+    | "dismissed";
 
   employment_type?:
-  | "full-time"
-  | "part-time"
-  | "contract"
-  | "intern";
+    | "full-time"
+    | "part-time"
+    | "contract"
+    | "intern";
 
   hire_date?: string;
   probation_end_date?: string;
