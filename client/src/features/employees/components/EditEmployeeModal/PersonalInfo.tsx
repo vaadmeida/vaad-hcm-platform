@@ -85,7 +85,20 @@ const FormInfo = ({
           />
         </div>
 
-        {/* Last Name - Cannot self edit */}
+        <div className="min-w-0 space-y-2">
+          <Label htmlFor="middle_name">Middle Name</Label>
+
+          <Input
+            id="middle_name"
+            name="middle_name"
+            placeholder="Enter middle name"
+            value={form.middle_name ?? ""}
+            onChange={handleChange}
+            disabled={isMyProfile}
+            className="w-full rounded-sm border-border text-sm text-secondary placeholder:text-gray-400"
+          />
+        </div>
+  
         <div className="min-w-0 space-y-2">
           <Label htmlFor="last_name">Last Name</Label>
 
