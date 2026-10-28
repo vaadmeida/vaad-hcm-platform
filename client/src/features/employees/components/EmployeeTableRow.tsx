@@ -50,14 +50,16 @@ const EmployeeTableRow = ({
 
         </div>
       </td>
+
       {/* Departments */}
       <td className="px-3 py-2">
-        <div className="flex max-w-70 flex-wrap gap-1.5">
+        <div className="flex max-w-55 flex-wrap gap-1.5">
           {employee.departments?.length ? (
             employee.departments.map((department) => (
               <span
                 key={department.id}
-                className="inline-flex rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700"
+                title={department.name}
+                className="inline-block max-w-50 truncate rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700"
               >
                 {department.name}
               </span>
@@ -68,12 +70,10 @@ const EmployeeTableRow = ({
         </div>
       </td>
 
-
       {/* Email */}
       <td className="px-3 py-2 hidden xl:block">
         {employee.email}
       </td>
-
 
       {/* Status */}
       <td className="px-3 py-2">
