@@ -4,11 +4,15 @@ import DocumentTableRow from "./DocumentTableRow";
 interface DocumentTableProps {
   documents: Document[];
   onDocumentClick: (documentId: string) => void;
+  onDeleteDocument: (documentId: string) => Promise<void>;
+  onDownloadDocument: (documentId: string) => void;
 }
 
 const DocumentTable = ({
   documents,
   onDocumentClick,
+  onDeleteDocument,
+  onDownloadDocument,
 }: DocumentTableProps) => {
   return (
     <div className="w-full overflow-x-auto">
@@ -47,6 +51,8 @@ const DocumentTable = ({
               key={document.id}
               document={document}
               onClick={onDocumentClick}
+              onDelete={onDeleteDocument}
+              onDownload={onDownloadDocument}
             />
           ))}
         </tbody>

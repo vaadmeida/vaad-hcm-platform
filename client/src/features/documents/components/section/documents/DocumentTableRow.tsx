@@ -1,21 +1,55 @@
+
+import { useState } from "react";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
 import type { Document } from "@/features/documents/types/documents.types";
-import { MoreHorizontal } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Download,
+  Trash2,
+} from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface DocumentTableRowProps {
   document: Document;
   onClick: (documentId: string) => void;
+  onDelete: (documentId: string) => Promise<void>;
+  onDownload: (documentId: string) => void;
 }
 
 const DocumentTableRow = ({
   document,
   onClick,
+  onDelete,
+  onDownload,
 }: DocumentTableRowProps) => {
-  const employeeName = document?.employee
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const employeeName = document.employee
     ? `${document.employee.first_name} ${document.employee.last_name}`
     : "Unknown Employee";
 
@@ -37,110 +71,188 @@ const DocumentTableRow = ({
     switch (status) {
       case "approved":
         return "bg-green-50 text-green-700";
-
       case "pending":
         return "bg-amber-50 text-amber-700";
-
       case "rejected":
         return "bg-red-50 text-red-700";
-
       default:
         return "bg-gray-50 text-gray-600";
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await onDelete(document.id);
+      setDeleteDialogOpen(false);
+      toast.success("Document deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete document:", error);
+      toast.error("Failed to delete document. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <tr
-      onClick={() => onClick(document.id)}
-      className="cursor-pointer last:border-none hover:bg-gray-50"
-    >
-      {/* Employee */}
-      <td className="px-3 py-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage
-              src={document.employee?.avatar_url ?? undefined}
-              alt={
-                document.employee
-                  ? `${document.employee.first_name} ${document.employee.last_name}`
-                  : "Unknown Employee"
-              }
-            />
+    <>
+      <tr
+        onClick={() => onClick(document.id)}
+        className="cursor-pointer last:border-none hover:bg-gray-50"
+      >
+        {/* Employee */}
+        <td className="px-3 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar className="h-9 w-9 shrink-0">
+              <AvatarImage
+                src={document.employee?.avatar_url ?? undefined}
+                alt={employeeName}
+              />
+              <AvatarFallback className="bg-primary/10 font-medium text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
 
-            <AvatarFallback className="bg-primary/10 font-medium text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-gray-900">
-              {employeeName}
-            </p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-gray-900">
+                {employeeName}
+              </p>
+            </div>
           </div>
-        </div>
-      </td>
+        </td>
 
-      {/* Document */}
-      <td className="hidden max-w-40 px-3 py-3 xl:table-cell">
-        <span
-          title={document.fileName}
-          className="block truncate font-medium text-gray-900"
-        >
-          {document.fileName}
-        </span>
-      </td>
-
-      {/* Document Type */}
-      <td className="max-w-40 px-3 py-3">
-        <span
-          title={document.documentType.name}
-          className="block truncate text-sm text-gray-700"
-        >
-          {document.documentType.name}
-        </span>
-      </td>
-
-      {/* Uploaded Date */}
-      <td className="hidden px-3 py-3 xl:table-cell">
-        <span className="whitespace-nowrap text-sm">
-          {formatDate(document.uploadedAt)}
-        </span>
-      </td>
-
-      {/* Status */}
-      <td className="hidden px-3 py-3 xl:table-cell">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${getStatusStyles(
-            document.status
-          )}`}
-        >
+        {/* Document */}
+        <td className="hidden max-w-40 px-3 py-3 xl:table-cell">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${document.status === "approved"
-              ? "bg-green-500"
-              : document.status === "pending"
-                ? "bg-amber-500"
-                : document.status === "rejected"
-                  ? "bg-red-500"
-                  : "bg-gray-400"
-              }`}
-          />
-
-          {document.status}
-        </span>
-      </td>
-
-      {/* Actions */}
-      <td className="px-3 py-3 text-center">
-        <div className="flex justify-center">
-          <span
-            title="Document actions"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground"
+            title={document.fileName}
+            className="block truncate font-medium text-gray-900"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            {document.fileName}
           </span>
-        </div>
-      </td>
-    </tr>
+        </td>
+
+        {/* Document Type */}
+        <td className="max-w-40 px-3 py-3">
+          <span
+            title={document.documentType.name}
+            className="block truncate text-sm text-gray-700"
+          >
+            {document.documentType.name}
+          </span>
+        </td>
+
+        {/* Uploaded Date */}
+        <td className="hidden px-3 py-3 xl:table-cell">
+          <span className="whitespace-nowrap text-sm">
+            {formatDate(document.uploadedAt)}
+          </span>
+        </td>
+
+        {/* Status */}
+        <td className="hidden px-3 py-3 xl:table-cell">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${getStatusStyles(
+              document.status
+            )}`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${document.status === "approved"
+                ? "bg-green-500"
+                : document.status === "pending"
+                  ? "bg-amber-500"
+                  : document.status === "rejected"
+                    ? "bg-red-500"
+                    : "bg-gray-400"
+                }`}
+            />
+            {document.status}
+          </span>
+        </td>
+
+        {/* Actions */}
+        <td
+          className="px-3 py-3 text-center"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Document actions"
+                  onClick={(event) => event.stopPropagation()}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-gray-100 hover:text-gray-900"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-44 bg-white">
+                <DropdownMenuItem
+                  onSelect={() => onClick(document.id)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  View document
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onSelect={() => onDownload(document.id)}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onSelect={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete document
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </td>
+      </tr>
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!isDeleting) setDeleteDialogOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete this document?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{document.fileName}"
+              and its stored file. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDelete();
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete document"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

@@ -12,11 +12,14 @@ import {
   useMyDocuments,
 } from "@/features/documents/hooks/useMyDocuments";
 import { useMyDocumentStats } from "@/features/documents/hooks/useMyDocumentsStats";
-import type { DocsFilters} from "@/features/documents/types/documents.types";
+import type { DocsFilters } from "@/features/documents/types/documents.types";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import EmployeeDocumentsCardList from "@/features/documents/components/employee_documents/EmployeeDocumentsCardList";
 import EmployeeDocumentsDetails from "@/features/documents/components/employee_documents/EmployeeDocumentsDetails";
+import { getMyDocumentDownloadUrl } from "@/features/documents/api/documents.api";
+import { toast } from "sonner";
+
 
 const MyDocumentsPage = () => {
   const [search, setSearch] = useState("");
@@ -53,6 +56,17 @@ const MyDocumentsPage = () => {
   const handleDocumentClick = (documentId: string) => {
     setSelectedDocumentId(documentId);
     setDetailsOpen(true);
+  };
+
+
+
+  const handleDownloadDocument = async (documentId: string) => {
+    try {
+      const downloadUrl = await getMyDocumentDownloadUrl(documentId);
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Unable to download document");
+    }
   };
 
 
@@ -113,6 +127,7 @@ const MyDocumentsPage = () => {
           <EmployeeDocumentTable
             documents={documents ?? []}
             onDocumentClick={handleDocumentClick}
+            onDownloadDocument={handleDownloadDocument}
           />
         </div>
 

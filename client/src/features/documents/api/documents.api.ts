@@ -150,3 +150,23 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Employee
 
   return response.data.data;
 };
+
+
+export const deleteMyDocument = async (
+  documentId: string,
+): Promise<void> => {
+  await api.delete(`/api/documents/${documentId}`);
+};
+
+
+export const getMyDocumentDownloadUrl = async (
+  documentId: string,
+): Promise<string> => {
+  const response = await api.get(
+    `/api/documents/download/${documentId}`,
+  );
+
+  console.log("Download API response:", response.data);
+
+  return response.data.data.downloadUrl;
+};

@@ -1,14 +1,24 @@
+
 import type { MyDocument } from "@/features/documents/types/documents.types";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Eye, Download } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface EmployeeDocumentsTableRowProps {
   document: MyDocument;
   onClick: (documentId: string) => void;
+  onDownload: (documentId: string) => void;
 }
 
 const EmployeeDocumentsTableRow = ({
   document,
   onClick,
+  onDownload,
 }: EmployeeDocumentsTableRowProps) => {
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-US", {
@@ -21,13 +31,10 @@ const EmployeeDocumentsTableRow = ({
     switch (status) {
       case "approved":
         return "bg-green-50 text-green-700";
-
       case "pending":
         return "bg-amber-50 text-amber-700";
-
       case "rejected":
         return "bg-red-50 text-red-700";
-
       default:
         return "bg-gray-50 text-gray-600";
     }
@@ -40,11 +47,9 @@ const EmployeeDocumentsTableRow = ({
     >
       {/* Document */}
       <td className="px-3 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-gray-900">
-            {document.fileName}
-          </p>
-        </div>
+        <p className="truncate text-sm font-medium text-gray-900">
+          {document.fileName}
+        </p>
       </td>
 
       {/* Document Type */}
@@ -65,7 +70,7 @@ const EmployeeDocumentsTableRow = ({
       <td className="hidden px-3 py-3 xl:table-cell">
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${getStatusStyles(
-            document.status,
+            document.status
           )}`}
         >
           <span
@@ -79,20 +84,44 @@ const EmployeeDocumentsTableRow = ({
                     : "bg-gray-400"
             }`}
           />
-
           {document.status}
         </span>
       </td>
 
       {/* Actions */}
-      <td className="px-3 py-3 text-center">
+      <td
+        className="px-3 py-3 text-center"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="flex justify-center">
-          <span
-            title="Document actions"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground"
-          >
-            <MoreHorizontal className="h-4 w-4 lg:ml-6 xl:ml-5" />
-          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Document actions"
+                onClick={(event) => event.stopPropagation()}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-gray-100 hover:text-gray-900"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onSelect={() => onClick(document.id)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View document
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={() => onDownload(document.id)}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </td>
     </tr>

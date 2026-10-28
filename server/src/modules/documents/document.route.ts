@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../../middlewares/auth.ts'
-import { createDocumentTypeController, getAllEmployeeDocumentsController, getDocumentByIdController, getDocumentDownloadUrlController, getDocumentsStatsController, getDocumentTypesController, getEmployeeDocumentsController, getExpiredDocumentsController, getExpiringDocumentsController, getMyDocumentsController, getMyDocumentStatsController, getRecentDocumentsController, selfUploadDocumentController, uploadEmployeeDocumentController, verifyDocumentController } from './document.controller.ts';
+import { createDocumentTypeController, deleteEmployeeDocumentController, getAllEmployeeDocumentsController, getDocumentByIdController, getDocumentDownloadUrlController, getDocumentsStatsController, getDocumentTypesController, getEmployeeDocumentsController, getExpiredDocumentsController, getExpiringDocumentsController, getMyDocumentsController, getMyDocumentStatsController, getRecentDocumentsController, selfUploadDocumentController, uploadEmployeeDocumentController, verifyDocumentController } from './document.controller.ts';
 import { asyncHandler } from '../../utils/asyncHandler.ts';
 import { requireRoles } from '../../middlewares/role.ts';
 import upload from '../../middlewares/upload.ts';
@@ -22,4 +22,5 @@ documentRouter.get('/employee/:employeeId', authenticate, asyncHandler(getEmploy
 documentRouter.get('/:documentId', authenticate, asyncHandler(getDocumentByIdController))
 documentRouter.get('/download/:documentId', authenticate, asyncHandler(getDocumentDownloadUrlController))
 documentRouter.patch('/verify/:documentId', authenticate, requireRoles("admin","hr"), asyncHandler(verifyDocumentController))
+documentRouter.delete("/:documentId",authenticate,requireRoles("admin", "hr"),asyncHandler(deleteEmployeeDocumentController));
 export default documentRouter;

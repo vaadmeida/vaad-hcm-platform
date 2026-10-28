@@ -2,7 +2,7 @@ import path from "path";
 import { DocumentCategory, DocumentStatus } from "@prisma/client";
 import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
-import { getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
+import { deleteFromStorage, getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
 import { AuthenticatedUser } from "../../middlewares/auth.ts";
 import { CreateDocumentTypeDto, EmployeeDocumentFilters, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
 
@@ -816,5 +816,36 @@ export const getMyDocumentStats = async (employeeId: string) => {
         approved,
         pending,
         needsAttention,
+    };
+};
+export const deleteEmployeeDocument = async (documentId: string) => {
+    const employeeDocument = await prisma.employeeDocument.findUnique({
+        where: {
+            id: documentId,
+        },
+        select: {
+            id: true,
+            fileUrl: true,
+        },
+    });
+
+    if (!employeeDocument) {
+        return null;
+    }
+
+    // Delete the file from S3 first
+    if (employeeDocument.fileUrl) {
+        await deleteFromStorage(employeeDocument.fileUrl);
+    }
+
+    // Delete the database record after S3 deletion succeeds
+    await prisma.employeeDocument.delete({
+        where: {
+            id: documentId,
+        },
+    });
+
+    return {
+        id: employeeDocument.id,
     };
 };

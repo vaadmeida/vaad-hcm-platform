@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { createDocumentTypeSchema, documentIdSchema, employeeDocumentFiltersSchema, employeeIdSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
-import { createDocumentType, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getMyDocuments, getMyDocumentStats, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
-import { AppError } from "../../errors/appError.ts";
+import { createDocumentType, deleteEmployeeDocument, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getMyDocuments, getMyDocumentStats, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
 
 
 export const createDocumentTypeController = async (req: Request, res: Response) => {
@@ -272,7 +271,6 @@ export const getDocumentByIdController = async (
     });
 };
 
-
 export const getMyDocumentStatsController = async (
     req: Request,
     res: Response,
@@ -290,5 +288,26 @@ export const getMyDocumentStatsController = async (
         success: true,
         message: "Document statistics fetched successfully",
         data: stats,
+    });
+};
+export const deleteEmployeeDocumentController = async (
+    req: Request,
+    res: Response
+) => {
+    const { documentId } = documentIdSchema.parse(req.params);
+
+    const document = await deleteEmployeeDocument(documentId);
+
+    if (!document) {
+        return res.status(404).json({
+            success: false,
+            message: "Document not found",
+        });
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Document deleted successfully",
+        data: document,
     });
 };
