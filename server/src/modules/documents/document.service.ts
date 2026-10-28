@@ -628,6 +628,7 @@ export const getRecentDocuments = async () => {
         orderBy: {
             uploadedAt: "desc",
         },
+        take: 5
     });
 
     return Promise.all(
