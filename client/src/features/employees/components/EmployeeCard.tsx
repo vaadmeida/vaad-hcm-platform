@@ -21,15 +21,14 @@ const EmployeeCard = ({
         {/* Header */}
         <div className="flex items-center gap-3">
 
-          <Avatar className="h-12 w-12">
+            <Avatar className="h-12 w-12">
             <AvatarImage
-              src={employee.first_name ?? ""}
+              src={employee.avatar_url ?? undefined}
               alt={`${employee.first_name} ${employee.last_name}`}
             />
 
-            <AvatarFallback className="bg-gray-200 text-gray-700 font-medium">
-              {employee.first_name?.charAt(0)}
-              {employee.last_name?.charAt(0)}
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              {`${employee.first_name?.charAt(0) ?? ""}${employee.last_name?.charAt(0) ?? ""}`.toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
