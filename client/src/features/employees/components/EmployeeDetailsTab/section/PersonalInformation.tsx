@@ -47,6 +47,11 @@ const PersonalInformation = ({
         />
 
         <InfoItem
+          label="Middle Name"
+          value={personal.middle_name}
+        />
+
+        <InfoItem
           label="Last Name"
           value={personal.last_name}
         />
