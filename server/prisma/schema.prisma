@@ -66,6 +66,11 @@ model Employee {
   emergency_contact_name         String?              @db.VarChar(150)
   emergency_contact_number       String?              @db.VarChar(20)
   emergency_contact_relationship String?              @db.VarChar(50)
+  next_of_kin_name               String?   @db.VarChar(150)
+  next_of_kin_relationship        String?   @db.VarChar(50)
+  next_of_kin_phone               String?   @db.VarChar(20)
+  next_of_kin_email               String?   @db.VarChar(255)
+  next_of_kin_address              String?
   gender                         String?              @db.VarChar(20)
   nationality                    String?              @db.VarChar(100)
   paye_id                        String?              @db.VarChar(50)
