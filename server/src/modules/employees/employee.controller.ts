@@ -73,8 +73,11 @@ export const getMyProfileController = async (
 };
 
 
-export const getAllEmployeesController = async (req: Request, res: Response) => {
 
+export const getAllEmployeesController = async (
+    req: Request,
+    res: Response
+) => {
     const parsed = getAllEmployeesSchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -91,14 +94,16 @@ export const getAllEmployeesController = async (req: Request, res: Response) => 
         throw new AppError("Unauthorized", 401, "NO_USER");
     }
 
-    const employees = await getAllEmployees(user, parsed.data);
+    const result = await getAllEmployees(user, parsed.data);
 
     return res.status(200).json({
         success: true,
-        count: employees.length,
-        data: employees,
+        count: result.data.length,
+        data: result.data,
+        pagination: result.pagination,
     });
 };
+
 
 export const updateEmployeeController = async (
     req: Request,
