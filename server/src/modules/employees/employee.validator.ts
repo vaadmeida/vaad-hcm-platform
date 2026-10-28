@@ -39,7 +39,10 @@ export const updateEmployeeSchema = z.object({
   next_of_kin_name: z.string().max(150).optional(),
   next_of_kin_relationship: z.string().max(50).optional(),
   next_of_kin_phone: z.string().max(20).optional(),
-  next_of_kin_email: z.email().max(255).optional(),
+  next_of_kin_email: z.union([
+  z.email().max(255),
+  z.literal(""),
+]).optional(),
   next_of_kin_address: z.string().optional(),
 
   // Employment
