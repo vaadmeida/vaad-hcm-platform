@@ -198,6 +198,13 @@ export const getEmployee = async (id: string, user: User) => {
             emergency_contact_relationship: true,
             emergency_contact_number: true,
 
+            // Next of Kin
+            next_of_kin_name: true,
+            next_of_kin_relationship: true,
+            next_of_kin_phone: true,
+            next_of_kin_email: true,
+            next_of_kin_address: true,
+
             // Employment Information
             job_title: true,
             job_description: true,
@@ -266,7 +273,7 @@ export const getEmployee = async (id: string, user: User) => {
     return {
         id: employee.id,
         employee_code: employee.employee_code,
-        full_name: `${employee.first_name} ${employee.last_name}`,
+        full_name: `${employee.first_name} ${employee.middle_name ? `${employee.middle_name} ` : ""}${employee.last_name}`,
         avatar_url: avatarUrl,
         personal: {
             first_name: employee.first_name,
@@ -311,6 +318,13 @@ export const getEmployee = async (id: string, user: User) => {
             relationship: employee.emergency_contact_relationship,
             phone: employee.emergency_contact_number,
         },
+        next_of_kin: {
+            name: employee.next_of_kin_name,
+            relationship: employee.next_of_kin_relationship,
+            phone: employee.next_of_kin_phone,
+            email: employee.next_of_kin_email,
+            address: employee.next_of_kin_address,
+        },
         payroll: {
             paye_id: employee.paye_id,
             bank_name: employee.bank_name,
@@ -349,6 +363,13 @@ export const getMyProfile = async (user: User) => {
             emergency_contact_name: true,
             emergency_contact_relationship: true,
             emergency_contact_number: true,
+
+            // Next of Kin
+            next_of_kin_name: true,
+            next_of_kin_relationship: true,
+            next_of_kin_phone: true,
+            next_of_kin_email: true,
+            next_of_kin_address: true,
 
             // Employment Information
             job_title: true,
@@ -457,7 +478,13 @@ export const getMyProfile = async (user: User) => {
             relationship: employee.emergency_contact_relationship,
             phone: employee.emergency_contact_number,
         },
-
+        next_of_kin: {
+            name: employee.next_of_kin_name,
+            relationship: employee.next_of_kin_relationship,
+            phone: employee.next_of_kin_phone,
+            email: employee.next_of_kin_email,
+            address: employee.next_of_kin_address,
+        },
         payroll: {
             paye_id: employee.paye_id,
             bank_name: employee.bank_name,
@@ -470,27 +497,41 @@ export const getMyProfile = async (user: User) => {
     };
 };
 
-
-
-
 export const getAllEmployees = async (
     user: User,
     filters: {
         search?: string;
         department?: string;
         status?: string;
+        page?: number;
+        limit?: number;
     }
 ) => {
     const { search, department, status } = filters;
 
+    const page = Math.max(
+        1,
+        Math.floor(Number(filters.page) || 1)
+    );
+
+    const limit = Math.min(
+        100,
+        Math.max(1, Math.floor(Number(filters.limit) || 7))
+    );
+
+    const skip = (page - 1) * limit;
+
     const isManager = user.role?.toLowerCase() === "manager";
 
-    const whereClause: Prisma.EmployeeWhereInput = {
-        status: {
-            not: "terminated",
-        },
-    };
+    const whereClause: Prisma.EmployeeWhereInput = {};
 
+    if (filters.status && filters.status !== "all") {
+        whereClause.status = filters.status;
+    } else {
+        whereClause.status = {
+            notIn: ["terminated", "dismissed", "resigned"],
+        };
+    }
     // Managers can only see employees who report directly to them.
     if (isManager) {
         whereClause.manager_id = user.id;
@@ -548,52 +589,59 @@ export const getAllEmployees = async (
         };
     }
 
-    if (status && status !== "all") {
-        whereClause.status = status;
-    }
+    const [employees, total] = await prisma.$transaction([
+        prisma.employee.findMany({
+            where: whereClause,
+            skip,
+            take: limit,
 
-    const employees = await prisma.employee.findMany({
-        where: whereClause,
-        select: {
-            id: true,
-            first_name: true,
-            last_name: true,
-            middle_name: true,
-            email: true,
-            phone: true,
-            role: true,
-            avatar_url: true,
-            status: true,
-            job_title: true,
-            employment_type: true,
-            hire_date: true,
-            created_at: true,
+            select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+                middle_name: true,
+                email: true,
+                phone: true,
+                role: true,
+                avatar_url: true,
+                status: true,
+                job_title: true,
+                employment_type: true,
+                hire_date: true,
+                created_at: true,
 
-            departments: {
-                select: {
-                    department: {
-                        select: {
-                            id: true,
-                            name: true,
+                departments: {
+                    select: {
+                        department: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
                         },
+                    },
+                },
+
+                manager: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true,
+                        middle_name: true,
                     },
                 },
             },
 
-            manager: {
-                select: {
-                    id: true,
-                    first_name: true,
-                    last_name: true,
-                    middle_name: true,
-                },
-            },
-        },
+            orderBy: [
+                { first_name: "asc" },
+                { last_name: "asc" },
+                { id: "asc" },
+            ],
+        }),
 
-        orderBy: {
-            first_name: "asc",
-        },
-    });
+        prisma.employee.count({
+            where: whereClause,
+        }),
+    ]);
 
     const employeesWithAvatar = await Promise.all(
         employees.map(async (emp) => ({
@@ -636,7 +684,20 @@ export const getAllEmployees = async (
         }))
     );
 
-    return employeesWithAvatar;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+        data: employeesWithAvatar,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    };
+
 };
 
 
@@ -682,6 +743,11 @@ export const updateEmployee = async ({
         "emergency_contact_name",
         "emergency_contact_relationship",
         "emergency_contact_number",
+        "next_of_kin_name",
+        "next_of_kin_relationship",
+        "next_of_kin_phone",
+        "next_of_kin_email",
+        "next_of_kin_address",
         "role",
         "job_title",
         "job_description",
@@ -783,12 +849,12 @@ export const updateEmployee = async ({
 
 
     // Clear the exit date when reactivating an inactive employee.
-if (
-    data.status === "active" &&
-    employee.status === "inactive"
-) {
-    employeeData.date_exited = null;
-}
+    if (
+        data.status === "active" &&
+        employee.status === "inactive"
+    ) {
+        employeeData.date_exited = null;
+    }
 
     // Track whether the reporting manager is changing.
     const isManagerChange =
@@ -1029,17 +1095,22 @@ if (
         });
 
         // 12. Fetch the updated employee with their department details.
-        const employeeWithDepartments =
-            await tx.employee.findUnique({
-                where: { id },
-                include: {
-                    departments: {
-                        include: {
-                            department: true,
+        // 12. Fetch the updated employee with minimal department details.
+        const employeeWithDepartments = await tx.employee.findUnique({
+            where: { id },
+            include: {
+                departments: {
+                    select: {
+                        department: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
                         },
                     },
                 },
-            });
+            },
+        });
 
         if (!employeeWithDepartments) {
             throw new AppError(
@@ -1049,13 +1120,14 @@ if (
             );
         }
 
-        // Return department objects rather than join-table records.
+        // Return only the department fields needed by the client.
         return {
             ...employeeWithDepartments,
             departments: employeeWithDepartments.departments.map(
                 (assignment) => assignment.department
             ),
         };
+
     });
 
     // 13. Remove sensitive data before returning the employee.
