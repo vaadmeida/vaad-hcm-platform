@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
 import { useManagers } from "../../hooks/useManagers";
 import axios from "axios";
+import NextOfKinInfo from "./NextOfKinInfo";
 
 
 interface EmployeeEditModalProps {
@@ -61,6 +62,7 @@ const mapEmployeeToForm = (
 ): UpdateEmployeeDTO => ({
     first_name: employee.personal.first_name ?? "",
     last_name: employee.personal.last_name ?? "",
+    middle_name: employee.personal.middle_name ?? "",
     email: employee.personal.email ?? "",
     gender: employee.personal.gender ?? "",
     date_of_birth: employee.personal.date_of_birth ?? "",
@@ -75,6 +77,12 @@ const mapEmployeeToForm = (
         employee.emergency_contact?.relationship ?? "",
     emergency_contact_number:
         employee.emergency_contact?.phone ?? "",
+
+    next_of_kin_name: employee.next_of_kin?.name ?? "",
+    next_of_kin_relationship: employee.next_of_kin?.relationship ?? "",
+    next_of_kin_phone: employee.next_of_kin?.phone ?? "",
+    next_of_kin_email: employee.next_of_kin?.email ?? "",
+    next_of_kin_address: employee.next_of_kin?.address ?? "",
 
     role: employee.employment.role ?? "employee",
     job_title: employee.employment.job_title ?? "",
@@ -291,6 +299,10 @@ const EmployeeEditModal = ({
 
                             <PersonalInfo handleChange={handleChange} form={form}
                                 isMyProfile={isMyProfile}
+                            />
+                            <NextOfKinInfo
+                                form={form}
+                                handleChange={handleChange}
                             />
                         </TabsContent>
 
