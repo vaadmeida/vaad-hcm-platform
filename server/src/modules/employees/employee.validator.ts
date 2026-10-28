@@ -17,6 +17,7 @@ const optionalDate = z.preprocess(
 export const updateEmployeeSchema = z.object({
   // Personal information
   first_name: z.string().min(2).optional(),
+  middle_name: z.string().max(100).optional(),
   last_name: z.string().min(2).optional(),
   gender: z.string().optional(),
   date_of_birth: optionalDate,
@@ -32,6 +33,14 @@ export const updateEmployeeSchema = z.object({
   emergency_contact_name: z.string().optional(),
   emergency_contact_relationship: z.string().optional(),
   emergency_contact_number: z.string().optional(),
+
+
+  // Next of Kin
+  next_of_kin_name: z.string().max(150).optional(),
+  next_of_kin_relationship: z.string().max(50).optional(),
+  next_of_kin_phone: z.string().max(20).optional(),
+  next_of_kin_email: z.email().max(255).optional(),
+  next_of_kin_address: z.string().optional(),
 
   // Employment
   role: z.enum(["employee", "manager", "hr", "admin"]).optional(),
@@ -67,9 +76,9 @@ export const getEmployeeSchema = z.object({
 });
 
 export const getAllEmployeesSchema = z.object({
-  page: z.string().optional(),
-  limit: z.string().optional(),
-  search: z.string().optional(),
-  department: z.string().optional(),
-  status: z.string().optional(),
+    search: z.string().optional(),
+    department: z.string().optional(),
+    status: z.string().optional(),
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
 });
