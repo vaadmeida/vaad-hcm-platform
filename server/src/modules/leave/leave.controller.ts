@@ -123,18 +123,12 @@ export const getTeamLeaveBalancesController = async (req: Request, res: Response
 
 }
 
-
-
 export const getAllLeaveBalancesController = async (
     req: Request,
     res: Response
 ) => {
     if (!req.user) {
-        throw new AppError(
-            "Unauthorized",
-            401,
-            "UNAUTHORIZED"
-        );
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
     }
 
     const search =
@@ -152,15 +146,27 @@ export const getAllLeaveBalancesController = async (
             ? req.query.leaveTypeId
             : undefined;
 
-    const result = await getAllLeaveBalances(
+    const page =
+        typeof req.query.page === "string"
+            ? Number(req.query.page)
+            : 1;
+
+    const limit =
+        typeof req.query.limit === "string"
+            ? Number(req.query.limit)
+            : 7;
+
+    const result = await getAllLeaveBalances({
         search,
         departmentId,
-        leaveTypeId
-    );
+        leaveTypeId,
+        page,
+        limit,
+    });
 
     return res.status(200).json({
         success: true,
-        data: result,
+        ...result,
     });
 };
 
@@ -198,8 +204,10 @@ export const getEmployeeLeaveBalanceController = async (
     });
 };
 
-export const getLeaveRequestsController = async (req: Request, res: Response) => {
-
+export const getLeaveRequestsController = async (
+    req: Request,
+    res: Response
+) => {
     const parsed = getLeaveRequestSchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -229,12 +237,9 @@ export const getLeaveRequestsController = async (req: Request, res: Response) =>
 
     return res.status(200).json({
         success: true,
-        data: result,
+        ...result,
     });
-
 };
-
-
 export const getLeaveRequestByIdController = async (req: Request, res: Response) => {
 
     const { id } = req.params
