@@ -7,6 +7,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useGetLeaveTypes } from "@/features/leaves/hooks/useGetLeaveType";
+import { useDepartments } from "@/features/departments/hooks/useDepartments";
 
 interface LeaveBalanceFiltersProps {
     search: string;
@@ -29,6 +31,10 @@ const LeaveBalanceFilters = ({
     total,
     onExport,
 }: LeaveBalanceFiltersProps) => {
+
+    const { data: leavetypes } = useGetLeaveTypes()
+    const { data: departments } = useDepartments()
+
     return (
         <div className="border-b border-border p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -59,16 +65,15 @@ const LeaveBalanceFilters = ({
                         <SelectContent
                             side="bottom"
                             sideOffset={4}
+                            align="end"
                             className="border border-gray-200"
                         >
                             <SelectItem value="all">All Departments</SelectItem>
-                            <SelectItem value="engineering">Engineering</SelectItem>
-                            <SelectItem value="product">Product</SelectItem>
-                            <SelectItem value="design">Design</SelectItem>
-                            <SelectItem value="finance">Finance</SelectItem>
-                            <SelectItem value="marketing">Marketing</SelectItem>
-                            <SelectItem value="hr">HR</SelectItem>
-                            <SelectItem value="sales">Sales</SelectItem>
+                            {(departments ?? []).map((department) => (
+                                <SelectItem key={department.id} value={department.id}>
+                                    {department.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 
@@ -77,28 +82,23 @@ const LeaveBalanceFilters = ({
                         value={leaveType}
                         onValueChange={onLeaveTypeChange}
                     >
-                        <SelectTrigger className="h-10 w-full border border-slate-200 bg-white sm:w-44">
+                        <SelectTrigger className="h-10 w-44 border border-slate-200 bg-white">
                             <SelectValue placeholder="All Types" />
                         </SelectTrigger>
 
                         <SelectContent
                             side="bottom"
                             sideOffset={4}
+                            align="end"
                             className="border border-gray-200"
                         >
                             <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="annual">Annual Leave</SelectItem>
-                            <SelectItem value="sick">Sick Leave</SelectItem>
-                            <SelectItem value="maternity">Maternity Leave</SelectItem>
-                            <SelectItem value="paternity">Paternity Leave</SelectItem>
-                            <SelectItem value="compassionate">
-                                Compassionate Leave
-                            </SelectItem>
-                            <SelectItem value="unpaid">Unpaid Leave</SelectItem>
-                            <SelectItem value="study">Study Leave</SelectItem>
-                            <SelectItem value="work-from-home">
-                                Work From Home
-                            </SelectItem>
+
+                            {leavetypes?.data.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
