@@ -9,11 +9,13 @@ import {
 } from "@/features/leaves/hooks/useGetTeamBalance";
 import { useAuthStore } from "@/store/auth.store";
 import LeaveBalanceCard from "./LeaveBalanceCard";
+import LeaveBalanceTablePagination from "./LeaveBalanceTablePagination";
 
 const LeaveBalances = () => {
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("all");
   const [leaveType, setLeaveType] = useState("all");
+  const [page, setPage] = useState(1);
 
   const user = useAuthStore((state) => state.user);
 
@@ -25,6 +27,8 @@ const LeaveBalances = () => {
       department === "all" ? undefined : department,
     leaveTypeId:
       leaveType === "all" ? undefined : leaveType,
+    page,
+    limit: 7,
   };
 
   const { data: allBalances } = useGetAllLeaveBalances(filters, {
@@ -37,11 +41,11 @@ const LeaveBalances = () => {
 
   const balances = isManager
     ? teamBalances ?? []
-    : allBalances ?? [];
+    : allBalances?.data ?? [];
 
-    console.log("balances", balances);
-
-  const total = balances.length;
+  const total = isManager
+    ? teamBalances?.length ?? 0
+    : allBalances?.pagination?.total ?? 0;
 
   return (
     <div>
@@ -70,6 +74,13 @@ const LeaveBalances = () => {
             />
           ))}
         </div>
+
+        {!isManager && allBalances?.pagination && (
+          <LeaveBalanceTablePagination
+            pagination={allBalances.pagination}
+            onPageChange={setPage}
+          />
+        )}
       </section>
     </div>
   );
