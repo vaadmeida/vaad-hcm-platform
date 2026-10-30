@@ -33,6 +33,7 @@ const categories = [
     { value: "contract", label: "Contract" },
     { value: "compliance", label: "Compliance" },
     { value: "certificate", label: "Certificate" },
+    { value: "employment", label: "Employment" },
     { value: "onboarding", label: "Onboarding" },
     { value: "other", label: "Other" },
 ];
