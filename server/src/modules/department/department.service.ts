@@ -452,7 +452,11 @@ export const getDepartmentStats = async (departmentId: string) => {
 
     const employees = await prisma.employee.findMany({
         where: {
-            department_id: departmentId,
+            departments:{
+                some:{
+                    department_id: departmentId
+                }
+            },
             status: {
                 not: "terminated",
             },
