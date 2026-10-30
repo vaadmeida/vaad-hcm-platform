@@ -17,7 +17,7 @@ export const getLeaveBalanceParamsSchema = z.object({
   id: z.uuid("Invalid employee ID"),
 });
 export const employeeIdParamsSchema = z.object({
-    id: z.string().min(1),
+  id: z.string().min(1),
 });
 
 
@@ -33,6 +33,8 @@ export const getLeaveRequestSchema = z.object({
     .optional(),
   search: z.string().trim().optional(),
   leave_type_id: z.uuid("Invalid leave type ID").optional(),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(7),
 });
 
 
