@@ -1,6 +1,7 @@
 import {
     Avatar,
     AvatarFallback,
+    AvatarImage,
 } from "@/components/ui/avatar";
 import type { LeaveBalanceItem } from "../../../types/leave.types";
 import { ChevronDown } from "lucide-react";
@@ -47,11 +48,15 @@ const LeaveBalanceTableRow = ({
                 <td className="px-3 py-3">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
-                            <AvatarFallback className="bg-[#1078A9]/10 text-xs font-medium text-[#1078A9]">
+                            <AvatarImage
+                                src={employee?.employee.avatar_url ?? undefined}
+                                alt={employeeName}
+                            />
+
+                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
                                 {initials}
                             </AvatarFallback>
                         </Avatar>
-
                         <div className="min-w-0">
                             <p className="truncate text-sm font-medium text-gray-900">
                                 {employeeName}
@@ -66,11 +71,11 @@ const LeaveBalanceTableRow = ({
                         </div>
                     </div>
                 </td>
-
-                {/* Department */}
                 <td className="hidden px-3 py-3 xl:table-cell">
                     <span className="text-sm text-gray-700">
-                        {employee.employee.department?.name ?? "—"}
+                        {employee.employee.departments
+                            ?.map((item) => item.department.name)
+                            .join(", ") || "—"}
                     </span>
                 </td>
 
