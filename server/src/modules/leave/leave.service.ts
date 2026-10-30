@@ -5,38 +5,7 @@ import { calculateWorkingDays } from "../../utils/date.utils.ts";
 import { User } from "../employees/employee.service.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 import { DateTime } from "luxon";
-
-
-type CreateLeaveTypes = {
-    name: string;
-    user: {
-        id: string;
-        role: "admin" | "hr" | "manager" | "employee";
-    };
-    default_days_per_year?: number | null;
-    requires_document?: boolean
-    is_paid?: boolean;
-    carries_over?: boolean;
-    max_carryover_days?: number | null;
-};
-
-interface GetLeaveRequestsInput {
-    user: User;
-    status?: string;
-    employee_id?: string;
-    search?: string;
-    leave_type_id?: string;
-}
-
-type SubmitLeaveRequestType = {
-    leave_type_id: string
-    start_date: Date
-    end_date: Date
-    reason?: string
-    document_url?: string
-}
-
-
+import { CreateLeaveTypes, GetLeaveRequestsInput, LeaveBalanceFilters, SubmitLeaveRequestType } from "./leave.types.ts";
 
 export const createLeaveTypes = async ({
     name,
@@ -373,13 +342,18 @@ export const getTeamLeaveBalances = async (userId: string) => {
     }));
 };
 
+export const getAllLeaveBalances = async ({
+    search,
+    departmentId,
+    leaveTypeId,
+    page = 1,
+    limit = 7,
+ }:LeaveBalanceFilters) => {
+    page = Math.max(1, Math.floor(Number(page) || 1));
+    limit = Math.min(100, Math.max(1, Math.floor(Number(limit) || 7)));
 
+    const skip = (page - 1) * limit;
 
-export const getAllLeaveBalances = async (
-    search?: string,
-    departmentId?: string,
-    leaveTypeId?: string
-) => {
     const balances = await prisma.leaveBalance.findMany({
         where: {
             employee: {
@@ -403,7 +377,11 @@ export const getAllLeaveBalances = async (
                 }),
 
                 ...(departmentId && {
-                    department_id: departmentId,
+                    departments: {
+                        some: {
+                            department_id: departmentId,
+                        },
+                    },
                 }),
             },
 
@@ -419,22 +397,27 @@ export const getAllLeaveBalances = async (
                     id: true,
                     first_name: true,
                     last_name: true,
-                    department: {
-                        select: {
-                            name: true,
+                    avatar_url: true,
+                    departments: {
+                        include: {
+                            department: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
                         },
                     },
                 },
             },
         },
+
+        orderBy: {
+            employee: {
+                first_name: "asc",
+            },
+        },
     });
-    if (balances.length === 0) {
-        throw new AppError(
-            "Leave balance not found",
-            404,
-            "LEAVE_BALANCE_NOT_FOUND"
-        );
-    }
 
     const employees = new Map<
         string,
@@ -443,9 +426,13 @@ export const getAllLeaveBalances = async (
                 id: string;
                 first_name: string;
                 last_name: string;
-                department: {
-                    name: string;
-                } | null;
+                avatar_url: string | null;
+                departments: {
+                    department: {
+                        id: string;
+                        name: string;
+                    };
+                }[];
             };
             total_used: number;
             leave_types_used: string[];
@@ -477,15 +464,41 @@ export const getAllLeaveBalances = async (
         }
     }
 
-    return Array.from(employees.values()).map((employee) => ({
-        employee: employee.employee,
+    // Total number of unique employees
+    const total = employees.size;
+    const totalPages = Math.ceil(total / limit);
 
-        total_used: employee.total_used,
+    // Paginate grouped employees
+    const paginatedEmployees = Array.from(employees.values()).slice(
+        skip,
+        skip + limit
+    );
 
-        active_types_used: employee.leave_types_used.length,
+    const data = await Promise.all(
+        paginatedEmployees.map(async (item) => ({
+            employee: {
+                ...item.employee,
+                avatar_url: item.employee.avatar_url
+                    ? await getPresignedUrl(item.employee.avatar_url)
+                    : null,
+            },
+            total_used: item.total_used,
+            active_types_used: item.leave_types_used.length,
+            leave_types_used: item.leave_types_used,
+        }))
+    );
 
-        leave_types_used: employee.leave_types_used,
-    }));
+    return {
+        data,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    };
 };
 
 export const getEmployeeLeaveBalance = async (employeeId: string) => {
@@ -556,8 +569,16 @@ export const getLeaveRequests = async ({
     employee_id,
     search,
     leave_type_id,
+    page: requestedPage,
+    limit: requestedLimit,
 }: GetLeaveRequestsInput) => {
 
+    const page = Math.max(1, Math.floor(Number(requestedPage) || 1));
+    const limit = Math.min(
+        100,
+        Math.max(1, Math.floor(Number(requestedLimit) || 7))
+    );
+    const skip = (page - 1) * limit;
 
     const isManager = user.role === "manager";
     const isEmployee = user.role === "employee";
@@ -567,7 +588,6 @@ export const getLeaveRequests = async ({
     }
 
     if (isManager && employee_id) {
-
         const employee = await prisma.employee.findUnique({
             where: { id: employee_id },
             select: {
@@ -625,76 +645,107 @@ export const getLeaveRequests = async ({
         }),
     };
 
-    const leaveRequests = await prisma.leaveRequest.findMany({
-        where: {
-            ...(status && { status }),
+    const whereClause: Prisma.LeaveRequestWhereInput = {
+        ...(status && { status }),
 
-            ...(effectiveEmployeeId && {
-                employee_id: effectiveEmployeeId,
-            }),
+        ...(effectiveEmployeeId && {
+            employee_id: effectiveEmployeeId,
+        }),
 
-            ...(leave_type_id && {
-                leave_type_id,
-            }),
+        ...(leave_type_id && {
+            leave_type_id,
+        }),
 
-            ...(Object.keys(employeeFilter).length > 0 && {
-                employee: employeeFilter,
-            }),
-        },
+        ...(Object.keys(employeeFilter).length > 0 && {
+            employee: employeeFilter,
+        }),
+    };
 
-        select: {
-            id: true,
-            start_date: true,
-            end_date: true,
-            total_days: true,
-            reason: true,
-            status: true,
-            approved_at: true,
-            created_at: true,
+    const [leaveRequests, total] = await prisma.$transaction([
+        prisma.leaveRequest.findMany({
+            where: whereClause,
+            skip,
+            take: limit,
+
+            select: {
+                id: true,
+                start_date: true,
+                end_date: true,
+                total_days: true,
+                reason: true,
+                status: true,
+                approved_at: true,
+                created_at: true,
+
+                employee: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true,
+                        email: true,
+                        avatar_url: true,
+                    },
+                },
+
+                leaveType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+
+            orderBy: {
+                created_at: "desc",
+            },
+        }),
+
+        prisma.leaveRequest.count({
+            where: whereClause,
+        }),
+    ]);
+
+    const data = await Promise.all(
+        leaveRequests.map(async (request) => ({
+            id: request.id,
+            start_date: request.start_date,
+            end_date: request.end_date,
+            total_days: Number(request.total_days),
+            reason: request.reason,
+            status: request.status,
+            approved_at: request.approved_at,
+            created_at: request.created_at,
 
             employee: {
-                select: {
-                    id: true,
-                    first_name: true,
-                    last_name: true,
-                    email: true,
-                },
+                id: request.employee.id,
+                first_name: request.employee.first_name,
+                last_name: request.employee.last_name,
+                email: request.employee.email,
+                avatar_url: request.employee.avatar_url
+                    ? await getPresignedUrl(request.employee.avatar_url)
+                    : null,
             },
 
             leaveType: {
-                select: {
-                    id: true,
-                    name: true,
-                },
+                id: request.leaveType.id,
+                name: request.leaveType.name,
             },
-        },
+        }))
+    );
 
-        orderBy: {
-            created_at: "desc",
-        },
-    });
+    const totalPages = Math.ceil(total / limit);
 
-    return leaveRequests.map((request) => ({
-        id: request.id,
-        start_date: request.start_date,
-        end_date: request.end_date,
-        total_days: Number(request.total_days),
-        reason: request.reason,
-        status: request.status,
-        approved_at: request.approved_at,
-        created_at: request.created_at,
-
-        employee: {
-            id: request.employee.id,
-            first_name: request.employee.first_name,
-            last_name: request.employee.last_name,
-            email: request.employee.email,
+    return {
+        data,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
         },
-        leaveType: {
-            id: request.leaveType.id,
-            name: request.leaveType.name,
-        },
-    }));
+    };
 };
 
 export const getLeaveRequestById = async (id: string) => {
@@ -724,10 +775,14 @@ export const getLeaveRequestById = async (id: string) => {
                     last_name: true,
                     email: true,
                     avatar_url: true,
-                    department: {
+                    departments: {
                         select: {
-                            id: true,
-                            name: true,
+                            department: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
                         },
                     },
                 },
@@ -746,7 +801,6 @@ export const getLeaveRequestById = async (id: string) => {
                 },
             },
 
-            // 👇 Get the person who approved/rejected it
             approver: {
                 select: {
                     id: true,
@@ -766,9 +820,25 @@ export const getLeaveRequestById = async (id: string) => {
         );
     }
 
-    return leaveRequest
-}
+    // Generate presigned avatar URL
+    const avatarUrl = leaveRequest.employee.avatar_url
+        ? await getPresignedUrl(leaveRequest.employee.avatar_url)
+        : null;
 
+    return {
+        ...leaveRequest,
+        employee: {
+            ...leaveRequest.employee,
+            avatar_url: avatarUrl,
+            departments: leaveRequest.employee.departments.map(
+                (assignment) => ({
+                    id: assignment.department.id,
+                    name: assignment.department.name,
+                })
+            ),
+        },
+    };
+};
 export const seedLeaveBalance = async (tx: Prisma.TransactionClient, employeeId: string) => {
 
     const currentYear = new Date().getFullYear();
@@ -1494,7 +1564,7 @@ export const getAdminLeaveStats = async () => {
 };
 
 export const getManagerLeaveStats = async (managerId: string) => {
-    
+
     const today = new Date();
 
     const employeeFilter = {
