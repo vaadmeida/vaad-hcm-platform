@@ -80,7 +80,9 @@ const LeaveBalanceCard = ({
         </p>
 
         <p className="mt-0.5 text-sm text-gray-700">
-          {employee.employee.department?.name ?? "—"}
+          {employee.employee.departments
+            .map((item) => item.department.name)
+            .join(", ") || "—"}
         </p>
       </div>
 
