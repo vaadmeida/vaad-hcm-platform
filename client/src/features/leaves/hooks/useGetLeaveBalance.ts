@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAllLeaveBalance } from "../api/leave.api";
-import type { LeaveBalanceFilters } from "../types/leave.types";
+import type {
+  LeaveBalanceFilters,
+  LeaveBalanceResponse,
+} from "../types/leave.types";
 
 export const useGetAllLeaveBalances = (
   filters?: LeaveBalanceFilters,
@@ -8,10 +11,9 @@ export const useGetAllLeaveBalances = (
     enabled?: boolean;
   }
 ) => {
-  return useQuery({
+  return useQuery<LeaveBalanceResponse>({
     queryKey: ["leave-balances", "all", filters],
     queryFn: () => getAllLeaveBalance(filters),
-    
     enabled: options?.enabled,
   });
 };
