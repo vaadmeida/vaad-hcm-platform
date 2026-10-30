@@ -300,6 +300,7 @@ enum DocumentStatus {
 enum DocumentCategory {
   identity
   contract
+  employment
   compliance
   certificate
   onboarding
