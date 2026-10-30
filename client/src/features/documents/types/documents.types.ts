@@ -150,12 +150,13 @@ export interface UploadDocumentPayload {
 }
 
 export type DocumentCategory =
-    | "identity"
-    | "contract"
-    | "compliance"
-    | "certificate"
-    | "onboarding"
-    | "other";
+  | "identity"
+  | "contract"
+  | "employment"
+  | "compliance"
+  | "certificate"
+  | "onboarding"
+  | "other";
 
 export interface DocumentType {
     id: string;
