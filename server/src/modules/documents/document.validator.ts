@@ -8,6 +8,7 @@ export const createDocumentTypeSchema = z.object({
     "contract",
     "compliance",
     "certificate",
+    "employment",
     "onboarding",
     "other",
   ]),
