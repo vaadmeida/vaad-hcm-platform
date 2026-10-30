@@ -1,6 +1,7 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from "@/components/ui/avatar";
 import { useApproveOrRejectLeaveRequest } from "@/features/leaves/hooks/useApproveOrRejectLeaveRequest";
 import type { LeaveRequest } from "@/features/leaves/types/leave.types";
@@ -16,6 +17,9 @@ const LeaveRequestTableRow = ({
   request,
   onClick,
 }: LeaveRequestTableRowProps) => {
+
+  const employee = request.employee;
+
   const employeeName = request?.employee
     ? `${request.employee.first_name} ${request.employee.last_name}`
     : "Unknown Employee";
@@ -50,7 +54,7 @@ const LeaveRequestTableRow = ({
     }
   };
 
-  const { mutate: approveOrReject, isPending } =  useApproveOrRejectLeaveRequest();
+  const { mutate: approveOrReject, isPending } = useApproveOrRejectLeaveRequest();
 
   const handleApprove = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -72,11 +76,15 @@ const LeaveRequestTableRow = ({
       <td className="px-3 py-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-[#1078A9]/10 text-xs font-medium text-[#1078A9]">
+            <AvatarImage
+              src={employee?.avatar_url ?? undefined}
+              alt={employeeName}
+            />
+
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
-
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-gray-900">
               {employeeName}
