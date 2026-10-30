@@ -336,7 +336,6 @@ export const getEmployee = async (id: string, user: User) => {
     };
 };
 
-
 export const getMyProfile = async (user: User) => {
     const employee = await prisma.employee.findUnique({
         where: { id: user.id },
@@ -525,8 +524,8 @@ export const getAllEmployees = async (
 
     const whereClause: Prisma.EmployeeWhereInput = {};
 
-    if (filters.status && filters.status !== "all") {
-        whereClause.status = filters.status;
+    if (status && status !== "all") {
+        whereClause.status = status;
     } else {
         whereClause.status = {
             notIn: ["terminated", "dismissed", "resigned"],
@@ -536,7 +535,6 @@ export const getAllEmployees = async (
     if (isManager) {
         whereClause.manager_id = user.id;
     }
-
     // Search employee details and all assigned department names.
     if (search) {
         whereClause.OR = [
@@ -699,8 +697,6 @@ export const getAllEmployees = async (
     };
 
 };
-
-
 
 export const updateEmployee = async ({
     id,
