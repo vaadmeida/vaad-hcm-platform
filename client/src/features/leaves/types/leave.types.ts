@@ -73,28 +73,52 @@ export interface LeaveRequestResponse {
   success: boolean;
   message: string;
   data: LeaveRequest[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface LeaveRequestFilters {
   search?: string;
   status?: string;
   leave_type_id?: string;
+  employee_id?: string;
+  page?: number;
+  limit?: number;
 }
-
 export interface LeaveBalanceFilters {
   search?: string;
   departmentId?: string;
   leaveTypeId?: string;
   page?: number;
+  limit?: number;
 }
+
 export interface LeaveBalanceEmployee {
   id: string;
   first_name: string;
   last_name: string;
-  department: {
-    name: string;
-  } | null;
   avatar_url: string | null;
+  departments: {
+    department: {
+      id: string;
+      name: string;
+    };
+  }[];
+}
+
+export interface LeaveBalancePagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export interface LeaveBalanceItem {
@@ -105,8 +129,8 @@ export interface LeaveBalanceItem {
 }
 
 export interface LeaveBalanceResponse {
-  success: boolean;
   data: LeaveBalanceItem[];
+  pagination: LeaveBalancePagination;
 }
 
 export interface EmployeeLeaveBalance {
@@ -292,6 +316,6 @@ export interface ApproveOrRejectLeaveRequestResponse {
 }
 
 export interface ApiError {
-    success: boolean;
-    message: string;
+  success: boolean;
+  message: string;
 }
