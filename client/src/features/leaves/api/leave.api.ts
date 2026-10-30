@@ -49,7 +49,7 @@ export const getLeaveRequests = async (filters?: LeaveRequestFilters): Promise<L
 
 
 
-export const getAllLeaveBalance = async (filters?: LeaveBalanceFilters): Promise<LeaveBalanceItem[]> => {
+export const getAllLeaveBalance = async (filters?: LeaveBalanceFilters): Promise<LeaveBalanceResponse> => {
   try {
     const response = await api.get<LeaveBalanceResponse>("/api/leaves/balance/all",
       {
@@ -57,7 +57,7 @@ export const getAllLeaveBalance = async (filters?: LeaveBalanceFilters): Promise
       }
     );
 
-    return response.data.data;
+    return response.data;
   } catch (error) {
     console.error("Getting leave balances API Error:", error);
     throw error;
