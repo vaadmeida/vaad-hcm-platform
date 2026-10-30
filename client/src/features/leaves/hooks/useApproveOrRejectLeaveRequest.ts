@@ -23,6 +23,11 @@ export const useApproveOrRejectLeaveRequest = () => {
             } else {
                 toast.success("Leave request rejected successfully");
             }
+            
+            // Refresh dashboard statistics
+            queryClient.invalidateQueries({
+                queryKey: ["dashboard-stats"],
+            });
 
             // Refresh all leave requests
             queryClient.invalidateQueries({
