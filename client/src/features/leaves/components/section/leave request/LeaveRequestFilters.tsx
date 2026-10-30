@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useGetLeaveTypes } from "@/features/leaves/hooks/useGetLeaveType";
 
 interface LeaveRequestFiltersProps {
   search: string;
@@ -33,13 +34,15 @@ const LeaveRequestFilters = ({
   approved,
   rejected,
 }: LeaveRequestFiltersProps) => {
-  
+
   const statusFilters = [
     { value: "all", label: "All", count: total },
     { value: "pending", label: "Pending", count: pending },
     { value: "approved", label: "Approved", count: approved },
     { value: "rejected", label: "Rejected", count: rejected },
   ];
+
+  const { data: leavetypes } = useGetLeaveTypes()
 
   return (
     <div className="flex flex-col gap-4 border-b border-border p-4">
@@ -54,11 +57,10 @@ const LeaveRequestFilters = ({
                 key={filter.value}
                 type="button"
                 onClick={() => onStatusChange(filter.value)}
-                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition ${
-                  isActive
+                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition ${isActive
                     ? "bg-[#1078A9]/10 text-[#1078A9]"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 {filter.label}
                 <span className="ml-1 font-semibold">
@@ -99,14 +101,12 @@ const LeaveRequestFilters = ({
               className="border border-gray-200"
             >
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="annual">Annual Leave</SelectItem>
-              <SelectItem value="sick">Sick Leave</SelectItem>
-              <SelectItem value="maternity">Maternity Leave</SelectItem>
-              <SelectItem value="paternity">Paternity Leave</SelectItem>
-              <SelectItem value="compassionate">
-                Compassionate Leave
-              </SelectItem>
-              <SelectItem value="unpaid">Unpaid Leave</SelectItem>
+
+              {leavetypes?.data.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
