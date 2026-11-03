@@ -1,10 +1,10 @@
 import path from "path";
-import { DocumentCategory, DocumentStatus } from "@prisma/client";
+import { DocumentCategory, DocumentStatus, Prisma } from "@prisma/client";
 import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
 import { deleteFromStorage, getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
 import { AuthenticatedUser } from "../../middlewares/auth.ts";
-import { CreateDocumentTypeDto, EmployeeDocumentFilters, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
+import { CreateDocumentTypeDto, EmployeeDocumentFilters, GetDocumentTypesInput, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
 
 
 
@@ -79,24 +79,58 @@ export const createDocumentType = async (data: CreateDocumentTypeDto) => {
 }
 
 
-export const getDocumentTypes = async () => {
-    const documentTypes = await prisma.documentType.findMany({
-        select: {
-            id: true,
-            name: true,
-            description: true,
-            isRequired: true,
-            hasExpiry: true,
-            isActive: true,
-            createdAt: true,
-            updatedAt: true,
-        },
-        orderBy: {
-            name: "asc",
-        },
-    });
 
-    return documentTypes;
+
+export const getDocumentTypes = async (
+  filters: GetDocumentTypesInput
+) => {
+  const { search, requirement, status } = filters;
+
+  const documentTypes = await prisma.documentType.findMany({
+    where: {
+      ...(search && {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      }),
+
+      ...(requirement && {
+        isRequired: requirement === "required",
+      }),
+
+      ...(status && {
+        isActive: status === "active",
+      }),
+    },
+
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      isRequired: true,
+      hasExpiry: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return documentTypes;
 };
 
 
@@ -168,91 +202,120 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
     return document;
 };
 
+
 export const getAllEmployeeDocuments = async ({
     status,
     employee_id,
     search,
-    document_type_id
+    document_type_id,
+    page: pageInput,
+    limit: limitInput,
 }: GetEmployeeDocumentsInput) => {
 
+    const page = Math.max(
+        1,
+        Math.floor(Number(pageInput) || 1)
+    );
 
+    const limit = Math.min(
+        100,
+        Math.max(1, Math.floor(Number(limitInput) || 7))
+    );
 
-    const documents = await prisma.employeeDocument.findMany({
-        where: {
-            ...(status && {
-                status: status as DocumentStatus,
-            }),
-            ...(employee_id && {
-                employeeId: employee_id,
-            }),
-            ...(document_type_id && {
-                documentTypeId: document_type_id,
-            }),
-            ...(search && {
-                OR: [
-                    {
-                        fileName: {
+    const skip = (page - 1) * limit;
+
+    const whereClause: Prisma.EmployeeDocumentWhereInput = {
+        ...(status && {
+            status: status as DocumentStatus,
+        }),
+
+        ...(employee_id && {
+            employeeId: employee_id,
+        }),
+
+        ...(document_type_id && {
+            documentTypeId: document_type_id,
+        }),
+
+        ...(search && {
+            OR: [
+                {
+                    fileName: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    employee: {
+                        first_name: {
                             contains: search,
                             mode: "insensitive",
                         },
                     },
-                    {
-                        employee: {
-                            first_name: {
-                                contains: search,
-                                mode: "insensitive",
-                            },
+                },
+                {
+                    employee: {
+                        last_name: {
+                            contains: search,
+                            mode: "insensitive",
                         },
                     },
-                    {
-                        employee: {
-                            last_name: {
-                                contains: search,
-                                mode: "insensitive",
-                            },
+                },
+                {
+                    employee: {
+                        email: {
+                            contains: search,
+                            mode: "insensitive",
                         },
                     },
-                    {
-                        employee: {
-                            email: {
-                                contains: search,
-                                mode: "insensitive",
-                            },
-                        },
-                    },
-                ],
-            }),
-        },
+                },
+            ],
+        }),
+    };
 
-        include: {
-            documentType: {
-                select: {
-                    name: true,
+    // Fetch paginated documents and total count
+    const [documents, total] = await prisma.$transaction([
+        prisma.employeeDocument.findMany({
+            where: whereClause,
+            skip,
+            take: limit,
+
+            include: {
+                documentType: {
+                    select: {
+                        name: true,
+                    },
+                },
+
+                employee: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                        email: true,
+                        avatar_url: true,
+                    },
                 },
             },
 
-            employee: {
-                select: {
-                    first_name: true,
-                    last_name: true,
-                    email: true,
-                    avatar_url: true,
-                },
+            orderBy: {
+                uploadedAt: "desc",
             },
-        },
+        }),
 
-        orderBy: {
-            uploadedAt: "desc",
-        },
-    });
+        prisma.employeeDocument.count({
+            where: whereClause,
+        }),
+    ]);
 
- const result =  await Promise.all(
+    // Generate presigned URLs for current page only
+    const result = await Promise.all(
         documents.map(async (document) => {
             const fileUrl = document.fileUrl?.startsWith("http")
                 ? document.fileUrl
                 : document.fileUrl
                     ? await getPresignedUrl(document.fileUrl)
                     : null;
+
             return {
                 id: document.id,
                 employeeId: document.employeeId,
@@ -263,18 +326,32 @@ export const getAllEmployeeDocuments = async ({
                 expiryDate: document.expiryDate,
                 status: document.status,
                 documentType: document.documentType,
+
                 employee: {
                     ...document.employee,
                     avatar_url: document.employee.avatar_url
-                        ? await getPresignedUrl(document.employee.avatar_url)
+                        ? await getPresignedUrl(
+                            document.employee.avatar_url
+                        )
                         : null,
                 },
             };
         })
     );
 
-return result;
+    const totalPages = Math.ceil(total / limit);
 
+    return {
+        data: result,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    };
 };
 
 
@@ -510,13 +587,12 @@ export const getDocumentDownloadUrl = async (docId: string, requestingUser: Auth
     if (requestingUser.role === 'employee' && requestingUser.id !== document.employeeId) {
         throw new AppError(
             "You are not authorized to view this document",
-            401,
+            403,
             "UNAUTHORIZED"
         )
     }
 
-    const url = await getPresignedUrl(document.fileUrl, 900);
-
+    const url = await getPresignedUrl(document.fileUrl,900,document.fileName);
     return {
         url,
         expires_in: 900,
