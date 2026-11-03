@@ -4,7 +4,7 @@ import { getDocuments } from "../api/documents.api"
 
 export const useGetDocuments = (filters: DocsFilters ) => {
    return useQuery<DocumentsResponse>({
-        queryKey: ['documents'],
+        queryKey: ["documents", filters],
         queryFn: ()=> getDocuments(filters),
         staleTime: 1000 * 60 * 5
      })
