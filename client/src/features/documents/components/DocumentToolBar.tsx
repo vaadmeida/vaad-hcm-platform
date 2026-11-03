@@ -21,14 +21,12 @@ const DocumentToolBar = () => {
             Manage, verify and track employee documents
           </p>
         </div>
-
-
         <Button
           onClick={() => setOpen(true)}
-          className="h-9 gap-2 rounded-lg px-3 text-sm text-white"
+          className="h-9 w-fit self-start gap-2 rounded-lg px-3 text-sm text-white"
         >
-          <PlusIcon />
-          Upload Document
+          <PlusIcon className="h-4 w-4 shrink-0" />
+          <span>Upload Document</span>
         </Button>
       </section>
 
