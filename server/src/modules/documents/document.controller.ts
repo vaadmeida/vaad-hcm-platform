@@ -24,16 +24,32 @@ export const createDocumentTypeController = async (req: Request, res: Response) 
 
 };
 
-export const getDocumentTypesController = async (req: Request, res: Response) => {
-    const documentTypes = await getDocumentTypes();
+export const getDocumentTypesController = async (
+  req: Request,
+  res: Response
+) => {
+  const { search, requirement, status } = req.query;
 
-    return res.status(200).json({
-        success: true,
-        message: "Document types retrieved successfully",
-        data: documentTypes,
-    });
+  const documentTypes = await getDocumentTypes({
+    search: typeof search === "string" ? search.trim() : undefined,
+
+    requirement:
+      requirement === "required" || requirement === "optional"
+        ? requirement
+        : undefined,
+
+    status:
+      status === "active" || status === "inactive"
+        ? status
+        : undefined,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Document types retrieved successfully",
+    data: documentTypes,
+  });
 };
-
 
 export const selfUploadDocumentController = async (
     req: Request,
@@ -89,8 +105,6 @@ export const uploadEmployeeDocumentController = async (req: Request, res: Respon
             message: "Unauthorized",
         });
     }
-
-    console.log("UPLOADER ROLE:", req.user.role);
 
     const employeeId = Array.isArray(req.params.employeeId)
         ? req.params.employeeId[0]
