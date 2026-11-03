@@ -34,7 +34,7 @@ const DocumentTabs = ({
 }: DocumentTabsProps) => {
     return (
         <div className="mt-6 border-b border-gray-200">
-            <div className="flex gap-6 overflow-x-auto">
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-6">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -44,15 +44,14 @@ const DocumentTabs = ({
                             key={tab.id}
                             type="button"
                             onClick={() => onTabChange(tab.id)}
-                            className={`relative flex shrink-0 cursor-pointer items-center gap-2 pb-3 text-sm font-medium transition-colors ${
-                                isActive
+                            className={`relative flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1 pb-3 text-center text-xs font-medium transition-colors sm:flex-row sm:gap-2 sm:text-sm ${isActive
                                     ? "text-primary"
                                     : "text-muted-foreground hover:text-foreground"
-                            }`}
+                                }`}
                         >
-                            <Icon className="h-4 w-4" />
+                            <Icon className="h-4 w-4 shrink-0" />
 
-                            {tab.label}
+                            <span className="truncate">{tab.label}</span>
 
                             {isActive && (
                                 <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary" />
