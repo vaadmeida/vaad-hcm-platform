@@ -21,7 +21,7 @@ const DocumentTypesTable = ({
                             Requirement
                         </th>
 
-                        <th className="hidden px-4 py-3 xl:table-cell">
+                        <th className="hidden px-4 py-3 xl:table-cell ml-6">
                             Expiry
                         </th>
 
