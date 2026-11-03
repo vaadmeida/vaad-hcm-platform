@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import ButtonLoader from "@/components/common/ButtonLoader";
 
 interface DocumentTableRowProps {
   document: Document;
@@ -183,7 +184,7 @@ const DocumentTableRow = ({
                   onClick={(event) => event.stopPropagation()}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-gray-100 hover:text-gray-900"
                 >
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4 cursor-pointer" />
                 </button>
               </DropdownMenuTrigger>
 
@@ -216,7 +217,6 @@ const DocumentTableRow = ({
           </div>
         </td>
       </tr>
-
       {/* Delete Confirmation */}
       <AlertDialog
         open={deleteDialogOpen}
@@ -224,32 +224,42 @@ const DocumentTableRow = ({
           if (!isDeleting) setDeleteDialogOpen(open);
         }}
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Delete this document?
+        <AlertDialogContent className="max-w-100 gap-0 rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+
+          <AlertDialogHeader className="space-y-2 text-left">
+            <AlertDialogTitle className="text-base font-semibold text-slate-900">
+              Delete document
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete "{document.fileName}"
-              and its stored file. This action cannot be undone.
+
+            <AlertDialogDescription className="text-sm leading-6 text-slate-500">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-slate-900">
+                "{document.fileName}"
+              </span>
+              ? This action is permanent and the stored file will also be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
+          <AlertDialogFooter className="mt-6 flex-row justify-end gap-2 border-0 bg-white p-0 shadow-none">
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="mt-0 h-9 rounded-md border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-none hover:bg-slate-50 cursor-pointer"
+            >
               Cancel
             </AlertDialogCancel>
+
             <AlertDialogAction
               disabled={isDeleting}
               onClick={(event) => {
                 event.preventDefault();
                 void handleDelete();
               }}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="h-9 rounded-md border-0 bg-red-600 px-4 text-sm font-medium text-white shadow-none hover:bg-red-700 focus-visible:ring-red-500 cursor-pointer"
             >
-              {isDeleting ? "Deleting..." : "Delete document"}
+              {isDeleting ? <ButtonLoader text="Deleting..." /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
+
         </AlertDialogContent>
       </AlertDialog>
     </>
