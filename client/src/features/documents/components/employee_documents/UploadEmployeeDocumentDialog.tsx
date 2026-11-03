@@ -21,8 +21,9 @@ import { FileUp, Upload } from "lucide-react";
 import { useGetMyProfile } from "@/features/my-profile/hooks/useGetMyProfile";
 import ButtonLoader from "@/components/common/ButtonLoader";
 import { toast } from "sonner";
-import { useDocumentTypes } from "../../hooks/useDocumentTypes";
+
 import { useUploadEmployeeDocument } from "../../hooks/useUploadEmployeeDocuments";
+import { useDocumentTypes } from "../../hooks/useDocumentsTypes";
 
 interface UploadEmployeeDocumentDialogProps {
     open: boolean;
