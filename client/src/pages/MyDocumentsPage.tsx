@@ -41,9 +41,7 @@ const MyDocumentsPage = () => {
     status:
       status === "all"
         ? undefined
-        : status === "needs_attention"
-          ? "rejected"
-          : status,
+        : status as "pending" | "approved" | "rejected",
   };
 
   const {
