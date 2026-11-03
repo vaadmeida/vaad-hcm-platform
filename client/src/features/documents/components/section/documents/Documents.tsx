@@ -1,19 +1,24 @@
-
 import { useState } from "react";
 import DocumentFilters from "./DocumentsFilters";
 import DocumentTable from "./DocumentTable";
 import DocumentDetails from "./DocumentDetails";
 import DocumentsCardList from "./DocumentsCardList";
+import DocumentsTablePagination from "./DocumentsTablePagination";
 
 import { useGetDocuments } from "@/features/documents/hooks/useGetDocuments";
 
 import useDownloadDocument from "@/features/documents/hooks/useDownloadDocument";
 import useDeleteDocument from "@/features/documents/hooks/useDeleteDocument";
 
+type DocumentStatus = "all" | "pending" | "approved" | "rejected";
+
 const Documents = () => {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState<DocumentStatus>("all");
   const [documentType, setDocumentType] = useState("all");
+
+  const [page, setPage] = useState(1);
+  const limit = 7;
 
   const [selectedDocumentId, setSelectedDocumentId] =
     useState<string | null>(null);
@@ -24,23 +29,44 @@ const Documents = () => {
     status: status === "all" ? undefined : status,
     document_type_id:
       documentType === "all" ? undefined : documentType,
+    page,
+    limit,
   });
 
   const { mutateAsync: deleteDocument } = useDeleteDocument();
   const { downloadDocument } = useDownloadDocument();
 
-  const documentList = documents?.data ?? [];
+  const documentList = documents?.data?.data ?? [];
+  const pagination = documents?.data?.pagination;
 
-  const total = documentList.length;
+  const total = pagination?.total ?? 0;
+
   const pending = documentList.filter(
     (document) => document.status === "pending"
   ).length;
+
   const approved = documentList.filter(
     (document) => document.status === "approved"
   ).length;
+
   const rejected = documentList.filter(
     (document) => document.status === "rejected"
   ).length;
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (value: DocumentStatus) => {
+    setStatus(value);
+    setPage(1);
+  };
+
+  const handleDocumentTypeChange = (value: string) => {
+    setDocumentType(value);
+    setPage(1);
+  };
 
   const handleDocumentClick = (documentId: string) => {
     setSelectedDocumentId(documentId);
@@ -60,11 +86,11 @@ const Documents = () => {
       <section className="overflow-hidden rounded-lg border border-border bg-white">
         <DocumentFilters
           search={search}
-          onSearch={setSearch}
+          onSearch={handleSearchChange}
           status={status}
-          onStatusChange={setStatus}
+          onStatusChange={handleStatusChange}
           documentType={documentType}
-          onDocumentTypeChange={setDocumentType}
+          onDocumentTypeChange={handleDocumentTypeChange}
           total={total}
           pending={pending}
           approved={approved}
@@ -94,6 +120,14 @@ const Documents = () => {
             onDocumentClick={handleDocumentClick}
           />
         </div>
+
+        {/* Pagination */}
+        {pagination && (
+          <DocumentsTablePagination
+            pagination={pagination}
+            onPageChange={setPage}
+          />
+        )}
       </section>
     </div>
   );
