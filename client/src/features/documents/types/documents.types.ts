@@ -11,7 +11,6 @@ export interface DocumentStatsResponse {
   data: DocumentStats;
 }
 
-
 export type DocumentStatus = "pending" | "approved" | "rejected";
 
 export interface RecentDocumentEmployee {
@@ -72,21 +71,34 @@ export interface Document {
   employee: DocumentEmployee;
 }
 
+export interface DocsFilters {
+  search?: string;
+  status?: "pending" | "approved" | "rejected";
+  document_type_id?: string;
+  employee_id?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface DocumentPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedDocuments {
+  data: Document[];
+  pagination: DocumentPagination;
+}
+
 export interface DocumentsResponse {
   success: boolean;
   message: string;
-  data: Document[];
+  data: PaginatedDocuments;
 }
-
-export interface DocsFilters {
-  search?: string;
-  status?: string;
-  document_type_id?: string;
-  employeeId?: string;
-}
-
-
-
 
 export interface DocumentDetails {
   id: string;
@@ -171,6 +183,12 @@ export interface DocumentType {
     createdAt: string;
     updatedAt: string;
 }
+
+export type DocumentTypeFilters = {
+  search?: string;
+  requirement?: "required" | "optional";
+  status?: "active" | "inactive";
+};
 
 export interface CreateDocumentTypeDto {
     name: string;
