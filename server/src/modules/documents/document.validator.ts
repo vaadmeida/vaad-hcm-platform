@@ -21,10 +21,12 @@ export const createDocumentTypeSchema = z.object({
 });
 
 export const getEmployeeDocumentsQuerySchema = z.object({
-    status: z.nativeEnum(DocumentStatus).optional(),
+    status: z.enum(DocumentStatus).optional(),
     employee_id: z.string().uuid().optional(),
     search: z.string().trim().optional(),
     document_type_id: z.string().uuid().optional(),
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 export const uploadDocumentSchema = z.object({
