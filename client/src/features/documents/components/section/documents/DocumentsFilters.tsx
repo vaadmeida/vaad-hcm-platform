@@ -7,12 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { DocumentStatus } from "@/features/documents/types/documents.types";
+import { useDocumentTypes } from "@/features/documents/hooks/useDocumentsTypes";
+
+
+export type DocumentStatusFilter = "all" | DocumentStatus;
 
 interface DocumentFiltersProps {
   search: string;
   onSearch: (value: string) => void;
-  status: string;
-  onStatusChange: (value: string) => void;
+  status: DocumentStatusFilter;
+  onStatusChange: (value: DocumentStatus) => void;
   documentType: string;
   onDocumentTypeChange: (value: string) => void;
   total: number;
@@ -33,6 +38,10 @@ const DocumentFilters = ({
   approved,
   rejected,
 }: DocumentFiltersProps) => {
+
+
+  const { data: documentTypes = [] } = useDocumentTypes();
+
   const statusFilters = [
     { value: "all", label: "All", count: total },
     { value: "pending", label: "Pending", count: pending },
@@ -52,12 +61,11 @@ const DocumentFilters = ({
               <button
                 key={filter.value}
                 type="button"
-                onClick={() => onStatusChange(filter.value)}
-                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-[#1078A9]/10 text-[#1078A9]"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                onClick={() => onStatusChange(filter.value as DocumentStatus)}
+                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition ${isActive
+                  ? "bg-[#1078A9]/10 text-[#1078A9]"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
               >
                 {filter.label}
                 <span className="ml-1 font-semibold">
@@ -90,7 +98,6 @@ const DocumentFilters = ({
             <SelectTrigger className="h-10 w-44 border border-slate-200 bg-white">
               <SelectValue placeholder="All Documents" />
             </SelectTrigger>
-
             <SelectContent
               side="bottom"
               sideOffset={4}
@@ -98,19 +105,11 @@ const DocumentFilters = ({
               className="border border-gray-200"
             >
               <SelectItem value="all">All Documents</SelectItem>
-              <SelectItem value="medical_certificate">
-                Medical Certificate
-              </SelectItem>
-              <SelectItem value="identification">
-                Identification
-              </SelectItem>
-              <SelectItem value="employment_letter">
-                Employment Letter
-              </SelectItem>
-              <SelectItem value="academic_certificate">
-                Academic Certificate
-              </SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              {documentTypes.map((docType) => (
+                <SelectItem key={docType.id} value={docType.id}>
+                  {docType.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
