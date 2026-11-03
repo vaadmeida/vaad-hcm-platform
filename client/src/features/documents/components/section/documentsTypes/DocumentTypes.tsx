@@ -1,31 +1,11 @@
-import DocumentTypesFilters from "./DocumentTypesFilters"
 import { useState } from "react";
-import { useDocumentTypes } from "@/features/documents/hooks/useDocumentTypes";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
-import ErrorState from "@/components/common/ErrorState";
-import DocumentTypesTable from "./DoumentsTypesTable";
-import DocumentsTypesCardList from "./DocumentsTypesCardList";
-import AddDocumentDialog from "./AddDocumentDialog";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
+import AddDocumentDialog from "./AddDocumentDialog";
+import DocumentTypesContent from "./DocumentTypesContent";
 
 const DocumentTypes = () => {
-
-    const [open, setOpen] = useState(false)
-    const [search, setSearch] = useState("");
-    const [requirement, setRequirement] = useState("all");
-    const [status, setStatus] = useState("all");
-
-    const { data: documentTypes = [], isLoading, isError } = useDocumentTypes();
-
-    if (isLoading) {
-        return <SkeletonLoader />;
-    }
-
-    if (isError) {
-        <ErrorState />
-    }
-
+    const [open, setOpen] = useState(false);
 
     return (
         <>
@@ -39,7 +19,6 @@ const DocumentTypes = () => {
                         Manage the types of documents employees can upload.
                     </p>
                 </div>
-
 
                 <Button
                     onClick={() => setOpen(true)}
@@ -55,33 +34,9 @@ const DocumentTypes = () => {
                 />
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <DocumentTypesFilters
-                    search={search}
-                    onSearch={setSearch}
-                    requirement={requirement}
-                    onRequirementChange={setRequirement}
-                    status={status}
-                    onStatusChange={setStatus}
-                />
-
-
-                {/* Tablet + Desktop */}
-                <div className="hidden md:block">
-                    <DocumentTypesTable
-                        documentTypes={documentTypes}
-                    />
-                </div>
-
-                <div className="md:hidden">
-                    <DocumentsTypesCardList documentTypes={documentTypes} />
-                </div>
-            </div>
-
-
+            <DocumentTypesContent />
         </>
+    );
+};
 
-    )
-}
-
-export default DocumentTypes
+export default DocumentTypes;
