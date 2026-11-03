@@ -18,16 +18,16 @@ const useDownloadDocument = () => {
         const downloadUrl =
           await getMyDocumentDownloadUrl(documentId);
 
+        console.log("Document ID:", documentId);
+        console.log("Download URL:", downloadUrl);
+
         if (!downloadUrl) {
           throw new Error("Download URL was not returned");
         }
 
         const link = window.document.createElement("a");
         link.href = downloadUrl;
-        link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.download = "";
-
         window.document.body.appendChild(link);
         link.click();
         link.remove();
