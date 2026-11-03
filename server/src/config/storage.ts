@@ -42,16 +42,20 @@ export async function uploadFileToS3(
 
 export async function getPresignedUrl(
   key: string,
-  expiresIn: number = 900
+  expiresIn: number = 900,
+  fileName: string = "document"
 ): Promise<string> {
+  const safeFileName = encodeURIComponent(fileName);
+
   const command = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
+    ResponseContentDisposition:
+      `attachment; filename*=UTF-8''${safeFileName}`,
   });
 
   return getSignedUrl(client, command, { expiresIn });
 }
-
 export async function deleteFromStorage(key: string): Promise<void> {
   await client.send(
     new DeleteObjectCommand({
