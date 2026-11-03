@@ -27,10 +27,18 @@ export interface GetEmployeeDocumentsInput {
     employee_id?: string;
     search?: string;
     document_type_id?: string;
+    page?: number;
+    limit?: number;
 }
 
 export interface EmployeeDocumentFilters {
     search?: string;
     status?: DocumentStatus;
     document_type_id?: string;
+}
+
+export interface GetDocumentTypesInput {
+  search?: string;
+  requirement?: "required" | "optional";
+  status?: "active" | "inactive";
 }
