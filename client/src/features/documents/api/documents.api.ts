@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { CreateDocumentTypeDto, DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, MyDocument, MyDocumentsResponse, MyDocumentStats, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
+import type { CreateDocumentTypeDto, DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, DocumentTypeFilters, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, MyDocument, MyDocumentsResponse, MyDocumentStats, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
 import type { ApiResponse } from "@/features/employees/types/employee.types";
 
 export const getDocumentStats = async (): Promise<DocumentStatsResponse> => {
@@ -109,16 +109,16 @@ export const verifyDocument = async (documentId: string,
   return response.data;
 };
 
+export const getDocumentTypes = async (
+  filters?: DocumentTypeFilters
+): Promise<DocumentType[]> => {
+  const response = await api.get<GetDocumentTypesResponse>(
+    "/api/documents/types",
+    { params: filters }
+  );
 
-export const getDocumentTypes = async (): Promise<DocumentType[]> => {
-    const response = await api.get<GetDocumentTypesResponse>(
-        "/api/documents/types"
-    );
-
-    return response.data.data;
-};
-
-
+  return response.data.data;
+}
 
 export const createDocumentType = async (payload: CreateDocumentTypeDto): Promise<DocumentType> => {
     const response = await api.post("/api/documents", payload);
@@ -160,13 +160,11 @@ export const deleteMyDocument = async (
 
 
 export const getMyDocumentDownloadUrl = async (
-  documentId: string,
+  documentId: string
 ): Promise<string> => {
   const response = await api.get(
-    `/api/documents/download/${documentId}`,
+    `/api/documents/download/${documentId}`
   );
 
-  console.log("Download API response:", response.data);
-
-  return response.data.data.downloadUrl;
+  return response.data.data.url;
 };
