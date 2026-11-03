@@ -19,10 +19,10 @@ import {
 } from "@/components/ui/select";
 import { FileUp, Upload } from "lucide-react";
 import { useEmployee } from "@/features/employees/hooks/useEmployee";
-import { useDocumentTypes } from "../hooks/useDocumentTypes";
 import { useUploadEmployeeDocument } from "../hooks/useUploadEmployeeDocuments";
 import ButtonLoader from "@/components/common/ButtonLoader";
 import { toast } from "sonner";
+import { useDocumentTypes } from "../hooks/useDocumentsTypes";
 
 interface UploadDocumentDialogProps {
     open: boolean;
@@ -184,29 +184,26 @@ const UploadDocumentDialog = ({
                             </Select>
                         </div>
                     </div>
-
                     {/* File Upload */}
                     <div className="space-y-1.5">
-                        <Label
-                            htmlFor="file"
-                            className="text-xs font-medium text-gray-700"
-                        >
-                            Document File
-                        </Label>
-
-                        <label
-                            htmlFor="file"
-                            className="group flex h-20 cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/60 px-4 transition hover:border-primary/40 hover:bg-primary/5"
-                        >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm ring-1 ring-gray-100 group-hover:text-primary">
+                        <label htmlFor="file" className="group grid h-20 w-full min-w-0 cursor-pointer grid-cols-[36px_minmax(0,1fr)] items-center gap-3 overflow-hidden rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/60 px-4 transition hover:border-primary/40 hover:bg-primary/5">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm ring-1 ring-gray-100 group-hover:text-primary">
                                 <Upload className="h-4 w-4" />
                             </div>
 
-                            <div className="min-w-0 text-left">
-                                <p className="truncate text-sm font-medium text-gray-700">
-                                    {selectedFile
-                                        ? selectedFile.name
-                                        : "Click to upload"}
+                            <div className="min-w-0 overflow-hidden">
+                                <p
+                                    title={selectedFile?.name}
+                                    style={{
+                                        display: "block",
+                                        maxWidth: "100%",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                    className="text-sm font-medium text-gray-700"
+                                >
+                                    {selectedFile?.name || "Click to upload"}
                                 </p>
 
                                 <p className="text-xs text-gray-500">
@@ -223,7 +220,6 @@ const UploadDocumentDialog = ({
                             />
                         </label>
                     </div>
-
                     {/* Expiry & Notes */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
