@@ -79,11 +79,11 @@ export const getDepartmentById = async (id: string, user: User) => {
 
     const formattedManager = manager
         ? {
-              ...manager,
-              avatar_url: manager.avatar_url
-                  ? await getPresignedUrl(manager.avatar_url)
-                  : null,
-          }
+            ...manager,
+            avatar_url: manager.avatar_url
+                ? await getPresignedUrl(manager.avatar_url)
+                : null,
+        }
         : null;
 
     const formattedEmployees = await Promise.all(
@@ -149,9 +149,9 @@ export const getDepartments = async (user: User) => {
                 employee_count: employees.length,
                 manager: manager
                     ? {
-                          ...manager,
-                          avatar_url: managerAvatarUrl,
-                      }
+                        ...manager,
+                        avatar_url: managerAvatarUrl,
+                    }
                     : null,
             };
         })
@@ -265,11 +265,12 @@ export const assignDepartmentManager = async ({
             "EMPLOYEE_NOT_ACTIVE"
         );
     }
+    // 4. Only managers, HR and Admin can manage departments
+    const allowedRoles = ["manager", "hr", "admin"];
 
-    // 4. Only managers and HR can manage departments
-    if (employee.role !== "manager" && employee.role !== "hr") {
+    if (!allowedRoles.includes(employee.role)) {
         throw new AppError(
-            "Only employees with manager or HR role can be assigned as department managers",
+            "Only employees with manager, HR or Admin roles can be assigned as department managers",
             400,
             "INVALID_MANAGER"
         );
@@ -353,11 +354,11 @@ export const teamMembers = async (departmentId: string) => {
 
     const manager = department.manager
         ? {
-              ...department.manager,
-              avatar_url: department.manager.avatar_url
-                  ? await getPresignedUrl(department.manager.avatar_url)
-                  : null,
-          }
+            ...department.manager,
+            avatar_url: department.manager.avatar_url
+                ? await getPresignedUrl(department.manager.avatar_url)
+                : null,
+        }
         : null;
 
     const members = await Promise.all(
@@ -452,8 +453,8 @@ export const getDepartmentStats = async (departmentId: string) => {
 
     const employees = await prisma.employee.findMany({
         where: {
-            departments:{
-                some:{
+            departments: {
+                some: {
                     department_id: departmentId
                 }
             },
