@@ -50,13 +50,23 @@ const EmploymentInformation = ({
         />
 
         <InfoItem
-          label="Role"
+          label="System Role"
           value={employment.role}
         />
 
         <InfoItem
           label="Employment Type"
           value={employment.employment_type}
+        />
+
+        <InfoItem
+          label="Employment Status"
+          value={
+            employment.status
+              ? employment.status.charAt(0).toUpperCase() +
+              employment.status.slice(1)
+              : "—"
+          }
         />
 
         <InfoItem
