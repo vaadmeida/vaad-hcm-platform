@@ -91,7 +91,6 @@ const mapEmployeeToForm = (
         employee.employment.departments?.map((department) => department.id) ?? [],
     manager_id: employee.employment.manager?.id ?? "",
     work_email: employee.employment.work_email ?? "",
-    status: employee.employment.status ?? "unconfirmed",
     employment_type: employee.employment.employment_type ?? "full-time",
     hire_date: employee.employment.hire_date ?? "",
     probation_end_date: employee.employment.probation_end_date ?? "",
@@ -163,16 +162,16 @@ const EmployeeEditModal = ({
     };
 
 
-    const payload: Partial<UpdateEmployeeDTO> = isMyProfile
-        ? selfPayload
-        : {
-            ...form,
-            department_ids: form.department_ids ?? [],
-            manager_id: form.manager_id || undefined,
-        };
+  const payload: Partial<UpdateEmployeeDTO> = isMyProfile
+    ? selfPayload
+    : {
+        ...form,
+        date_exited: undefined,
+        department_ids: form.department_ids ?? [],
+        manager_id: form.manager_id || undefined,
+};
 
-
-    const handleSubmit = async (
+const handleSubmit = async (
         e: React.MouseEvent<HTMLButtonElement>
     ) => {
         e.preventDefault();
