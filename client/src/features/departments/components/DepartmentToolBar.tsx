@@ -9,6 +9,9 @@ const DepartmentToolBar = () => {
     const { data: departments = [] } = useDepartments();
     const { data: employees } = useEmployee({});
 
+    console.log("departments", departments);
+    console.log("employees", employees);
+
     return (
         <div>
             <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -25,7 +28,7 @@ const DepartmentToolBar = () => {
                         <span className="hidden sm:inline">•</span>
 
                         <p>
-                            {employees?.data?.length ?? 0}{" "}
+                            {employees?.pagination?.total ?? 0}{" "}
                             {(employees?.data?.length ?? 0) === 1 ? "employee" : "employees"}
                         </p>
                     </div>
