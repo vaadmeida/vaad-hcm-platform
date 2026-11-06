@@ -218,31 +218,8 @@ const FormInfo = ({
           </select>
         </div>
 
-        {/* City - Can self edit */}
-        <div className="min-w-0 space-y-2">
-          <Label htmlFor="city">City</Label>
 
-          <select
-            id="city"
-            name="city"
-            value={form.city ?? ""}
-            onChange={handleChange}
-            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
-          >
-            <option value="">Select City</option>
-
-            {cities?.data.map((city) => (
-              <option
-                key={city.id}
-                value={city.name}
-              >
-                {city.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* State - Can self edit */}
+                {/* State - Can self edit */}
         <div className="min-w-0 space-y-2">
           <Label htmlFor="state_of_residence">
             State of Residence
@@ -267,6 +244,31 @@ const FormInfo = ({
             ))}
           </select>
         </div>
+
+        {/* City - Can self edit */}
+        <div className="min-w-0 space-y-2">
+          <Label htmlFor="city">City</Label>
+
+          <select
+            id="city"
+            name="city"
+            value={form.city ?? ""}
+            onChange={handleChange}
+            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-secondary outline-none"
+          >
+            <option value="">Select City</option>
+
+            {cities?.data.map((city) => (
+              <option
+                key={city.id}
+                value={city.name}
+              >
+                {city.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
 
         {/* Residential Address - Can self edit */}
         <div className="min-w-0 space-y-2 sm:col-span-2">
