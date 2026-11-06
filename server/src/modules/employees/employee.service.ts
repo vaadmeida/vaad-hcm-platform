@@ -1341,8 +1341,9 @@ export const getManagers = async (user: User) => {
     const managers = await prisma.employee.findMany({
         where: {
             role: {
-                in: ["manager", "hr"],
+                in: ["manager", "hr", "admin"],
             },
+            status: "active",
         },
         select: {
             id: true,
