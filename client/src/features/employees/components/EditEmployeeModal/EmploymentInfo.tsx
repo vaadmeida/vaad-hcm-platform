@@ -119,7 +119,7 @@ const EmploymentInfo = ({
 
         {/* Role */}
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="role">Role</Label>
+          <Label htmlFor="role"> System Role</Label>
 
           <Select
             value={form.role ?? "employee"}
@@ -144,56 +144,6 @@ const EmploymentInfo = ({
           </Select>
         </div>
 
-        {/* Employment Type */}
-        <div className="min-w-0 space-y-2">
-          <Label htmlFor="employment_type">Employment Type</Label>
-
-          <Select
-            value={form.employment_type ?? "full-time"}
-            onValueChange={(value) =>
-              handleSelectChange("employment_type", value)
-            }
-          >
-            <SelectTrigger
-              id="employment_type"
-              className="w-full rounded-sm border-border text-sm"
-            >
-              <SelectValue placeholder="Select employment type" />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="full-time">Full-time</SelectItem>
-              <SelectItem value="part-time">Part-time</SelectItem>
-              <SelectItem value="contract">Contract</SelectItem>
-              <SelectItem value="intern">Intern</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Status */}
-        <div className="min-w-0 space-y-2">
-          <Label htmlFor="status">Employment Status</Label>
-
-          <Select
-            value={form.status ?? "probation"}
-            onValueChange={(value) =>
-              handleSelectChange("status", value)
-            }
-          >
-            <SelectTrigger
-              id="status"
-              className="w-full rounded-sm border-border text-sm"
-            >
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="probation">Probation</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
         {/* Hire Date */}
         <div className="min-w-0 space-y-2">
@@ -254,7 +204,7 @@ const EmploymentInfo = ({
         </div>
 
         {/* Work Email */}
-        <div className="min-w-0 space-y-2 sm:col-span-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="work_email">Work Email</Label>
 
           <Input
