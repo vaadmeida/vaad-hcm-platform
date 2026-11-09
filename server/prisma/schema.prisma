@@ -96,8 +96,6 @@ model Employee {
   @@map("employees")
 }
 
-
-
 model EmployeeDepartment {
   employee_id  String   @db.Uuid
   department_id String  @db.Uuid
