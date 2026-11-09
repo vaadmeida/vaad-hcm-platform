@@ -2,6 +2,241 @@ import { Prisma } from "@prisma/client";
 import prisma from "../../config/prisma.ts";
 import { AppError } from "../../errors/appError.ts";
 import { CreateSalaryInput, UpdateSalaryInput } from "./salary.validator.ts";
+import { getPresignedUrl } from "../../config/storage.ts";
+import { EmployeeSalaryFilters } from "./salary.types.ts";
+
+
+
+export const getEmployeesWithSalary = async ({
+  page = 1,
+  search = "",
+  department = "all",
+  salaryStatus = "all",
+}: EmployeeSalaryFilters = {}) => {
+  const limit = 7;
+  const skip = (page - 1) * limit;
+
+  // Build employee filters
+  const where: Prisma.EmployeeWhereInput = {
+    AND: [
+      // Search filter
+      ...(search.trim()
+        ? [
+            {
+              OR: [
+                {
+                  first_name: {
+                    contains: search.trim(),
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  middle_name: {
+                    contains: search.trim(),
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  last_name: {
+                    contains: search.trim(),
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  employee_code: {
+                    contains: search.trim(),
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  email: {
+                    contains: search.trim(),
+                    mode: "insensitive" as const,
+                  },
+                },
+              ],
+            },
+          ]
+        : []),
+
+      // Department filter
+      ...(department !== "all"
+        ? [
+            {
+              departments: {
+                some: {
+                  department: {
+                    is: {
+                      id: department,
+                    },
+                  },
+                },
+              },
+            },
+          ]
+        : []),
+
+      // Salary status filter
+      ...(salaryStatus === "ACTIVE"
+        ? [
+            {
+              salaries: {
+                some: {
+                  endDate: null,
+                },
+              },
+            },
+          ]
+        : salaryStatus === "ENDED"
+          ? [
+              {
+                salaries: {
+                  some: {},
+                  none: {
+                    endDate: null,
+                  },
+                },
+              },
+            ]
+          : salaryStatus === "NOT_CONFIGURED"
+            ? [
+                {
+                  salaries: {
+                    none: {},
+                  },
+                },
+              ]
+            : []),
+    ],
+  };
+
+  const [employees, total] = await Promise.all([
+    prisma.employee.findMany({
+      where,
+      skip,
+      take: limit,
+
+      orderBy: [
+        { first_name: "asc" },
+        { last_name: "asc" },
+      ],
+
+      select: {
+        id: true,
+        first_name: true,
+        middle_name: true,
+        last_name: true,
+        employee_code: true,
+        avatar_url: true,
+        job_title: true,
+        status: true,
+
+        departments: {
+          select: {
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+
+        salaries: {
+          orderBy: {
+            effectiveDate: "desc",
+          },
+          take: 1,
+          select: {
+            id: true,
+            annualBaseSalary: true,
+            monthlyGross: true,
+            paye: true,
+            netPay: true,
+            effectiveDate: true,
+            endDate: true,
+          },
+        },
+      },
+    }),
+
+    prisma.employee.count({
+      where,
+    }),
+  ]);
+
+  const data = await Promise.all(
+    employees.map(async (employee) => {
+      const latestSalary = employee.salaries[0] ?? null;
+
+      const isActiveSalary =
+        latestSalary !== null && latestSalary.endDate === null;
+
+      const salaryStatus = isActiveSalary
+        ? "ACTIVE"
+        : latestSalary
+          ? "ENDED"
+          : "NOT_CONFIGURED";
+
+      const avatarUrl = employee.avatar_url
+        ? await getPresignedUrl(employee.avatar_url)
+        : null;
+
+      return {
+        employeeId: employee.id,
+
+        firstName: employee.first_name,
+        middleName: employee.middle_name,
+        lastName: employee.last_name,
+
+        employeeName: [
+          employee.first_name,
+          employee.middle_name,
+          employee.last_name,
+        ]
+          .filter(Boolean)
+          .join(" "),
+
+        employeeCode: employee.employee_code,
+        avatarUrl,
+        jobTitle: employee.job_title,
+        employmentStatus: employee.status,
+
+        departments: employee.departments.map(({ department }) => ({
+          id: department.id,
+          name: department.name,
+        })),
+
+        salary: isActiveSalary && latestSalary
+          ? {
+              id: latestSalary.id,
+              annualBaseSalary: Number(latestSalary.annualBaseSalary),
+              monthlyGross: Number(latestSalary.monthlyGross),
+              paye: Number(latestSalary.paye),
+              netPay: Number(latestSalary.netPay),
+              effectiveDate: latestSalary.effectiveDate,
+            }
+          : null,
+
+        salaryStatus,
+      };
+    })
+  );
+
+  return {
+    data,
+
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPreviousPage: page > 1,
+    },
+  };
+};
+
 
 export const getEmployeeSalary = async (employeeId: string) => {
 
@@ -35,7 +270,6 @@ export const getEmployeeSalary = async (employeeId: string) => {
 
   return salary;
 }
-
 
 export const createEmployeeSalary = async (
   employeeId: string,
@@ -118,8 +352,6 @@ export const createEmployeeSalary = async (
 
   return salary;
 };
-
-
 
 export const updateEmployeeSalary = async (
   employeeId: string,
