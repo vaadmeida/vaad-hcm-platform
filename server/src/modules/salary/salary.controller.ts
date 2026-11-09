@@ -1,7 +1,28 @@
 import { Request, Response } from "express";
-import { createEmployeeSalary, getEmployeeSalary, updateEmployeeSalary } from "./salary.service.ts";
+import { createEmployeeSalary, getEmployeeSalary, getEmployeesWithSalary, updateEmployeeSalary } from "./salary.service.ts";
 import { AppError } from "../../errors/appError.ts";
 import { createSalarySchema, updateSalarySchema } from "./salary.validator.ts";
+
+
+export const getAllEmployeesSalaryController = async (
+  req: Request,
+  res: Response
+) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+
+  const result = await getEmployeesWithSalary({
+    page,
+    search: String(req.query.search ?? ""),
+    department: String(req.query.department ?? "all"),
+    salaryStatus: String(req.query.salaryStatus ?? "all"),
+  });
+
+  res.status(200).json({
+    success: true,
+    ...result,
+  });
+};
+
 
 export const getEmployeeSalaryController = async (
     req: Request,
