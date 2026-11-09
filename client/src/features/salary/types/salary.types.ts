@@ -63,3 +63,58 @@ export type CreateEmployeeSalaryDTO = {
   components: CreateSalaryComponentDTO[];
   additionalEarnings: CreateAdditionalEarningDTO[];
 };
+
+
+
+export type SalaryStatus = "ACTIVE" | "ENDED" | "NOT_CONFIGURED";
+
+export interface EmployeeSalarySummary {
+  id: string;
+  annualBaseSalary: number;
+  monthlyGross: number;
+  paye: number;
+  netPay: number;
+  effectiveDate: string;
+}
+
+export interface SalaryDepartment {
+  id: string;
+  name: string;
+}
+
+export interface EmployeeWithSalary {
+  employeeId: string;
+  firstName: string;
+  middleName: string | null;
+  lastName: string;
+  employeeName: string;
+  employeeCode: string | null;
+  avatarUrl: string | null;
+  jobTitle: string | null;
+  employmentStatus: string;
+  departments: SalaryDepartment[];
+  salary: EmployeeSalarySummary | null;
+  salaryStatus: SalaryStatus;
+}
+
+export interface SalaryPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface GetEmployeesSalaryResponse {
+  success: boolean;
+  data: EmployeeWithSalary[];
+  pagination: SalaryPagination;
+}
+
+export interface GetEmployeesSalaryParams {
+  page?: number;
+  search?: string;
+  department?: string;
+  salaryStatus?: SalaryStatus | "all";
+}
