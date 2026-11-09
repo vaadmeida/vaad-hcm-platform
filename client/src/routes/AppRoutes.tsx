@@ -32,6 +32,7 @@ import SecuritySettings from "@/pages/settings/SecuritySettings";
 import IntegrationsSettings from "@/pages/settings/IntegrationsSettings";
 import OnboardingPage from "@/pages/OnboardingPage";
 import NotificationPage from "@/pages/NotificationPage";
+import PayrollPage from "@/pages/PayrollPage";
 
 export const AppRoutes = () => {
    const token = useAuthStore((state) => state.token);
@@ -62,6 +63,7 @@ export const AppRoutes = () => {
                <Route element={<RoleRoute allowedRoles={["admin", "hr"]} />}>
                   <Route path="/departments" element={<DepartmentPage />} />
                   <Route path="/documents" element={<DocumentPage />} />
+                  <Route path="/payroll" element={<PayrollPage />} />                  
                   <Route path="/onboarding" element={<OnboardingPage />} />
                </Route>
 
