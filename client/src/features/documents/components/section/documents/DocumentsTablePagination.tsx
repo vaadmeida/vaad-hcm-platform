@@ -26,9 +26,30 @@ const DocumentsTablePagination = ({
   const start = total === 0 ? 0 : (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
 
-  if (totalPages === 0) {
-    return null;
-  }
+  const getVisiblePages = (): (number | "...")[] => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (page <= 3) {
+      return [1, 2, 3, 4, "...", totalPages];
+    }
+
+    if (page >= totalPages - 2) {
+      return [
+        1,
+        "...",
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+
+    return [1, "...", page - 1, page, page + 1, "...", totalPages];
+  };
+
+  if (totalPages <= 1) return null;
 
   return (
     <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -46,8 +67,15 @@ const DocumentsTablePagination = ({
           Previous
         </button>
 
-        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-          (pageNumber) => (
+        {getVisiblePages().map((pageNumber, index) =>
+          pageNumber === "..." ? (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-2 text-sm text-muted-foreground"
+            >
+              ...
+            </span>
+          ) : (
             <button
               key={pageNumber}
               type="button"
