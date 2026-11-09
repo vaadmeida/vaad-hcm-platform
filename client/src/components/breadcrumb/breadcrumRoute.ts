@@ -155,4 +155,10 @@ export const breadcrumbRoutes = [
       { label: "Notifications", path: "/notifications" },
     ],
   },
+   {
+    match: /^\/payroll$/,
+    breadcrumbs: [
+      { label: "Payroll", path: "/payroll" },
+    ],
+  },
 ];
