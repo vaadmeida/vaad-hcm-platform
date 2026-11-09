@@ -26,7 +26,7 @@ const SidebarItem = ({ item, onItemClick }: SidebarItemProps) => {
     >
       <Icon size={15} />
 
-      <span className="text-sm">{item.title}</span>
+      <span className="text-xs">{item.title}</span>
     </NavLink>
   );
 };
