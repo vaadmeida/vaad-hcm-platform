@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Building2, CalendarDays, FolderOpen, Settings, User, GraduationCap } from "lucide-react";
+import { LayoutDashboard, Users, Building2, CalendarDays, FolderOpen, Settings, User, GraduationCap, Wallet } from "lucide-react";
 
 export const adminSidebar = [
   {
@@ -17,7 +17,7 @@ export const adminSidebar = [
     href: "/departments",
   },
   {
-    title: "Leave Managements",
+    title: "Leave Management",
     icon: CalendarDays,
     href: "/leave",
   },
@@ -25,6 +25,11 @@ export const adminSidebar = [
     title: "Documents",
     icon: FolderOpen,
     href: "/documents",
+  },
+  {
+    title: "Payroll",
+    icon: Wallet,
+    href: "/payroll",
   },
   {
     title: "Onboarding",
@@ -63,6 +68,11 @@ export const hrSidebar = [
     title: "Documents",
     icon: FolderOpen,
     href: "/documents",
+  },
+   {
+    title: "Payroll",
+    icon: Wallet,
+    href: "/payroll",
   },
    {
     title: "Onboarding",
