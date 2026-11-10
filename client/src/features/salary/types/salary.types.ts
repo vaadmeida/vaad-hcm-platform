@@ -57,14 +57,8 @@ export type CreateAdditionalEarningDTO = Omit<
 export type CreateEmployeeSalaryDTO = {
   annualBaseSalary: number;
   effectiveDate: string;
-  monthlyGross: number;
   paye: number;
-  netPay: number;
-  components: CreateSalaryComponentDTO[];
-  additionalEarnings: CreateAdditionalEarningDTO[];
 };
-
-
 
 export type SalaryStatus = "ACTIVE" | "ENDED" | "NOT_CONFIGURED";
 
