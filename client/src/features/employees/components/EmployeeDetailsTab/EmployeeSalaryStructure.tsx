@@ -1,5 +1,4 @@
-import { Pencil, Plus } from "lucide-react";
-import { useState } from "react";
+import { Plus } from "lucide-react";
 
 import ErrorState from "@/components/common/ErrorState";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,7 @@ import AdditionalEarnings from "@/features/salary/components/AdditionalEarnings"
 
 import { useEmployeeSalary } from "@/features/salary/hooks/useEmployeeSalary";
 
-import CreateSalaryModal from "@/features/salary/components/createSalaryModal/CreateSalaryModal";
-import EditSalaryModal from "@/features/salary/components/editSalaryModal/EditSalaryModal";
+
 
 interface EmployeeSalaryStructureProps {
   employee: {
@@ -22,8 +20,6 @@ interface EmployeeSalaryStructureProps {
 const EmployeeSalaryStructure = ({
   employee,
 }: EmployeeSalaryStructureProps) => {
-  const [isAddSalaryOpen, setIsAddSalaryOpen] = useState(false);
-  const [isEditSalaryOpen, setIsEditSalaryOpen] = useState(false);
 
   const {
     data,
@@ -67,18 +63,13 @@ const EmployeeSalaryStructure = ({
           <Button
             type="button"
             className="mt-4 h-9 cursor-pointer gap-2 rounded-lg px-3 text-sm text-white"
-            onClick={() => setIsAddSalaryOpen(true)}
           >
             <Plus className="h-4 w-4" />
             Add Salary
           </Button>
         </div>
 
-        <CreateSalaryModal
-          employeeId={employee.id}
-          open={isAddSalaryOpen}
-          onOpenChange={setIsAddSalaryOpen}
-        />
+       
       </>
     );
   }
@@ -108,14 +99,6 @@ const EmployeeSalaryStructure = ({
             </p>
           </div>
 
-          <Button
-            type="button"
-            className="h-9 cursor-pointer gap-2 rounded-lg px-3 text-sm text-white"
-            onClick={() => setIsEditSalaryOpen(true)}
-          >
-            <Pencil className="h-4 w-4" />
-            Edit Salary
-          </Button>
         </div>
 
         <SalaryOverview salary={salary} />
@@ -125,12 +108,7 @@ const EmployeeSalaryStructure = ({
         <AdditionalEarnings earnings={salary.additionalEarnings} />
       </div>
 
-      <EditSalaryModal
-        employeeId={employee.id}
-        salary={salary}
-        open={isEditSalaryOpen}
-        onOpenChange={setIsEditSalaryOpen}
-      />
+    
     </>
   );
 };
