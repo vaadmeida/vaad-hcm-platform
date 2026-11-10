@@ -1,48 +1,36 @@
 import { z } from "zod";
 
-export const createSalarySchema = z.object({
-  annualBaseSalary: z.coerce.number().positive(),
-  effectiveDate: z.coerce.date(),
-  monthlyGross: z.coerce.number().positive(),
-  paye: z.coerce.number().min(0).default(0),
-  netPay: z.coerce.number().positive(),
-  components: z
-    .array(
-      z.object({
-        name: z.string().min(1, "Component name is required"),
-        percentage: z.number().min(0).max(100),
-        annualAmount: z.number().min(0),
-      })
-    )
-    .min(1, "At least one salary component is required")
-    .refine(
-      (components) => {
-        const totalPercentage = components.reduce(
-          (total, component) => total + component.percentage,
-          0
-        );
-        return Math.abs(totalPercentage - 100) < 0.01;
-      },
-      {
-        message: "Salary component percentages must total 100%.",
-      }
-    ),
+const moneySchema = z.coerce
+  .number()
+  .finite()
+  .multipleOf(0.01, "Amount can have at most 2 decimal places");
 
-  additionalEarnings: z
-    .array(
-      z.object({
-        name: z.string().min(1, "Earning name is required"),
-        amount: z.number().positive(),
-        frequency: z.enum(["MONTHLY", "ANNUAL", "ONE_TIME"]),
-      })
-    )
-    .optional()
-    .default([]),
+export const createSalarySchema = z.object({
+  
+  annualBaseSalary: moneySchema.positive(
+    "Annual base salary must be greater than zero"
+  ),
+
+  effectiveDate: z.coerce.date(),
+
+  paye: moneySchema.min(0).default(0),
+
+  performanceBonus: moneySchema.min(0).default(0),
 });
 
 export type CreateSalaryInput = z.infer<typeof createSalarySchema>;
 
+export const salaryReviewSchema = z.object({
+    annualBaseSalary: moneySchema.positive().optional(),
+    effectiveDate: z.coerce.date(),
+    paye: moneySchema.min(0).optional(),
+}).refine(
+    (data) =>
+        data.annualBaseSalary !== undefined ||
+        data.paye !== undefined,
+    {
+        message: "Provide a new annual base salary or PAYE amount.",
+    }
+);
 
-export const updateSalarySchema = createSalarySchema.partial();
-
-export type UpdateSalaryInput = z.infer<typeof updateSalarySchema>;
+export type SalaryReviewInput = z.infer<typeof salaryReviewSchema>;
