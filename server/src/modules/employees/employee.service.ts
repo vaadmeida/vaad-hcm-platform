@@ -698,6 +698,7 @@ export const getAllEmployees = async (
 
 };
 
+
 export const updateEmployee = async ({
     id,
     data,
@@ -835,6 +836,7 @@ export const updateEmployee = async ({
             "INVALID_EXIT_DATE"
         );
     }
+
     // Track whether the employee's status is changing.
     const statusChanged =
         data.status !== undefined &&
@@ -885,6 +887,19 @@ export const updateEmployee = async ({
             where: { id },
             data: employeeData,
         });
+
+        // End the employee's active salary structure when they exit.
+        if (isExitStatus && nextExitDate) {
+            await tx.employeeSalary.updateMany({
+                where: {
+                    employeeId: id,
+                    endDate: null,
+                },
+                data: {
+                    endDate: new Date(String(nextExitDate)),
+                },
+            });
+        }
 
         // 5. Update department assignments when department_ids is provided.
         if (department_ids !== undefined) {
