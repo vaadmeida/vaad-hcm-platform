@@ -1,26 +1,27 @@
 import { Request, Response } from "express";
-import { createEmployeeSalary, getEmployeeSalary, getEmployeesWithSalary, updateEmployeeSalary } from "./salary.service.ts";
+import { createEmployeeSalary, EmployeeSalaryReview, getEmployeeSalary, getEmployeeSalaryHistory, getEmployeesWithSalary } from "./salary.service.ts";
 import { AppError } from "../../errors/appError.ts";
-import { createSalarySchema, updateSalarySchema } from "./salary.validator.ts";
+import { createSalarySchema, salaryReviewSchema } from "./salary.validator.ts";
+import z from "zod";
 
 
 export const getAllEmployeesSalaryController = async (
-  req: Request,
-  res: Response
+    req: Request,
+    res: Response
 ) => {
-  const page = Math.max(1, Number(req.query.page) || 1);
+    const page = Math.max(1, Number(req.query.page) || 1);
 
-  const result = await getEmployeesWithSalary({
-    page,
-    search: String(req.query.search ?? ""),
-    department: String(req.query.department ?? "all"),
-    salaryStatus: String(req.query.salaryStatus ?? "all"),
-  });
+    const result = await getEmployeesWithSalary({
+        page,
+        search: String(req.query.search ?? ""),
+        department: String(req.query.department ?? "all"),
+        salaryStatus: String(req.query.salaryStatus ?? "all"),
+    });
 
-  res.status(200).json({
-    success: true,
-    ...result,
-  });
+    res.status(200).json({
+        success: true,
+        ...result,
+    });
 };
 
 
@@ -72,15 +73,15 @@ export const getMySalaryController = async (
     });
 };
 
-
 export const createEmployeeSalaryController = async (
     req: Request,
     res: Response
 ) => {
-
     const { employeeId } = req.params;
 
-    if (typeof employeeId !== "string") {
+    const employeeIdValidation = z.string().uuid().safeParse(employeeId);
+
+    if (!employeeIdValidation.success) {
         throw new AppError(
             "Invalid employee ID.",
             400,
@@ -91,16 +92,20 @@ export const createEmployeeSalaryController = async (
     const validation = createSalarySchema.safeParse(req.body);
 
     if (!validation.success) {
-        console.error("Salary validation errors:", validation.error.flatten());
+        console.error(
+            "Salary validation errors:",
+            JSON.stringify(validation.error.flatten(), null, 2)
+        );
 
         throw new AppError(
             "Invalid salary data.",
             400,
-            "INVALID_SALARY_DATA"
+            "INVALID_SALARY_DATA",
+            validation.error.flatten()
         );
     }
     const salary = await createEmployeeSalary(
-        employeeId,
+        employeeIdValidation.data,
         validation.data
     );
 
@@ -111,26 +116,70 @@ export const createEmployeeSalaryController = async (
     });
 };
 
-export const updateEmployeeSalaryController = async (
+export const EmployeeSalaryReviewController = async (
     req: Request,
     res: Response
 ) => {
     const { employeeId } = req.params;
 
-    const result = updateSalarySchema.safeParse(req.body);
+    // 1. Validate employee ID.
+    const employeeIdValidation = z.string().uuid().safeParse(employeeId);
+
+    if (!employeeIdValidation.success) {
+        throw new AppError(
+            "Invalid employee ID.",
+            400,
+            "INVALID_EMPLOYEE_ID"
+        );
+    }
+
+    // 2. Validate salary review data.
+    const result = salaryReviewSchema.safeParse(req.body);
 
     if (!result.success) {
         console.error(
-            "Salary update validation errors:",
+            "Salary review validation errors:",
             result.error.flatten()
         );
 
         throw new AppError(
-            JSON.stringify(result.error.flatten()),
+            "Invalid salary review data.",
             400,
-            "INVALID_SALARY_UPDATE_DATA"
+            "INVALID_SALARY_REVIEW_DATA",
+            result.error.flatten()
         );
     }
+
+    // 3. Process salary review.
+    const salary = await EmployeeSalaryReview(
+        employeeIdValidation.data,
+        result.data
+    );
+
+    // 4. Return newly created salary structure.
+    return res.status(201).json({
+        success: true,
+        message: "Employee salary reviewed successfully.",
+        data: salary,
+    });
+};
+
+
+export const getEmployeeSalaryHistoryController = async (
+    req: Request,
+    res: Response
+) => {
+    const { employeeId } = req.params;
+    const user = req.user;
+
+    if (!user) {
+        throw new AppError(
+            "Unauthorized.",
+            401,
+            "UNAUTHORIZED"
+        );
+    }
+
     if (typeof employeeId !== "string") {
         throw new AppError(
             "Invalid employee ID.",
@@ -139,14 +188,32 @@ export const updateEmployeeSalaryController = async (
         );
     }
 
-    const salary = await updateEmployeeSalary(
-        employeeId,
-        result.data
-    );
+    const validation = z.string().uuid().safeParse(employeeId);
 
-    return res.status(200).json({
+    if (!validation.success) {
+        throw new AppError(
+            "Invalid employee ID.",
+            400,
+            "INVALID_EMPLOYEE_ID"
+        );
+    }
+
+    if (
+        user.role === "employee" &&
+        user.id !== employeeId
+    ) {
+        throw new AppError(
+            "You are not authorized to view this salary history.",
+            403,
+            "FORBIDDEN"
+        );
+    }
+
+    const salaryHistory = await getEmployeeSalaryHistory(employeeId);
+
+    res.status(200).json({
         success: true,
-        message: "Salary structure updated successfully.",
-        data: salary,
+        message: "Employee salary history retrieved successfully.",
+        data: salaryHistory,
     });
 };
