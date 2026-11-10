@@ -1,10 +1,10 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../../config/prisma.ts";
-import { AppError } from "../../errors/appError.ts";
-import { CreateSalaryInput, UpdateSalaryInput } from "./salary.validator.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
+import { AppError } from "../../errors/appError.ts";
+import { calculateSalary } from "./salary.calculation.ts";
 import { EmployeeSalaryFilters } from "./salary.types.ts";
-
+import { CreateSalaryInput, SalaryReviewInput } from "./salary.validator.ts";
 
 
 export const getEmployeesWithSalary = async ({
@@ -237,7 +237,6 @@ export const getEmployeesWithSalary = async ({
   };
 };
 
-
 export const getEmployeeSalary = async (employeeId: string) => {
 
    
@@ -275,49 +274,75 @@ export const createEmployeeSalary = async (
   employeeId: string,
   data: CreateSalaryInput
 ) => {
-  // Confirm employee exists
-  const employee = await prisma.employee.findUnique({
-    where: {
-      id: employeeId,
-    },
+  // 1. Calculate salary values on the backend.
+  const calculatedSalary = calculateSalary({
+    annualBaseSalary: data.annualBaseSalary,
+    paye: data.paye,
   });
 
-  if (!employee) {
+  // 2. Ensure PAYE does not exceed monthly gross.
+  if (calculatedSalary.paye.greaterThan(calculatedSalary.monthlyGross)) {
     throw new AppError(
-      "Employee not found.",
-      404,
-      "EMPLOYEE_NOT_FOUND"
+      "PAYE cannot exceed the employee's monthly gross salary.",
+      400,
+      "INVALID_PAYE"
     );
   }
 
-  // Prevent multiple active salary structures
-  const existingSalary = await prisma.employeeSalary.findFirst({
-    where: {
-      employeeId,
-      endDate: null,
-    },
-  });
-
-  if (existingSalary) {
-    throw new AppError(
-      "Employee already has an active salary structure.",
-      409,
-      "ACTIVE_SALARY_EXISTS"
-    );
-  }
-
+  // 3. Perform checks and create salary records atomically.
   const salary = await prisma.$transaction(async (tx) => {
+    // Confirm employee exists.
+    const employee = await tx.employee.findUnique({
+      where: { id: employeeId },
+    });
+
+    if (!employee) {
+      throw new AppError(
+        "Employee not found.",
+        404,
+        "EMPLOYEE_NOT_FOUND"
+      );
+    }
+
+    // Prevent salary creation for employees who have exited.
+    const exitStatuses = ["resigned", "terminated", "dismissed"];
+
+    if (exitStatuses.includes(employee.status)) {
+      throw new AppError(
+        "Cannot create a salary structure for an employee who has exited.",
+        400,
+        "EMPLOYEE_HAS_EXITED"
+      );
+    }
+
+    // Prevent multiple active salary structures.
+    const existingSalary = await tx.employeeSalary.findFirst({
+      where: {
+        employeeId,
+        endDate: null,
+      },
+    });
+
+    if (existingSalary) {
+      throw new AppError(
+        "Employee already has an active salary structure.",
+        409,
+        "ACTIVE_SALARY_EXISTS"
+      );
+    }
+
+    // Create salary and related records.
     const employeeSalary = await tx.employeeSalary.create({
       data: {
         employeeId,
-        annualBaseSalary: data.annualBaseSalary,
+        annualBaseSalary: calculatedSalary.annualBaseSalary,
         effectiveDate: data.effectiveDate,
-        monthlyGross: data.monthlyGross,
-        paye: data.paye,
-        netPay: data.netPay,
+        monthlyGross: calculatedSalary.monthlyGross,
+        paye: calculatedSalary.paye,
+        netPay: calculatedSalary.netPay,
 
         components: {
-          create: data.components.map((component) => ({
+          create: calculatedSalary.components.map((component) => ({
             name: component.name,
             percentage: component.percentage,
             annualAmount: component.annualAmount,
@@ -325,7 +350,7 @@ export const createEmployeeSalary = async (
         },
 
         additionalEarnings: {
-          create: data.additionalEarnings.map((earning) => ({
+          create: calculatedSalary.additionalEarnings.map((earning) => ({
             name: earning.name,
             amount: earning.amount,
             frequency: earning.frequency,
@@ -353,126 +378,173 @@ export const createEmployeeSalary = async (
   return salary;
 };
 
-export const updateEmployeeSalary = async (
-  employeeId: string,
-  data: UpdateSalaryInput
+
+export const EmployeeSalaryReview = async (
+    employeeId: string,
+    data: SalaryReviewInput
 ) => {
-  const employee = await prisma.employee.findUnique({
-    where: {
-      id: employeeId,
-    },
-  });
 
-  if (!employee) {
-    throw new AppError(
-      "Employee not found.",
-      404,
-      "EMPLOYEE_NOT_FOUND"
-    );
-  }
+    const salary = await prisma.$transaction(async (tx) => {
 
-  const existingSalary = await prisma.employeeSalary.findFirst({
-    where: {
-      employeeId,
-      endDate: null,
-    },
-  });
+        // 1. Confirm employee exists.
+        const employee = await tx.employee.findUnique({
+            where: { id: employeeId },
+        });
 
-  if (!existingSalary) {
-    throw new AppError(
-      "Salary structure not found for this employee.",
-      404,
-      "SALARY_STRUCTURE_NOT_FOUND"
-    );
-  }
+        if (!employee) {
+            throw new AppError(
+                "Employee not found.",
+                404,
+                "EMPLOYEE_NOT_FOUND"
+            );
+        }
 
-  const salary = await prisma.$transaction(async (tx) => {
-    
-    const updateData: Prisma.EmployeeSalaryUpdateInput = {};
+        // 2. Get the employee's current active salary.
+        const existingSalary = await tx.employeeSalary.findFirst({
+            where: {
+                employeeId,
+                endDate: null,
+            },
+        });
 
-    if (data.annualBaseSalary !== undefined) {
-      updateData.annualBaseSalary = data.annualBaseSalary;
-    }
+        if (!existingSalary) {
+            throw new AppError(
+                "Salary structure not found for this employee.",
+                404,
+                "SALARY_STRUCTURE_NOT_FOUND"
+            );
+        }
 
-    if (data.effectiveDate !== undefined) {
-      updateData.effectiveDate = data.effectiveDate;
-    }
+        // 3. Determine the new salary values.
+        const annualBaseSalary =
+            data.annualBaseSalary ??
+            Number(existingSalary.annualBaseSalary);
 
-    if (data.monthlyGross !== undefined) {
-      updateData.monthlyGross = data.monthlyGross;
-    }
+        const paye =
+            data.paye ??
+            Number(existingSalary.paye);
 
-    if (data.paye !== undefined) {
-      updateData.paye = data.paye;
-    }
+        const effectiveDate = data.effectiveDate;
 
-    if (data.netPay !== undefined) {
-      updateData.netPay = data.netPay;
-    }
+        // 4. Ensure the new effective date is after the existing one.
+        if (effectiveDate <= existingSalary.effectiveDate) {
+            throw new AppError(
+                "New salary effective date must be after the current salary effective date.",
+                400,
+                "INVALID_EFFECTIVE_DATE"
+            );
+        }
 
-    await tx.employeeSalary.update({
-      where: {
-        id: existingSalary.id,
-      },
-      data: updateData,
+        // 5. Calculate the new salary structure.
+        const calculatedSalary = calculateSalary({
+            annualBaseSalary,
+            paye,
+        });
+
+        // 6. Close the previous salary record.
+        const previousEndDate = new Date(
+            effectiveDate.getTime() - 1
+        );
+
+        await tx.employeeSalary.update({
+            where: {
+                id: existingSalary.id,
+            },
+            data: {
+                endDate: previousEndDate,
+            },
+        });
+
+        // 7. Create a completely new salary record.
+        const newSalary = await tx.employeeSalary.create({
+            data: {
+                employeeId,
+                annualBaseSalary: calculatedSalary.annualBaseSalary,
+                effectiveDate,
+                monthlyGross: calculatedSalary.monthlyGross,
+                paye: calculatedSalary.paye,
+                netPay: calculatedSalary.netPay,
+
+                components: {
+                    create: calculatedSalary.components.map(
+                        (component) => ({
+                            name: component.name,
+                            percentage: component.percentage,
+                            annualAmount: component.annualAmount,
+                        })
+                    ),
+                },
+
+                additionalEarnings: {
+                    create: calculatedSalary.additionalEarnings.map(
+                        (earning) => ({
+                            name: earning.name,
+                            amount: earning.amount,
+                            frequency: earning.frequency,
+                        })
+                    ),
+                },
+            },
+
+            include: {
+                components: {
+                    orderBy: {
+                        percentage: "desc",
+                    },
+                },
+                additionalEarnings: {
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                },
+            },
+        });
+
+        return newSalary;
     });
 
-    if (data.components !== undefined) {
-      await tx.salaryComponent.deleteMany({
-        where: {
-          salaryId: existingSalary.id,
-        },
-      });
+    return salary;
+};
 
-      if (data.components.length > 0) {
-        await tx.salaryComponent.createMany({
-          data: data.components.map((component) => ({
-            salaryId: existingSalary.id,
-            name: component.name,
-            percentage: component.percentage,
-            annualAmount: component.annualAmount,
-          })),
-        });
-      }
-    }
 
-    if (data.additionalEarnings !== undefined) {
-      await tx.additionalEarning.deleteMany({
-        where: {
-          salaryId: existingSalary.id,
-        },
-      });
-
-      if (data.additionalEarnings.length > 0) {
-        await tx.additionalEarning.createMany({
-          data: data.additionalEarnings.map((earning) => ({
-            salaryId: existingSalary.id,
-            name: earning.name,
-            amount: earning.amount,
-            frequency: earning.frequency,
-          })),
-        });
-      }
-    }
-
-    return tx.employeeSalary.findUnique({
-      where: {
-        id: existingSalary.id,
-      },
-      include: {
-        components: {
-          orderBy: {
-            percentage: "desc",
-          },
-        },
-        additionalEarnings: {
-          orderBy: {
-            createdAt: "asc",
-          },
-        },
-      },
+export const getEmployeeSalaryHistory = async (
+    employeeId: string
+) => {
+    // 1. Confirm employee exists.
+    const employee = await prisma.employee.findUnique({
+        where: { id: employeeId },
+        select: { id: true },
     });
-  });
 
-  return salary;
+    if (!employee) {
+        throw new AppError(
+            "Employee not found.",
+            404,
+            "EMPLOYEE_NOT_FOUND"
+        );
+    }
+
+    // 2. Retrieve all salary records.
+    const salaryHistory = await prisma.employeeSalary.findMany({
+        where: {
+            employeeId,
+        },
+        orderBy: {
+            effectiveDate: "desc",
+        },
+        include: {
+            components: {
+                orderBy: {
+                    percentage: "desc",
+                },
+            },
+            additionalEarnings: {
+                orderBy: {
+                    createdAt: "asc",
+                },
+            },
+        },
+    });
+
+    return salaryHistory;
 };
