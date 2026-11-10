@@ -1,7 +1,5 @@
-
 import { api } from "@/lib/axios.api.ts";
 import type { CreateEmployeeSalaryDTO, EmployeeSalaryResponse, GetEmployeesSalaryParams, GetEmployeesSalaryResponse } from "../types/salary.types.ts";
-
 
 export const getEmployeesWithSalary = async (
   params: GetEmployeesSalaryParams
@@ -12,7 +10,6 @@ export const getEmployeesWithSalary = async (
 
   return response.data;
 };
-
 
 export const getEmployeeSalary = async (
   employeeId: string
