@@ -379,14 +379,34 @@ model SalaryComponent {
   @@index([salaryId])
 }
 
+enum EarningCalculationType {
+  FIXED
+  PERCENTAGE
+}
+
+enum CalculationBaseType {
+  BASIC_SALARY
+  GROSS_SALARY
+  HOUSING_ALLOWANCE
+  TRANSPORT_ALLOWANCE
+  MEDICAL_ALLOWANCE
+  MEAL_ALLOWANCE
+  WARDROBE_ALLOWANCE
+  CUSTOM_AMOUNT
+}
+
 model AdditionalEarning {
-  id        String           @id @default(uuid()) @db.Uuid
-  salaryId  String           @db.Uuid
-  name      String
-  amount    Decimal          @db.Decimal(15, 2)
-  frequency EarningFrequency @default(ANNUAL)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id                  String                 @id @default(uuid()) @db.Uuid
+  salaryId            String                 @db.Uuid
+  name                String
+  amount              Decimal                @db.Decimal(15, 2)
+  calculationType     EarningCalculationType @default(FIXED)
+  percentage          Decimal?               @db.Decimal(5, 2)
+  calculationBase     Decimal?               @db.Decimal(15, 2)
+  calculationBaseType CalculationBaseType?
+  frequency           EarningFrequency       @default(ANNUAL)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
 
   salary EmployeeSalary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
 
