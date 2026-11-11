@@ -1,18 +1,31 @@
 import { useState } from "react";
 import EmployeeSalaryFilter from "./EmployeeSalaryFilters";
 import EmployeeSalaryStructureToolBar from "./EmployeeSalaryStructureToolBar";
+// import EmployeeSalaryTable from "./EmployeeSalaryTable";
+import EmployeeSalaryPagination from "./EmployeeSalaryPagination";
+
 import { useGetEmployeesWithSalary } from "../../hooks/useGetEmployeesWithSalary";
-import type { SalaryStatus } from "../../types/salary.types";
-import EmployeeSalaryTable from "./EmployeeSalaryTable";
+import type {
+    EmployeeWithSalary,
+    SalaryStatus,
+} from "../../types/salary.types";
+
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import EmployeeSalaryPagination from "./EmployeeSalaryPagination";
+import SalaryStructureView from "../SalaryStructureView";
+import AddEmployeeSalaryModal from "../add-salary/AddEmployeeSalaryModal";
 
 const EmployeeSalaryStructure = () => {
     const [search, setSearch] = useState("");
     const [department, setDepartment] = useState("all");
     const [salaryStatus, setSalaryStatus] = useState<SalaryStatus | "all">("all");
     const [page, setPage] = useState(1);
+
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+
+    const [isAddSalaryOpen, setIsAddSalaryOpen] = useState(false);
+    const [addSalaryEmployee, setAddSalaryEmployee] =
+        useState<EmployeeWithSalary | undefined>();
 
     const { data, isLoading, isError } = useGetEmployeesWithSalary({
         page,
@@ -39,6 +52,21 @@ const EmployeeSalaryStructure = () => {
         setSalaryStatus(value);
         setPage(1);
     };
+
+    // const handleAddSalary = (employee: EmployeeWithSalary) => {
+    //     setAddSalaryEmployee(employee);
+    //     setIsAddSalaryOpen(true);
+    // };
+
+    // Show selected employee salary
+    if (selectedEmployeeId) {
+        return (
+            <SalaryStructureView
+                employeeId={selectedEmployeeId}
+                onBack={() => setSelectedEmployeeId(null)}
+            />
+        );
+    }
 
     return (
         <div className="space-y-4">
@@ -67,6 +95,7 @@ const EmployeeSalaryStructure = () => {
                         message="Something went wrong while loading salary records. Please try again."
                     />
                 )}
+
                 {!isLoading && !isError && (
                     <>
                         {employees.length === 0 ? (
@@ -76,11 +105,17 @@ const EmployeeSalaryStructure = () => {
                             />
                         ) : (
                             <div className="hidden md:block">
-                                <EmployeeSalaryTable employees={employees} onEmployeeClick={() => { }} />
+                                 {/* <EmployeeSalaryTable
+                                    employees={employees}
+                                    onViewSalary={setSelectedEmployeeId}
+                                    onReviewSalary={(employeeId) => {
+                                        // Connect existing salary review flow here.
+                                    }}
+                                    onAddSalary={handleAddSalary}
+                                />  */}
                             </div>
                         )}
 
-                        {/* Render pagination here */}
                         {pagination && (
                             <EmployeeSalaryPagination
                                 pagination={pagination}
@@ -90,6 +125,18 @@ const EmployeeSalaryStructure = () => {
                     </>
                 )}
             </section>
+
+            <AddEmployeeSalaryModal
+                open={isAddSalaryOpen}
+                onOpenChange={(open) => {
+                    setIsAddSalaryOpen(open);
+
+                    if (!open) {
+                        setAddSalaryEmployee(undefined);
+                    }
+                }}
+                employee={addSalaryEmployee}
+            />
         </div>
     );
 };
