@@ -6,15 +6,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import AddEmployeeSalaryForm from "./AddEmployeeSalaryForm";
+import type { EmployeeWithSalary } from "../../types/salary.types";
 
 interface AddEmployeeSalaryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  employee?: EmployeeWithSalary;
 }
 
 const AddEmployeeSalaryModal = ({
   open,
   onOpenChange,
+  employee,
 }: AddEmployeeSalaryModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -27,6 +30,8 @@ const AddEmployeeSalaryModal = ({
         </DialogHeader>
 
         <AddEmployeeSalaryForm
+          key={employee?.employeeId ?? "new-employee"}
+          employee={employee}
           onSuccess={() => onOpenChange(false)}
         />
       </DialogContent>
