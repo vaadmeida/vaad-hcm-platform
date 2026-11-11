@@ -3,8 +3,83 @@ import prisma from "../../config/prisma.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 import { AppError } from "../../errors/appError.ts";
 import { calculateSalary } from "./salary.calculation.ts";
-import { EmployeeSalaryFilters } from "./salary.types.ts";
+import { AdditionalEarningFrequency, CalculationBaseType, EmployeeSalaryFilters } from "./salary.types.ts";
 import { CreateSalaryInput, SalaryReviewInput } from "./salary.validator.ts";
+
+
+const resolveCalculationBase = (
+  calculationBaseType: CalculationBaseType,
+  calculatedSalary: ReturnType<typeof calculateSalary>,
+  frequency: AdditionalEarningFrequency,
+  customBase?: number
+): Prisma.Decimal => {
+  // Custom amount is already entered in the selected frequency.
+  if (calculationBaseType === "CUSTOM_AMOUNT") {
+    if (customBase == null || customBase <= 0) {
+      throw new AppError(
+        "A valid custom calculation base is required.",
+        400,
+        "INVALID_CUSTOM_CALCULATION_BASE"
+      );
+    }
+
+    return new Prisma.Decimal(customBase.toString());
+  }
+
+  let annualBase: Prisma.Decimal;
+
+  switch (calculationBaseType) {
+    case "GROSS_SALARY":
+      annualBase = calculatedSalary.annualBaseSalary;
+      break;
+
+    case "BASIC_SALARY":
+    case "HOUSING_ALLOWANCE":
+    case "TRANSPORT_ALLOWANCE":
+    case "MEDICAL_ALLOWANCE":
+    case "MEAL_ALLOWANCE":
+    case "WARDROBE_ALLOWANCE": {
+      const componentNames: Record<string, string> = {
+        BASIC_SALARY: "Basic Salary",
+        HOUSING_ALLOWANCE: "Housing Allowance",
+        TRANSPORT_ALLOWANCE: "Transport Allowance",
+        MEDICAL_ALLOWANCE: "Medical Allowance",
+        MEAL_ALLOWANCE: "Meal Allowance",
+        WARDROBE_ALLOWANCE: "Wardrobe Allowance",
+      };
+
+      const component = calculatedSalary.components.find(
+        (item) => item.name === componentNames[calculationBaseType]
+      );
+
+      if (!component) {
+        throw new AppError(
+          "Selected salary component was not found.",
+          400,
+          "CALCULATION_BASE_NOT_FOUND"
+        );
+      }
+
+      annualBase = component.annualAmount;
+      break;
+    }
+
+    default:
+      throw new AppError(
+        "Invalid calculation base type.",
+        400,
+        "INVALID_CALCULATION_BASE_TYPE"
+      );
+  }
+
+  // Annual uses annual values.
+  // Monthly and One-Time use monthly equivalents.
+  if (frequency === "ANNUAL") {
+    return annualBase;
+  }
+
+  return annualBase.div(12).toDecimalPlaces(2);
+};
 
 
 export const getEmployeesWithSalary = async ({
@@ -22,90 +97,90 @@ export const getEmployeesWithSalary = async ({
       // Search filter
       ...(search.trim()
         ? [
-            {
-              OR: [
-                {
-                  first_name: {
-                    contains: search.trim(),
-                    mode: "insensitive" as const,
-                  },
+          {
+            OR: [
+              {
+                first_name: {
+                  contains: search.trim(),
+                  mode: "insensitive" as const,
                 },
-                {
-                  middle_name: {
-                    contains: search.trim(),
-                    mode: "insensitive" as const,
-                  },
+              },
+              {
+                middle_name: {
+                  contains: search.trim(),
+                  mode: "insensitive" as const,
                 },
-                {
-                  last_name: {
-                    contains: search.trim(),
-                    mode: "insensitive" as const,
-                  },
+              },
+              {
+                last_name: {
+                  contains: search.trim(),
+                  mode: "insensitive" as const,
                 },
-                {
-                  employee_code: {
-                    contains: search.trim(),
-                    mode: "insensitive" as const,
-                  },
+              },
+              {
+                employee_code: {
+                  contains: search.trim(),
+                  mode: "insensitive" as const,
                 },
-                {
-                  email: {
-                    contains: search.trim(),
-                    mode: "insensitive" as const,
-                  },
+              },
+              {
+                email: {
+                  contains: search.trim(),
+                  mode: "insensitive" as const,
                 },
-              ],
-            },
-          ]
+              },
+            ],
+          },
+        ]
         : []),
 
       // Department filter
       ...(department !== "all"
         ? [
-            {
-              departments: {
-                some: {
-                  department: {
-                    is: {
-                      id: department,
-                    },
+          {
+            departments: {
+              some: {
+                department: {
+                  is: {
+                    id: department,
                   },
                 },
               },
             },
-          ]
+          },
+        ]
         : []),
 
       // Salary status filter
       ...(salaryStatus === "ACTIVE"
         ? [
+          {
+            salaries: {
+              some: {
+                endDate: null,
+              },
+            },
+          },
+        ]
+        : salaryStatus === "ENDED"
+          ? [
             {
               salaries: {
-                some: {
+                some: {},
+                none: {
                   endDate: null,
                 },
               },
             },
           ]
-        : salaryStatus === "ENDED"
-          ? [
+          : salaryStatus === "NOT_CONFIGURED"
+            ? [
               {
                 salaries: {
-                  some: {},
-                  none: {
-                    endDate: null,
-                  },
+                  none: {},
                 },
               },
             ]
-          : salaryStatus === "NOT_CONFIGURED"
-            ? [
-                {
-                  salaries: {
-                    none: {},
-                  },
-                },
-              ]
             : []),
     ],
   };
@@ -209,13 +284,13 @@ export const getEmployeesWithSalary = async ({
 
         salary: isActiveSalary && latestSalary
           ? {
-              id: latestSalary.id,
-              annualBaseSalary: Number(latestSalary.annualBaseSalary),
-              monthlyGross: Number(latestSalary.monthlyGross),
-              paye: Number(latestSalary.paye),
-              netPay: Number(latestSalary.netPay),
-              effectiveDate: latestSalary.effectiveDate,
-            }
+            id: latestSalary.id,
+            annualBaseSalary: Number(latestSalary.annualBaseSalary),
+            monthlyGross: Number(latestSalary.monthlyGross),
+            paye: Number(latestSalary.paye),
+            netPay: Number(latestSalary.netPay),
+            effectiveDate: latestSalary.effectiveDate,
+          }
           : null,
 
         salaryStatus,
@@ -239,7 +314,7 @@ export const getEmployeesWithSalary = async ({
 
 export const getEmployeeSalary = async (employeeId: string) => {
 
-   
+
   const salary = await prisma.employeeSalary.findFirst({
     where: {
       employeeId,
@@ -270,6 +345,7 @@ export const getEmployeeSalary = async (employeeId: string) => {
   return salary;
 }
 
+
 export const createEmployeeSalary = async (
   employeeId: string,
   data: CreateSalaryInput
@@ -289,7 +365,120 @@ export const createEmployeeSalary = async (
     );
   }
 
-  // 3. Perform checks and create salary records atomically.
+  // 3. Calculate HR-created additional earnings.
+  const customEarnings = (data.additionalEarnings ?? []).map((earning) => {
+    if (earning.calculationType === "FIXED") {
+      if (
+        earning.amount == null ||
+        !Number.isFinite(earning.amount) ||
+        earning.amount < 0
+      ) {
+        throw new AppError(
+          `Invalid amount for ${earning.name}.`,
+          400,
+          "INVALID_EARNING_AMOUNT"
+        );
+      }
+
+      return {
+        name: earning.name,
+        amount: new Prisma.Decimal(earning.amount.toString()),
+        calculationType: "FIXED" as const,
+        percentage: null,
+        calculationBase: null,
+        calculationBaseType: null,
+        frequency: earning.frequency,
+      };
+    }
+
+    // Validate percentage configuration.
+    if (
+      earning.percentage == null ||
+      !Number.isFinite(earning.percentage) ||
+      earning.percentage <= 0 ||
+      earning.percentage > 100 ||
+      !earning.calculationBaseType
+    ) {
+      throw new AppError(
+        `Invalid percentage configuration for ${earning.name}.`,
+        400,
+        "INVALID_PERCENTAGE_EARNING"
+      );
+    }
+
+    const calculationBase = resolveCalculationBase(
+      earning.calculationBaseType,
+      calculatedSalary,
+      earning.frequency,
+      earning.calculationBase ?? undefined
+    );
+
+    const amount = calculationBase
+      .mul(earning.percentage)
+      .div(100)
+      .toDecimalPlaces(2);
+
+    return {
+      name: earning.name,
+      amount,
+      calculationType: "PERCENTAGE" as const,
+      percentage: new Prisma.Decimal(earning.percentage.toString()),
+      calculationBase,
+      calculationBaseType: earning.calculationBaseType,
+      frequency: earning.frequency,
+    };
+  });
+
+  // 4. Get annual Basic Salary for system-generated earnings.
+  const basicSalary = calculatedSalary.components.find(
+    (component) => component.name === "Basic Salary"
+  );
+
+  if (!basicSalary) {
+    throw new AppError(
+      "Basic salary component not found.",
+      400,
+      "BASIC_SALARY_NOT_FOUND"
+    );
+  }
+
+  // 5. Map system-generated earnings with percentage metadata.
+  const systemEarnings = calculatedSalary.additionalEarnings.map(
+    (earning) => {
+      const percentage =
+        earning.name === "Leave Allowance"
+          ? 10
+          : earning.name === "13th Month"
+            ? 15
+            : null;
+
+      if (percentage === null) {
+        throw new AppError(
+          `Unknown system-generated earning: ${earning.name}.`,
+          400,
+          "UNKNOWN_SYSTEM_EARNING"
+        );
+      }
+
+      return {
+        name: earning.name,
+        amount: earning.amount,
+        calculationType: "PERCENTAGE" as const,
+        percentage: new Prisma.Decimal(percentage.toString()),
+        calculationBase: basicSalary.annualAmount,
+        calculationBaseType: "BASIC_SALARY" as const,
+        frequency: earning.frequency,
+      };
+    }
+  );
+
+  // 6. Combine system-generated and HR-created earnings.
+  const allAdditionalEarnings = [
+    ...systemEarnings,
+    ...customEarnings,
+  ];
+
+  // 7. Perform checks and create salary records atomically.
   const salary = await prisma.$transaction(async (tx) => {
     // Confirm employee exists.
     const employee = await tx.employee.findUnique({
@@ -350,11 +539,7 @@ export const createEmployeeSalary = async (
         },
 
         additionalEarnings: {
-          create: calculatedSalary.additionalEarnings.map((earning) => ({
-            name: earning.name,
-            amount: earning.amount,
-            frequency: earning.frequency,
-          })),
+          create: allAdditionalEarnings,
         },
       },
 
@@ -380,171 +565,327 @@ export const createEmployeeSalary = async (
 
 
 export const EmployeeSalaryReview = async (
-    employeeId: string,
-    data: SalaryReviewInput
+  employeeId: string,
+  data: SalaryReviewInput
 ) => {
-
-    const salary = await prisma.$transaction(async (tx) => {
-
-        // 1. Confirm employee exists.
-        const employee = await tx.employee.findUnique({
-            where: { id: employeeId },
-        });
-
-        if (!employee) {
-            throw new AppError(
-                "Employee not found.",
-                404,
-                "EMPLOYEE_NOT_FOUND"
-            );
-        }
-
-        // 2. Get the employee's current active salary.
-        const existingSalary = await tx.employeeSalary.findFirst({
-            where: {
-                employeeId,
-                endDate: null,
-            },
-        });
-
-        if (!existingSalary) {
-            throw new AppError(
-                "Salary structure not found for this employee.",
-                404,
-                "SALARY_STRUCTURE_NOT_FOUND"
-            );
-        }
-
-        // 3. Determine the new salary values.
-        const annualBaseSalary =
-            data.annualBaseSalary ??
-            Number(existingSalary.annualBaseSalary);
-
-        const paye =
-            data.paye ??
-            Number(existingSalary.paye);
-
-        const effectiveDate = data.effectiveDate;
-
-        // 4. Ensure the new effective date is after the existing one.
-        if (effectiveDate <= existingSalary.effectiveDate) {
-            throw new AppError(
-                "New salary effective date must be after the current salary effective date.",
-                400,
-                "INVALID_EFFECTIVE_DATE"
-            );
-        }
-
-        // 5. Calculate the new salary structure.
-        const calculatedSalary = calculateSalary({
-            annualBaseSalary,
-            paye,
-        });
-
-        // 6. Close the previous salary record.
-        const previousEndDate = new Date(
-            effectiveDate.getTime() - 1
-        );
-
-        await tx.employeeSalary.update({
-            where: {
-                id: existingSalary.id,
-            },
-            data: {
-                endDate: previousEndDate,
-            },
-        });
-
-        // 7. Create a completely new salary record.
-        const newSalary = await tx.employeeSalary.create({
-            data: {
-                employeeId,
-                annualBaseSalary: calculatedSalary.annualBaseSalary,
-                effectiveDate,
-                monthlyGross: calculatedSalary.monthlyGross,
-                paye: calculatedSalary.paye,
-                netPay: calculatedSalary.netPay,
-
-                components: {
-                    create: calculatedSalary.components.map(
-                        (component) => ({
-                            name: component.name,
-                            percentage: component.percentage,
-                            annualAmount: component.annualAmount,
-                        })
-                    ),
-                },
-
-                additionalEarnings: {
-                    create: calculatedSalary.additionalEarnings.map(
-                        (earning) => ({
-                            name: earning.name,
-                            amount: earning.amount,
-                            frequency: earning.frequency,
-                        })
-                    ),
-                },
-            },
-
-            include: {
-                components: {
-                    orderBy: {
-                        percentage: "desc",
-                    },
-                },
-                additionalEarnings: {
-                    orderBy: {
-                        createdAt: "asc",
-                    },
-                },
-            },
-        });
-
-        return newSalary;
-    });
-
-    return salary;
-};
-
-
-export const getEmployeeSalaryHistory = async (
-    employeeId: string
-) => {
+  const salary = await prisma.$transaction(async (tx) => {
     // 1. Confirm employee exists.
-    const employee = await prisma.employee.findUnique({
-        where: { id: employeeId },
-        select: { id: true },
+    const employee = await tx.employee.findUnique({
+      where: { id: employeeId },
     });
 
     if (!employee) {
-        throw new AppError(
-            "Employee not found.",
-            404,
-            "EMPLOYEE_NOT_FOUND"
-        );
+      throw new AppError(
+        "Employee not found.",
+        404,
+        "EMPLOYEE_NOT_FOUND"
+      );
     }
 
-    // 2. Retrieve all salary records.
-    const salaryHistory = await prisma.employeeSalary.findMany({
-        where: {
-            employeeId,
-        },
-        orderBy: {
-            effectiveDate: "desc",
-        },
-        include: {
-            components: {
-                orderBy: {
-                    percentage: "desc",
-                },
-            },
-            additionalEarnings: {
-                orderBy: {
-                    createdAt: "asc",
-                },
-            },
-        },
+    // 2. Prevent salary reviews for employees who have exited.
+    const exitStatuses = ["resigned", "terminated", "dismissed"];
+
+    if (exitStatuses.includes(employee.status)) {
+      throw new AppError(
+        "Cannot review the salary of an employee who has exited.",
+        400,
+        "EMPLOYEE_HAS_EXITED"
+      );
+    }
+
+    // 3. Get the employee's current active salary.
+    const existingSalary = await tx.employeeSalary.findFirst({
+      where: {
+        employeeId,
+        endDate: null,
+      },
+      include: {
+        additionalEarnings: true,
+        components: true,
+      },
     });
 
-    return salaryHistory;
+    if (!existingSalary) {
+      throw new AppError(
+        "Salary structure not found for this employee.",
+        404,
+        "SALARY_STRUCTURE_NOT_FOUND"
+      );
+    }
+
+    // 4. Determine proposed salary values.
+    const annualBaseSalary =
+      data.annualBaseSalary ??
+      Number(existingSalary.annualBaseSalary);
+
+    const paye =
+      data.paye ??
+      Number(existingSalary.paye);
+
+    const effectiveDate = data.effectiveDate;
+
+    // 5. Validate effective date.
+    if (effectiveDate <= existingSalary.effectiveDate) {
+      throw new AppError(
+        "New salary effective date must be after the current salary effective date.",
+        400,
+        "INVALID_EFFECTIVE_DATE"
+      );
+    }
+
+    // 6. Calculate the proposed salary structure.
+    const calculatedSalary = calculateSalary({
+      annualBaseSalary,
+      paye,
+    });
+
+    // 7. Ensure PAYE does not exceed monthly gross.
+    if (calculatedSalary.paye.greaterThan(calculatedSalary.monthlyGross)) {
+      throw new AppError(
+        "PAYE cannot exceed the employee's monthly gross salary.",
+        400,
+        "INVALID_PAYE"
+      );
+    }
+
+    // 8. Identify existing HR-created additional earnings.
+    // System-generated earnings are recreated automatically.
+    const existingCustomEarnings =
+      existingSalary.additionalEarnings.filter(
+        (earning) =>
+          earning.name !== "Leave Allowance" &&
+          earning.name !== "13th Month"
+      );
+
+    // 9. Use submitted earnings or preserve existing custom earnings.
+    const earningsToProcess =
+      data.additionalEarnings ??
+      existingCustomEarnings.map((earning) => ({
+        name: earning.name,
+        calculationType: earning.calculationType,
+        amount:
+          earning.amount != null
+            ? Number(earning.amount)
+            : undefined,
+        percentage:
+          earning.percentage != null
+            ? Number(earning.percentage)
+            : undefined,
+        calculationBaseType:
+          earning.calculationBaseType ?? undefined,
+        calculationBase:
+          earning.calculationBase != null
+            ? Number(earning.calculationBase)
+            : undefined,
+        frequency: earning.frequency,
+      }));
+
+    // 10. Recalculate HR-created additional earnings.
+    const customEarnings = earningsToProcess.map((earning) => {
+      if (earning.calculationType === "FIXED") {
+        if (
+          earning.amount == null ||
+          !Number.isFinite(earning.amount) ||
+          earning.amount < 0
+        ) {
+          throw new AppError(
+            `Invalid amount for ${earning.name}.`,
+            400,
+            "INVALID_EARNING_AMOUNT"
+          );
+        }
+
+        return {
+          name: earning.name,
+          amount: new Prisma.Decimal(earning.amount.toString()),
+          calculationType: "FIXED" as const,
+          percentage: null,
+          calculationBase: null,
+          calculationBaseType: null,
+          frequency: earning.frequency,
+        };
+      }
+
+      if (
+        earning.percentage == null ||
+        !Number.isFinite(earning.percentage) ||
+        earning.percentage <= 0 ||
+        earning.percentage > 100 ||
+        !earning.calculationBaseType
+      ) {
+        throw new AppError(
+          `Invalid percentage configuration for ${earning.name}.`,
+          400,
+          "INVALID_PERCENTAGE_EARNING"
+        );
+      }
+
+      const calculationBase = resolveCalculationBase(
+        earning.calculationBaseType,
+        calculatedSalary,
+        earning.frequency,
+        earning.calculationBase ?? undefined
+      );
+
+      const amount = calculationBase
+        .mul(earning.percentage)
+        .div(100)
+        .toDecimalPlaces(2);
+
+      return {
+        name: earning.name,
+        amount,
+        calculationType: "PERCENTAGE" as const,
+        percentage: new Prisma.Decimal(
+          earning.percentage.toString()
+        ),
+        calculationBase,
+        calculationBaseType: earning.calculationBaseType,
+        frequency: earning.frequency,
+      };
+    });
+
+    // 11. Get annual Basic Salary for system-generated earnings.
+    const basicSalary = calculatedSalary.components.find(
+      (component) => component.name === "Basic Salary"
+    );
+
+    if (!basicSalary) {
+      throw new AppError(
+        "Basic salary component not found.",
+        400,
+        "BASIC_SALARY_NOT_FOUND"
+      );
+    }
+
+    // 12. Recreate system-generated earnings with percentage metadata.
+    const systemEarnings = calculatedSalary.additionalEarnings.map(
+      (earning) => {
+        const percentage =
+          earning.name === "Leave Allowance"
+            ? 10
+            : earning.name === "13th Month"
+              ? 15
+              : null;
+
+        if (percentage === null) {
+          throw new AppError(
+            `Unknown system-generated earning: ${earning.name}.`,
+            400,
+            "UNKNOWN_SYSTEM_EARNING"
+          );
+        }
+
+        return {
+          name: earning.name,
+          amount: earning.amount,
+          frequency: earning.frequency,
+          calculationType: "PERCENTAGE" as const,
+          percentage: new Prisma.Decimal(percentage.toString()),
+          calculationBase: basicSalary.annualAmount,
+          calculationBaseType: "BASIC_SALARY" as const,
+        };
+      }
+    );
+
+    // 13. Close the previous salary record.
+    const previousEndDate = new Date(
+      effectiveDate.getTime() - 1
+    );
+
+    await tx.employeeSalary.update({
+      where: {
+        id: existingSalary.id,
+      },
+      data: {
+        endDate: previousEndDate,
+      },
+    });
+
+    // 14. Create the new salary record.
+    const newSalary = await tx.employeeSalary.create({
+      data: {
+        employeeId,
+        annualBaseSalary: calculatedSalary.annualBaseSalary,
+        effectiveDate,
+        monthlyGross: calculatedSalary.monthlyGross,
+        paye: calculatedSalary.paye,
+        netPay: calculatedSalary.netPay,
+
+        components: {
+          create: calculatedSalary.components.map((component) => ({
+            name: component.name,
+            percentage: component.percentage,
+            annualAmount: component.annualAmount,
+          })),
+        },
+
+        additionalEarnings: {
+          create: [
+            ...systemEarnings,
+            ...customEarnings,
+          ],
+        },
+      },
+
+      include: {
+        components: {
+          orderBy: {
+            percentage: "desc",
+          },
+        },
+        additionalEarnings: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
+    });
+
+    return newSalary;
+  });
+
+  return salary;
+};
+
+export const getEmployeeSalaryHistory = async (
+  employeeId: string
+) => {
+  // 1. Confirm employee exists.
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { id: true },
+  });
+
+  if (!employee) {
+    throw new AppError(
+      "Employee not found.",
+      404,
+      "EMPLOYEE_NOT_FOUND"
+    );
+  }
+
+  // 2. Retrieve all salary records.
+  const salaryHistory = await prisma.employeeSalary.findMany({
+    where: {
+      employeeId,
+    },
+    orderBy: {
+      effectiveDate: "desc",
+    },
+    include: {
+      components: {
+        orderBy: {
+          percentage: "desc",
+        },
+      },
+      additionalEarnings: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
+  });
+
+  return salaryHistory;
 };
