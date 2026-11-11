@@ -1,3 +1,4 @@
+
 import type { AdditionalEarning } from "@/features/salary/types/salary.types";
 
 interface AdditionalEarningsProps {
@@ -22,6 +23,14 @@ const formatFrequency = (frequency: AdditionalEarning["frequency"]) => {
     default:
       return frequency;
   }
+};
+
+const formatCalculation = (earning: AdditionalEarning) => {
+  if (earning.percentage != null) {
+    return `${Number(earning.percentage)}% of Annual Basic`;
+  }
+
+  return "Fixed amount";
 };
 
 const AdditionalEarnings = ({
@@ -62,6 +71,10 @@ const AdditionalEarnings = ({
                   Earning
                 </th>
 
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Calculation
+                </th>
+
                 <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">
                   Amount
                 </th>
@@ -82,6 +95,12 @@ const AdditionalEarnings = ({
                     <p className="text-sm font-medium text-gray-900">
                       {earning.name}
                     </p>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span className="inline-flex rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      {formatCalculation(earning)}
+                    </span>
                   </td>
 
                   <td className="px-6 py-4 text-right">
@@ -107,6 +126,8 @@ const AdditionalEarnings = ({
                   </p>
                 </td>
 
+                <td />
+                
                 <td className="px-6 py-4 text-right">
                   <p className="text-sm font-bold text-gray-900">
                     {formatCurrency(totalAmount)}
