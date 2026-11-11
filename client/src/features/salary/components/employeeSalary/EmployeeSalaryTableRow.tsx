@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 
 interface EmployeeSalaryTableRowProps {
     employee: EmployeeWithSalary;
-    onClick: (employeeId: string) => void;
+    onViewSalary: (employeeId: string) => void;
+    onReviewSalary: (employeeId: string) => void;
+  onAddSalary: (employee: EmployeeWithSalary) => void;
 }
 
 const formatCurrency = (amount: number) =>
@@ -28,7 +30,9 @@ const getInitials = (firstName: string, lastName: string) =>
 
 const EmployeeSalaryTableRow = ({
     employee,
-    onClick,
+    onViewSalary,
+    onReviewSalary,
+    onAddSalary,    
 }: EmployeeSalaryTableRowProps) => {
     const salary = employee.salary;
 
@@ -113,7 +117,7 @@ const EmployeeSalaryTableRow = ({
                         {salary ? (
                             <>
                                 <DropdownMenuItem
-                                    onClick={() => onClick(employee.employeeId)}
+                                    onClick={() => onViewSalary(employee.employeeId)}
                                     className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground focus:bg-muted/10"
                                 >
                                     <Eye className="h-4 w-4 text-muted-foreground" />
@@ -122,7 +126,7 @@ const EmployeeSalaryTableRow = ({
 
                                 {employee.salaryStatus === "ACTIVE" && (
                                     <DropdownMenuItem
-                                        onClick={() => onClick(employee.employeeId)}
+                                       onClick={() => onReviewSalary(employee.employeeId)}
                                         className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground focus:bg-muted/10"
                                     >
                                         <Pencil className="h-4 w-4 text-muted-foreground" />
@@ -132,7 +136,7 @@ const EmployeeSalaryTableRow = ({
                             </>
                         ) : (
                             <DropdownMenuItem
-                                onClick={() => onClick(employee.employeeId)}
+                                onClick={() => onAddSalary(employee)}
                                 className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-primary focus:bg-primary/5 focus:text-primary"
                             >
                                 <Plus className="h-4 w-4" />
