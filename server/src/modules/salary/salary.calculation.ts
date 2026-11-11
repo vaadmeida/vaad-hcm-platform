@@ -1,3 +1,4 @@
+
 import { Prisma } from "@prisma/client";
 import { AppError } from "../../errors/appError.ts";
 
@@ -62,19 +63,29 @@ export const calculateSalary = ({
     .minus(monthlyPaye)
     .toDecimalPlaces(2);
 
-  // Calculate annual additional earnings from annual basic salary.
+  // Calculate system-generated additional earnings.
+  const calculationBase = basicSalary.annualAmount;
+
   const additionalEarnings = [
     {
       name: "Leave Allowance",
-      amount: basicSalary.annualAmount
-        .mul(0.10)
+      calculationType: "PERCENTAGE" as const,
+      percentage: new Prisma.Decimal(10),
+      calculationBase,
+      amount: calculationBase
+        .mul(10)
+        .div(100)
         .toDecimalPlaces(2),
       frequency: "ANNUAL" as const,
     },
     {
       name: "13th Month",
-      amount: basicSalary.annualAmount
-        .mul(0.15)
+      calculationType: "PERCENTAGE" as const,
+      percentage: new Prisma.Decimal(15),
+      calculationBase,
+      amount: calculationBase
+        .mul(15)
+        .div(100)
         .toDecimalPlaces(2),
       frequency: "ANNUAL" as const,
     },
