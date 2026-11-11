@@ -18,6 +18,9 @@ export type AdditionalEarning = {
   salaryId: string;
   name: string;
   amount: number;
+  calculationType: "FIXED" | "PERCENTAGE";
+  percentage: number | null;
+  calculationBase: number | null;
   frequency: AdditionalEarningFrequency;
   createdAt: string;
   updatedAt: string;
