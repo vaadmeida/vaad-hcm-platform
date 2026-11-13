@@ -66,3 +66,60 @@ export const approveOrRejectSchema = z.discriminatedUnion("action", [
 export const cancelLeaveRequestParamsSchema = z.object({
   id: z.uuid("Invalid leave request ID"),
 });
+
+
+export const updateLeaveTypeSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(3, "Leave type name must be at least 3 characters.")
+      .optional(),
+
+    is_paid: z.boolean().optional(),
+
+    carries_over: z.boolean().optional(),
+
+    requires_document: z.boolean().optional(),
+
+    max_carryover_days: z
+      .number()
+      .int()
+      .min(0, "Maximum carryover days cannot be negative.")
+      .nullable()
+      .optional(),
+
+    default_days_per_year: z
+      .number()
+      .int()
+      .min(0, "Default days per year cannot be negative.")
+      .nullable()
+      .optional(),
+  })
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    {
+      message: "Provide at least one field to update.",
+    }
+  )
+  .refine(
+    (data) =>
+      !(data.is_paid === false && data.carries_over === true),
+    {
+      message: "Unpaid leave cannot carry over days.",
+      path: ["carries_over"],
+    }
+  )
+  .refine(
+    (data) =>
+      !(
+        data.carries_over === false &&
+        (data.max_carryover_days ?? 0) > 0
+      ),
+    {
+      message:
+        "Maximum carryover days must be 0 when carryover is disabled.",
+      path: ["max_carryover_days"],
+    }
+  );
+  
