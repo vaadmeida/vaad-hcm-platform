@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
-import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, employeeIdParamsSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema } from "./leave.validator.ts"
+import { approveOrRejectParamsSchema, approveOrRejectSchema, cancelLeaveRequestParamsSchema, CreateLeaveTypeSchema, employeeIdParamsSchema, getLeaveBalanceParamsSchema, getLeaveRequestSchema, getLeaveSchema, submitRequestSchema, updateLeaveTypeSchema } from "./leave.validator.ts"
 import { AppError } from "../../errors/appError.ts";
-import { approveOrRejectRequest, cancelRequest, createLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getCurrentlyOnLeave, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequestById, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, submitLeaveRequests } from "./leave.service.ts";
+import { approveOrRejectRequest, cancelRequest, createLeaveTypes, deleteLeaveTypes, getAdminLeaveStats, getAllLeaveBalances, getAllLeaveTypes, getCurrentlyOnLeave, getEmployeeLeaveBalance, getEmployeeLeaveStats, getLeaveRequestById, getLeaveRequests, getLeaveTypes, getManagerLeaveStats, getMyLeaveBalance, getRecentLeaveRequest, getTeamLeaveBalances, submitLeaveRequests, updateLeaveTypes } from "./leave.service.ts";
 import z from "zod";
 import { LeaveStats } from "./leave.types.ts";
 
@@ -41,6 +41,49 @@ export const createLeaveTypesController = async (req: Request, res: Response) =>
 
 }
 
+export const updateLeaveTypesController = async (
+  req: Request,
+  res: Response,
+
+) => {
+
+    const validatedData = updateLeaveTypeSchema.parse(req.body);
+
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    if (!id) {
+      throw new AppError(
+        "Leave type ID is required.",
+        400,
+        "INVALID_LEAVE_TYPE_ID"
+      );
+    }
+
+    if (!req.user) {
+      throw new AppError(
+        "Authentication required.",
+        401,
+        "UNAUTHORIZED"
+      );
+    }
+
+    const leaveType = await updateLeaveTypes({
+      id,
+      ...validatedData,
+            max_carryover_days: validatedData.max_carryover_days ?? undefined,
+      user: req.user,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Leave type updated successfully.",
+      data: leaveType,
+    });
+
+};
+
 export const getLeaveTypesController = async (req: Request, res: Response) => {
 
     const parsed = getLeaveSchema.safeParse(req.params)
@@ -63,6 +106,41 @@ export const getLeaveTypesController = async (req: Request, res: Response) => {
 
 }
 
+export const deleteLeaveTypesController = async (
+  req: Request,
+  res: Response,
+) => {
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    if (!id) {
+      throw new AppError(
+        "Leave type ID is required.",
+        400,
+        "INVALID_LEAVE_TYPE_ID"
+      );
+    }
+
+    if (!req.user) {
+      throw new AppError(
+        "Authentication required.",
+        401,
+        "UNAUTHORIZED"
+      );
+    }
+
+    const deletedLeaveType = await deleteLeaveTypes({
+      id,
+      user: req.user,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Leave type deleted successfully.",
+      data: deletedLeaveType,
+    });
+  } 
 
 
 export const getAllLeaveTypesController = async (req: Request, res: Response) => {
