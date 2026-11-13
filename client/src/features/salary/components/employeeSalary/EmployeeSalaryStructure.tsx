@@ -1,7 +1,7 @@
 import { useState } from "react";
 import EmployeeSalaryFilter from "./EmployeeSalaryFilters";
 import EmployeeSalaryStructureToolBar from "./EmployeeSalaryStructureToolBar";
-// import EmployeeSalaryTable from "./EmployeeSalaryTable";
+import EmployeeSalaryTable from "./EmployeeSalaryTable";
 import EmployeeSalaryPagination from "./EmployeeSalaryPagination";
 
 import { useGetEmployeesWithSalary } from "../../hooks/useGetEmployeesWithSalary";
@@ -14,6 +14,7 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import SalaryStructureView from "../SalaryStructureView";
 import AddEmployeeSalaryModal from "../add-salary/AddEmployeeSalaryModal";
+import ReviewEmployeeSalaryModal from "../review-salary-modal/ReviewEmployeeSalaryModal";
 
 const EmployeeSalaryStructure = () => {
     const [search, setSearch] = useState("");
@@ -24,7 +25,11 @@ const EmployeeSalaryStructure = () => {
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
     const [isAddSalaryOpen, setIsAddSalaryOpen] = useState(false);
-    const [addSalaryEmployee, setAddSalaryEmployee] =
+    const [addSalaryEmployee, setAddSalaryEmployee] = useState<EmployeeWithSalary | undefined>();
+
+    const [isReviewSalaryOpen, setIsReviewSalaryOpen] = useState(false);
+
+    const [reviewSalaryEmployee, setReviewSalaryEmployee] =
         useState<EmployeeWithSalary | undefined>();
 
     const { data, isLoading, isError } = useGetEmployeesWithSalary({
@@ -53,10 +58,21 @@ const EmployeeSalaryStructure = () => {
         setPage(1);
     };
 
-    // const handleAddSalary = (employee: EmployeeWithSalary) => {
-    //     setAddSalaryEmployee(employee);
-    //     setIsAddSalaryOpen(true);
-    // };
+    const handleAddSalary = (employee: EmployeeWithSalary) => {
+        setAddSalaryEmployee(employee);
+        setIsAddSalaryOpen(true);
+    };
+
+    const handleReviewSalary = (employeeId: string) => {
+        const employee = employees.find(
+            (item) => item.employeeId === employeeId
+        );
+
+        if (!employee) return;
+
+        setReviewSalaryEmployee(employee);
+        setIsReviewSalaryOpen(true);
+    };
 
     // Show selected employee salary
     if (selectedEmployeeId) {
@@ -105,14 +121,12 @@ const EmployeeSalaryStructure = () => {
                             />
                         ) : (
                             <div className="hidden md:block">
-                                 {/* <EmployeeSalaryTable
+                                <EmployeeSalaryTable
                                     employees={employees}
                                     onViewSalary={setSelectedEmployeeId}
-                                    onReviewSalary={(employeeId) => {
-                                        // Connect existing salary review flow here.
-                                    }}
+                                    onReviewSalary={handleReviewSalary}
                                     onAddSalary={handleAddSalary}
-                                />  */}
+                                />
                             </div>
                         )}
 
@@ -137,6 +151,20 @@ const EmployeeSalaryStructure = () => {
                 }}
                 employee={addSalaryEmployee}
             />
+            
+            {reviewSalaryEmployee && (
+                <ReviewEmployeeSalaryModal
+                    open={isReviewSalaryOpen}
+                    onOpenChange={(open) => {
+                        setIsReviewSalaryOpen(open);
+
+                        if (!open) {
+                            setReviewSalaryEmployee(undefined);
+                        }
+                    }}
+                    employee={reviewSalaryEmployee}
+                />
+            )}
         </div>
     );
 };
