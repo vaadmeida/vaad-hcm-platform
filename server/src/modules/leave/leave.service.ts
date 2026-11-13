@@ -5,7 +5,7 @@ import { calculateWorkingDays } from "../../utils/date.utils.ts";
 import { User } from "../employees/employee.service.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 import { DateTime } from "luxon";
-import { CreateLeaveTypes, GetLeaveRequestsInput, LeaveBalanceFilters, SubmitLeaveRequestType } from "./leave.types.ts";
+import { CreateLeaveTypes, GetLeaveRequestsInput, LeaveBalanceFilters, SubmitLeaveRequestType, UpdateLeaveTypes } from "./leave.types.ts";
 
 export const createLeaveTypes = async ({
     name,
@@ -101,6 +101,250 @@ export const createLeaveTypes = async ({
 
 };
 
+export const updateLeaveTypes = async ({
+    id,
+    name,
+    is_paid,
+    carries_over,
+    requires_document,
+    max_carryover_days,
+    default_days_per_year,
+    user,
+}: UpdateLeaveTypes) => {
+    // 1. Permission validation
+    if (user.role !== "admin" && user.role !== "hr") {
+        throw new AppError(
+            "You do not have permission for this action.",
+            403,
+            "NOT_AUTHORIZED"
+        );
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        // 2. Find existing leave type
+        const existingLeaveType = await tx.leaveType.findUnique({
+            where: { id },
+        });
+
+        if (!existingLeaveType) {
+            throw new AppError(
+                "Leave type not found.",
+                404,
+                "LEAVE_TYPE_NOT_FOUND"
+            );
+        }
+
+        // 3. Validate and normalize name
+        const normalizedName = name?.trim();
+
+        if (normalizedName !== undefined && normalizedName.length < 3) {
+            throw new AppError(
+                "Leave type name must be at least 3 characters.",
+                400,
+                "INVALID_NAME"
+            );
+        }
+
+        // 4. Check for duplicate name
+        if (normalizedName !== undefined) {
+            const duplicate = await tx.leaveType.findFirst({
+                where: {
+                    name: normalizedName,
+                    id: { not: id },
+                },
+            });
+
+            if (duplicate) {
+                throw new AppError(
+                    "Leave type already exists.",
+                    409,
+                    "DUPLICATE_LEAVE_TYPE"
+                );
+            }
+        }
+
+        // 5. Validate the final policy, including unchanged fields
+        const nextIsPaid = is_paid ?? existingLeaveType.is_paid;
+        const nextCarriesOver =
+            carries_over ?? existingLeaveType.carries_over;
+
+        const nextMaxCarryover =
+            max_carryover_days ??
+            existingLeaveType.max_carryover_days ??
+            0;
+        if (!nextCarriesOver && nextMaxCarryover > 0) {
+            throw new AppError(
+                "max_carryover_days must be 0 when carries_over is false.",
+                400,
+                "INVALID_CARRYOVER"
+            );
+        }
+
+        if (!nextIsPaid && nextCarriesOver) {
+            throw new AppError(
+                "Unpaid leave cannot carry over days.",
+                400,
+                "INVALID_POLICY"
+            );
+        }
+
+        // 6. Update leave type
+        const updatedLeaveType = await tx.leaveType.update({
+            where: { id },
+            data: {
+                ...(normalizedName !== undefined && {
+                    name: normalizedName,
+                }),
+                ...(is_paid !== undefined && { is_paid }),
+                ...(carries_over !== undefined && { carries_over }),
+                ...(requires_document !== undefined && {
+                    requires_document,
+                }),
+                ...(max_carryover_days !== undefined && {
+                    max_carryover_days,
+                }),
+                ...(default_days_per_year !== undefined && {
+                    default_days_per_year,
+                }),
+            },
+        });
+
+        // 7. Synchronize employee entitlements when annual days change
+        if (default_days_per_year !== undefined) {
+            const newEntitlement = default_days_per_year ?? 0;
+
+            // Update existing employee balances.
+            // used_days is deliberately preserved.
+            await tx.leaveBalance.updateMany({
+                where: {
+                    leave_type_id: id,
+                },
+                data: {
+                    entitled_days: newEntitlement,
+                },
+            });
+
+            // Get all employees, including inactive employees.
+            const employees = await tx.employee.findMany({
+                select: {
+                    id: true,
+                },
+            });
+
+            // Find employees who already have a balance.
+            const existingBalances = await tx.leaveBalance.findMany({
+                where: {
+                    leave_type_id: id,
+                },
+                select: {
+                    employee_id: true,
+                },
+            });
+
+            const existingEmployeeIds = new Set(
+                existingBalances.map((balance) => balance.employee_id)
+            );
+
+            // Create balances for employees without one.
+            const missingBalances = employees
+                .filter(
+                    (employee) => !existingEmployeeIds.has(employee.id)
+                )
+                .map((employee) => ({
+                    employee_id: employee.id,
+                    leave_type_id: id,
+                    entitled_days: newEntitlement,
+                    used_days: 0,
+                }));
+
+            if (missingBalances.length > 0) {
+                await tx.leaveBalance.createMany({
+                    data: missingBalances,
+                    skipDuplicates: true,
+                });
+            }
+        }
+
+        return updatedLeaveType;
+    });
+};
+
+
+
+interface DeleteLeaveType {
+  id: string;
+  user: {
+    role: string;
+  };
+}
+
+export const deleteLeaveTypes = async ({
+  id,
+  user,
+}: DeleteLeaveType) => {
+  // 1. Permission validation
+  if (user.role !== "admin" && user.role !== "hr") {
+    throw new AppError(
+      "You do not have permission to delete leave types.",
+      403,
+      "NOT_AUTHORIZED"
+    );
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    // 2. Check whether leave type exists
+    const leaveType = await tx.leaveType.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (!leaveType) {
+      throw new AppError(
+        "Leave type not found.",
+        404,
+        "LEAVE_TYPE_NOT_FOUND"
+      );
+    }
+
+    // 3. Check whether leave requests reference this leave type
+    const leaveRequestCount = await tx.leaveRequest.count({
+      where: {
+        leave_type_id: id,
+      },
+    });
+
+    if (leaveRequestCount > 0) {
+      throw new AppError(
+        "This leave type cannot be deleted because leave requests are associated with it. Deactivate it instead.",
+        409,
+        "LEAVE_TYPE_IN_USE"
+      );
+    }
+
+    // 4. Delete associated employee balances
+    await tx.leaveBalance.deleteMany({
+      where: {
+        leave_type_id: id,
+      },
+    });
+
+    // 5. Delete leave type
+    await tx.leaveType.delete({
+      where: {
+        id,
+      },
+    });
+
+    return {
+      id: leaveType.id,
+      name: leaveType.name,
+    };
+  });
+};
+
 export const getLeaveTypes = async (id: string, user: { id: string; role: string }) => {
 
     const leave = await prisma.leaveType.findUnique({
@@ -130,9 +374,6 @@ export const getAllLeaveTypes = async () => {
 
     return leaveTypes
 }
-
-
-
 
 export const getMyLeaveBalance = async (userId: string) => {
     const approvedLeaves = await prisma.leaveRequest.findMany({
@@ -348,7 +589,7 @@ export const getAllLeaveBalances = async ({
     leaveTypeId,
     page = 1,
     limit = 7,
- }:LeaveBalanceFilters) => {
+}: LeaveBalanceFilters) => {
     page = Math.max(1, Math.floor(Number(page) || 1));
     limit = Math.min(100, Math.max(1, Math.floor(Number(limit) || 7)));
 
