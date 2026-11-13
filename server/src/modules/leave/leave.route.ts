@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.ts";
-import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getCurrentlyOnLeaveController, getEmployeeLeaveBalanceController, getLeaveRequestByIdController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, submitLeaveRequestsController } from "./leave.controller.ts";
+import { approveOrRejectRequestController, cancelRequestController, createLeaveTypesController, deleteLeaveTypesController, getAllLeaveBalancesController, getAllLeaveTypesController, getCurrentlyOnLeaveController, getEmployeeLeaveBalanceController, getLeaveRequestByIdController, getLeaveRequestsController, getLeaveStats, getLeaveTypesController, getMyLeaveBalanceController, getRecentLeaveRequestController, getTeamLeaveBalancesController, submitLeaveRequestsController, updateLeaveTypesController } from "./leave.controller.ts";
 import { requireRoles } from "../../middlewares/role.ts";
 import { authenticate } from "../../middlewares/auth.ts";
 import { consumeLeaveDay, processActiveLeaves } from "./leave.service.ts";
@@ -33,7 +33,9 @@ leaveRouter.patch("/:id", authenticate, asyncHandler(approveOrRejectRequestContr
 
 // GET ONE LEAVE TYPE
 // Keep this LAST because /:id is a catch-all for one-segment GET routes
-leaveRouter.get("/:id", authenticate, requireRoles("admin"), asyncHandler(getLeaveTypesController));
+leaveRouter.get("/:id", authenticate, requireRoles("admin", "hr"), asyncHandler(getLeaveTypesController));
+leaveRouter.patch("/types/:id",authenticate, requireRoles("admin", "hr"), asyncHandler(updateLeaveTypesController));
+leaveRouter.delete("/types/:id",authenticate,asyncHandler(deleteLeaveTypesController));
 
 
 export default leaveRouter;
