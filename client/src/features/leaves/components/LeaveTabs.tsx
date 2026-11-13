@@ -1,4 +1,3 @@
-import { useAuthStore } from "@/store/auth.store";
 import { FileText, LayoutDashboard, Settings, Wallet } from "lucide-react";
 
 
@@ -43,9 +42,8 @@ const tabs = [
 ];
 
 const LeaveTabs = ({ activeTab, onTabChange }: LeaveTabsProps) => {
-    const user = useAuthStore((state) => state.user);
-
-    const visibleTabs = tabs.filter((tab) => !(tab.id === "My Leaves" && user?.role === "admin"));
+  
+   const visibleTabs = tabs;
 
     return (
         <div className="mt-6 border-b border-gray-200">
