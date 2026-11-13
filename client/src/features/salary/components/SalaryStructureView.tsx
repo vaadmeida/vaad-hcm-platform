@@ -7,16 +7,25 @@ import SalaryComponents from "@/features/salary/components/SalaryComponents";
 import AdditionalEarnings from "@/features/salary/components/AdditionalEarnings";
 
 import { useEmployeeSalary } from "@/features/salary/hooks/useEmployeeSalary";
+import SalaryHistory from "./salary-histpry/SalaryHistory";
+import { useState } from "react";
+import type { EmployeeSalaryHistory } from "../types/salary.types";
+import SalaryHistoryDetailsModal from "./salary-histpry/SalaryHistoryDetailsModal";
 
 interface SalaryStructureViewProps {
     employeeId: string;
-    onBack: () => void;
+    onBack?: () => void;
 }
 
 const SalaryStructureView = ({
     employeeId,
     onBack,
 }: SalaryStructureViewProps) => {
+    const [selectedHistorySalary, setSelectedHistorySalary] =
+        useState<EmployeeSalaryHistory | null>(null);
+
+    const [isHistoryDetailsOpen, setIsHistoryDetailsOpen] =
+        useState(false);
     const { data, isLoading, isError } = useEmployeeSalary(employeeId);
 
     if (isLoading) {
@@ -30,8 +39,12 @@ const SalaryStructureView = ({
     if (isError) {
         return (
             <div className="space-y-4">
-                <Button variant="ghost" onClick={onBack}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                <Button
+                    variant="ghost"
+                    onClick={onBack}
+                    className="gap-2 text-[#1078A9] hover:bg-[#1078A9]/10 hover:text-[#1078A9] cursor-pointer"
+                >
+                    <ArrowLeft className="h-4 w-4" />
                     Back to employees
                 </Button>
 
@@ -46,8 +59,12 @@ const SalaryStructureView = ({
 
     return (
         <div className="space-y-6">
-            <Button variant="ghost" onClick={onBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
+            <Button
+                variant="ghost"
+                onClick={onBack}
+                className="gap-2 text-[#1078A9] hover:bg-[#1078A9]/10 hover:text-[#1078A9] cursor-pointer"
+            >
+                <ArrowLeft className="h-4 w-4" />
                 Back to employees
             </Button>
 
@@ -65,6 +82,20 @@ const SalaryStructureView = ({
             <SalaryComponents components={salary.components} />
 
             <AdditionalEarnings earnings={salary.additionalEarnings} />
+
+            <SalaryHistory
+                employeeId={employeeId}
+                onViewDetails={(salary) => {
+                    setSelectedHistorySalary(salary);
+                    setIsHistoryDetailsOpen(true);
+                }}
+            />
+
+            <SalaryHistoryDetailsModal
+                open={isHistoryDetailsOpen}
+                onOpenChange={setIsHistoryDetailsOpen}
+                salary={selectedHistorySalary}
+            />
         </div>
     );
 };
