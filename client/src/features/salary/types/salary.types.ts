@@ -26,6 +26,25 @@ export type AdditionalEarning = {
   updatedAt: string;
 };
 
+
+export type AdditionalEarningInput = {
+  name: string;
+  calculationType: "FIXED" | "PERCENTAGE";
+  amount?: number;
+  percentage?: number;
+  calculationBase?: number;
+  calculationBaseType?:
+    | "BASIC_SALARY"
+    | "GROSS_SALARY"
+    | "HOUSING_ALLOWANCE"
+    | "TRANSPORT_ALLOWANCE"
+    | "MEDICAL_ALLOWANCE"
+    | "MEAL_ALLOWANCE"
+    | "WARDROBE_ALLOWANCE"
+    | "CUSTOM_AMOUNT";
+  frequency: AdditionalEarningFrequency;
+};
+
 export type EmployeeSalary = {
   id: string;
   employeeId: string;
@@ -114,4 +133,25 @@ export interface GetEmployeesSalaryParams {
   search?: string;
   department?: string;
   salaryStatus?: SalaryStatus | "all";
+}
+
+export interface ReviewEmployeeSalaryDTO {
+  annualBaseSalary?: number;
+  effectiveDate: string;
+  paye?: number;
+  additionalEarnings?: AdditionalEarningInput[];
+}
+export interface EmployeeSalaryHistory {
+  id: string;
+  employeeId: string;
+  annualBaseSalary: number;
+  effectiveDate: string;
+  endDate: string | null;
+  monthlyGross: number;
+  paye: number;
+  netPay: number;
+  createdAt: string;
+  updatedAt: string;
+  components: SalaryComponent[];
+  additionalEarnings: AdditionalEarning[];
 }
