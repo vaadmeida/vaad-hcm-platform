@@ -882,25 +882,51 @@ export const updateEmployee = async ({
         let assignedDepartmentNames: string[] = [];
         let removedDepartmentNames: string[] = [];
 
+        // Check the employee's active salary before updating their record.
+        let activeSalary = null;
+
+        if (isExitStatus && nextExitDate) {
+            const dateExited = new Date(String(nextExitDate));
+
+            activeSalary = await tx.employeeSalary.findFirst({
+                where: {
+                    employeeId: id,
+                    endDate: null,
+                },
+                orderBy: {
+                    effectiveDate: "desc",
+                },
+            });
+
+            if (
+                activeSalary &&
+                dateExited < activeSalary.effectiveDate
+            ) {
+                throw new AppError(
+                    "Exit date cannot be earlier than the salary effective date.",
+                    400,
+                    "INVALID_SALARY_END_DATE"
+                );
+            }
+        }
+
         // Update the employee's ordinary fields.
         const updatedEmployee = await tx.employee.update({
             where: { id },
             data: employeeData,
         });
 
-        // End the employee's active salary structure when they exit.
-        if (isExitStatus && nextExitDate) {
-            await tx.employeeSalary.updateMany({
+        // End the active salary structure when the employee exits.
+        if (isExitStatus && nextExitDate && activeSalary) {
+            await tx.employeeSalary.update({
                 where: {
-                    employeeId: id,
-                    endDate: null,
+                    id: activeSalary.id,
                 },
                 data: {
                     endDate: new Date(String(nextExitDate)),
                 },
             });
         }
-
         // 5. Update department assignments when department_ids is provided.
         if (department_ids !== undefined) {
             // Remove duplicate department IDs.
