@@ -61,7 +61,7 @@ const EmployeeDetailsPage = () => {
       )}
 
       {canViewAllTabs && activeTab === "salary" && (
-        <EmployeeSalaryStructure employee={employee} />
+        <EmployeeSalaryStructure employeeId={employee.id} />
       )}
 
       {canViewAllTabs && activeTab === "onboarding" && (
