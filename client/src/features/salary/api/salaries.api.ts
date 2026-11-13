@@ -1,5 +1,5 @@
 import { api } from "@/lib/axios.api.ts";
-import type { CreateEmployeeSalaryDTO, EmployeeSalaryResponse, GetEmployeesSalaryParams, GetEmployeesSalaryResponse } from "../types/salary.types.ts";
+import type { CreateEmployeeSalaryDTO, EmployeeSalaryHistory, EmployeeSalaryResponse, GetEmployeesSalaryParams, GetEmployeesSalaryResponse, ReviewEmployeeSalaryDTO } from "../types/salary.types.ts";
 
 export const getEmployeesWithSalary = async (
   params: GetEmployeesSalaryParams
@@ -19,7 +19,6 @@ export const getEmployeeSalary = async (
   return response.data;
 };
 
-
 export const createEmployeeSalary = async (
   employeeId: string,
   payload: CreateEmployeeSalaryDTO
@@ -30,20 +29,28 @@ export const createEmployeeSalary = async (
   return response.data;
 };
 
-
-export const updateEmployeeSalary = async (
+export const reviewEmployeeSalary = async (
   employeeId: string,
-  payload: Partial<CreateEmployeeSalaryDTO>
+  payload: ReviewEmployeeSalaryDTO
 ): Promise<EmployeeSalaryResponse> => {
-  const response = await api.patch<EmployeeSalaryResponse>(
-    `/api/salaries/employees/${employeeId}`,
+  const response = await api.post<EmployeeSalaryResponse>(
+    `/api/salaries/employees/${employeeId}/review`,
     payload
   );
 
   return response.data;
 };
 
+export const getEmployeeSalaryHistory = async (
+  employeeId: string
+): Promise<EmployeeSalaryHistory[]> => {
+  const response = await api.get(
+    `/api/salaries/employees/${employeeId}/history`
+  );
 
+  return response.data.data;
+};
+  
 export const getMySalary = async (): Promise<EmployeeSalaryResponse> => {
   const response = await api.get<EmployeeSalaryResponse>(
     "/api/salaries/me"
