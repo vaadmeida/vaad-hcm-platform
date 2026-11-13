@@ -314,6 +314,18 @@ export const getEmployeesWithSalary = async ({
 
 export const getEmployeeSalary = async (employeeId: string) => {
 
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { id: true },
+  });
+
+  if (!employee) {
+    throw new AppError(
+      "Employee not found.",
+      404,
+      "EMPLOYEE_NOT_FOUND"
+    );
+  }
 
   const salary = await prisma.employeeSalary.findFirst({
     where: {
@@ -334,18 +346,9 @@ export const getEmployeeSalary = async (employeeId: string) => {
     },
   });
 
-  if (!salary) {
-    throw new AppError(
-      "Salary structure not found for this employee.",
-      404,
-      "SALARY_STRUCTURE_NOT_FOUND"
-    );
-  }
-
+  // No active salary is a valid state.
   return salary;
-}
-
-
+};
 export const createEmployeeSalary = async (
   employeeId: string,
   data: CreateSalaryInput
@@ -869,6 +872,9 @@ export const getEmployeeSalaryHistory = async (
   const salaryHistory = await prisma.employeeSalary.findMany({
     where: {
       employeeId,
+      endDate: {
+        not: null,
+      },
     },
     orderBy: {
       effectiveDate: "desc",
