@@ -235,3 +235,38 @@ export interface MyDocumentsResponse {
     message: string;
     data: MyDocument[];
 }
+
+export interface UpdateDocumentTypePayload {
+    id: string;
+    name?: string;
+    category?: DocumentCategory;
+    description?: string | null;
+    isRequired?: boolean;
+    hasExpiry?: boolean;
+    allowedExtensions?: string[];
+    maxSizeMb?: number;
+}
+
+export interface UpdateDocumentTypeStatusPayload {
+    id: string;
+    isActive: boolean;
+}
+
+export interface DeleteDocumentTypePayload {
+    id: string;
+}
+
+export interface DocumentTypeResponse {
+    success: boolean;
+    message: string;
+    data: DocumentType;
+}
+
+export interface DeleteDocumentTypeResponse {
+    success: boolean;
+    message: string;
+    data: {
+        id: string;
+        name: string;
+    };
+}
