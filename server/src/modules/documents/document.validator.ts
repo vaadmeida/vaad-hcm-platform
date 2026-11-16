@@ -70,3 +70,9 @@ export const employeeDocumentFiltersSchema = z.object({
 export type EmployeeDocumentFilters = z.infer<
     typeof employeeDocumentFiltersSchema
 >;
+
+export const updateDocumentTypeStatusSchema = z.object({
+    isActive: z.boolean({
+        error: "isActive must be a boolean",
+    }),
+});
