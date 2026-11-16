@@ -16,20 +16,24 @@ const DocumentTypesTable = ({
                         <th className="px-4 py-3 pr-2">
                             Document Type
                         </th>
+
+                        <th className="hidden px-4 py-3 xl:table-cell">
+                            Category
+                        </th>
                         
-                        <th className="px-4 py-3">
+                        <th className="hidden px-4 py-3 text-center xl:table-cell">
                             Requirement
                         </th>
 
-                        <th className="hidden px-4 py-3 xl:table-cell ml-6">
+                        <th className="hidden px-4 py-3 xl:table-cell ml-6 text-center">
                             Expiry
                         </th>
 
-                        <th className="px-4 py-3">
+                        <th className="px-4 py-3 text-center">
                             Status
                         </th>
 
-                        <th className="px-4 py-3 text-right">
+                        <th className="px-4 py-3 text-center">
                             Actions
                         </th>
                     </tr>
