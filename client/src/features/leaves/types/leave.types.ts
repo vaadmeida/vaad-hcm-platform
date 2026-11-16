@@ -319,3 +319,25 @@ export interface ApiError {
   success: boolean;
   message: string;
 }
+
+export interface UpdateLeaveTypePayload {
+  id: string;
+  name?: string;
+  is_paid?: boolean;
+  carries_over?: boolean;
+  requires_document?: boolean;
+  max_carryover_days?: number;
+  default_days_per_year?: number;
+}
+
+export interface DeleteLeaveTypePayload {
+  id: string;
+}
+
+export type UpdateLeaveTypeResponse = LeaveType;
+
+export interface DeleteLeaveTypeResponse {
+  id: string;
+  name: string;
+}
+
