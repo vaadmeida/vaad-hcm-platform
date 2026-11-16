@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { ApproveOrRejectLeaveRequestPayload, ApproveOrRejectLeaveRequestResponse, CreateLeaveTypePayload, CreateLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestDetailsResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType } from "../types/leave.types";
+import type { ApproveOrRejectLeaveRequestPayload, ApproveOrRejectLeaveRequestResponse, CreateLeaveTypePayload, CreateLeaveTypeResponse, DeleteLeaveTypePayload, DeleteLeaveTypeResponse, EmployeeLeaveBalanceResponse, LeaveApiError, LeaveBalanceFilters, LeaveBalanceItem, LeaveBalanceResponse, LeaveRequestDetailsResponse, LeaveRequestFilters, LeaveRequestResponse, LeaveStatsResponse, LeaveTypesResponse, RecentLeaveRequestsResponse, SubmitLeaveRequestResponse, SubmitLeaveRequestType, UpdateLeaveTypePayload, UpdateLeaveTypeResponse } from "../types/leave.types";
 import axios from "axios";
 
 export const getLeaveStats = async (): Promise<LeaveStatsResponse> => {
@@ -108,21 +108,37 @@ export const getLeaveTypes = async (): Promise<LeaveTypesResponse> => {
 
 
 export const createLeaveType = async (payload: CreateLeaveTypePayload): Promise<CreateLeaveTypeResponse> => {
-  try {
+
     const response = await api.post<CreateLeaveTypeResponse>("/api/leaves", payload);
 
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.log("CREATE LEAVE TYPE ERROR STATUS:", error.response?.status);
-      console.log("CREATE LEAVE TYPE ERROR DATA:", error.response?.data);
-    }
 
-    console.error("Creating leave type API Error:", error);
-    console.error("Creating leave type API Error:", error);
-    throw error;
-  }
 };
+
+export const updateLeaveTypes = async (
+ payload: UpdateLeaveTypePayload
+): Promise<UpdateLeaveTypeResponse> => {
+  const { id, ...data } = payload;
+
+  const response = await api.patch<UpdateLeaveTypeResponse>(
+    `/api/leaves/types/${id}`,
+    data
+  );
+
+  return response.data;
+};
+
+
+export const deleteLeaveTypes = async (
+  payload: DeleteLeaveTypePayload
+): Promise<DeleteLeaveTypeResponse> => {
+  const response = await api.delete<DeleteLeaveTypeResponse>(
+    `/api/leaves/types/${payload.id}`
+  );
+
+  return response.data;
+};
+
 export const getMyLeaveBalance = async (): Promise<EmployeeLeaveBalanceResponse> => {
   try {
     const response = await api.get<EmployeeLeaveBalanceResponse>(
