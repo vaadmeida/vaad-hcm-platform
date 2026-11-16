@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { createDocumentTypeSchema, documentIdSchema, employeeDocumentFiltersSchema, employeeIdSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
-import { createDocumentType, deleteEmployeeDocument, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getMyDocuments, getMyDocumentStats, getRecentDocuments, uploadDocument, verifyDocument } from "./document.service.ts";
+import { createDocumentTypeSchema, documentIdSchema, employeeDocumentFiltersSchema, employeeIdSchema, getDocumentDownloadSchema, getEmployeeDocumentsQuerySchema, getEmployeeDocumentsSchema, updateDocumentTypeStatusSchema, uploadDocumentSchema, verifyDocumentParamsSchema, verifyDocumentSchema } from "./document.validator.ts";
+import { createDocumentType, deleteDocumentType, deleteEmployeeDocument, getAllEmployeeDocuments, getDocumentById, getDocumentDownloadUrl, getDocumentsStats, getDocumentTypes, getEmployeeDocuments, getExpiredDocuments, getExpiringDocuments, getMyDocuments, getMyDocumentStats, getRecentDocuments, updateDocumentType, updateDocumentTypeStatus, uploadDocument, verifyDocument } from "./document.service.ts";
 
 
 export const createDocumentTypeController = async (req: Request, res: Response) => {
@@ -23,6 +23,91 @@ export const createDocumentTypeController = async (req: Request, res: Response) 
     });
 
 };
+
+
+export const updateDocumentTypeController = async (
+    req: Request,
+    res: Response,
+) => {
+  
+        const { id } = req.params;
+
+        if (typeof id !== "string" || !id.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Document type ID is required",
+            });
+        }
+
+        const documentType = await updateDocumentType(
+            id,
+            req.body
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Document type updated successfully",
+            data: documentType,
+        });
+   
+};
+
+export const deleteDocumentTypeController = async (
+    req: Request,
+    res: Response,
+
+) => {
+        const { id } = req.params;
+
+        if (typeof id !== "string" || !id.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Document type ID is required",
+            });
+        }
+
+        const documentType = await deleteDocumentType(id);
+
+        res.status(200).json({
+            success: true,
+            message: "Document type deleted successfully",
+            data: documentType,
+        });
+   
+};
+
+export const updateDocumentTypeStatusController = async (
+    req: Request,
+    res: Response,
+) => {
+   
+        const { id } = req.params;
+
+        if (typeof id !== "string" || !id.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Document type ID is required",
+            });
+        }
+
+        const validatedData = updateDocumentTypeStatusSchema.parse(
+            req.body
+        );
+
+        const documentType = await updateDocumentTypeStatus(
+            id,
+            validatedData.isActive
+        );
+
+        res.status(200).json({
+            success: true,
+            message: `Document type ${
+                validatedData.isActive ? "activated" : "deactivated"
+            } successfully`,
+            data: documentType,
+        });
+   
+}
 
 export const getDocumentTypesController = async (
   req: Request,
