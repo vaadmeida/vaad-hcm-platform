@@ -33,6 +33,7 @@ import { useGetDocumentById } from "@/features/documents/hooks/useGetDocumentByI
 import { useVerifyDocument } from "@/features/documents/hooks/useVerifyDocument";
 
 import { toast } from "sonner";
+import useDownloadDocument from "@/features/documents/hooks/useDownloadDocument";
 
 interface DocumentDetailsProps {
     documentId: string | null;
@@ -48,6 +49,8 @@ const DocumentDetails = ({
     const { data, isLoading, isError } = useGetDocumentById(
         documentId ?? ""
     );
+
+    const { downloadDocument, isDownloading } = useDownloadDocument();
 
     const verifyDocumentMutation = useVerifyDocument();
 
@@ -160,13 +163,9 @@ const DocumentDetails = ({
     };
 
     const handleDownload = () => {
-        if (!document?.fileUrl) return;
+        if (!documentId) return;
 
-        window.open(
-            document.fileUrl,
-            "_blank",
-            "noopener,noreferrer"
-        );
+        downloadDocument(documentId);
     };
 
     const handlePreview = () => {
@@ -442,15 +441,15 @@ const DocumentDetails = ({
                                                 ? "This document is waiting for HR review."
                                                 : document.status ===
                                                     "approved"
-                                                  ? `Uploaded and verified on ${formatDate(
+                                                    ? `Uploaded and verified on ${formatDate(
                                                         document.verified_by_name ||
-                                                            document.uploadedAt
+                                                        document.uploadedAt
                                                     )}.`
-                                                  : document.verified_by_name
-                                                    ? `Rejected on ${formatDate(
-                                                          document.verified_by_name
-                                                      )}.`
-                                                    : "Document was rejected."}
+                                                    : document.verified_by_name
+                                                        ? `Rejected on ${formatDate(
+                                                            document.verified_by_name
+                                                        )}.`
+                                                        : "Document was rejected."}
                                         </p>
                                     </div>
                                 </div>
@@ -601,16 +600,14 @@ const DocumentDetails = ({
                                     <Button
                                         type="button"
                                         onClick={handleDownload}
-                                        className="
-                                            h-10
-                                            bg-[#1078A9]
-                                            text-white
-                                            shadow-sm
-                                            hover:bg-[#0d668f]
-                                        "
-                                    >
+                                        disabled={isDownloading}
+                                        className="h-10
+                                                    bg-[#1078A9]
+                                                    text-white
+                                                    shadow-sm
+                                                    hover:bg-[#0d668f]">
                                         <Download className="mr-2 h-4 w-4" />
-                                        Download
+                                        {isDownloading ? "Downloading..." : "Download"}
                                     </Button>
                                 </div>
                             </section>
