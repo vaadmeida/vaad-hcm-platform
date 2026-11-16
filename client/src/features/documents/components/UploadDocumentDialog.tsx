@@ -97,7 +97,7 @@ const UploadDocumentDialog = ({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="w-[calc(100%-2rem)] max-w-lg gap-0 overflow-hidden rounded-xl bg-white p-0 shadow-2xl">
                 {/* Header */}
-                <DialogHeader className="border-b bg-gray-50/70 px-5 py-4">
+                    <DialogHeader className="border-b border-gray-200 bg-white px-5 py-4">
                     <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <FileUp className="h-4 w-4" />
@@ -264,7 +264,7 @@ const UploadDocumentDialog = ({
                 </div>
 
                 {/* Footer */}
-                <DialogFooter className="border-t bg-gray-50/50 px-8 py-6">
+              <DialogFooter className="border-t border-gray-200 bg-white px-5 py-4">
                     <Button
                         type="button"
                         variant="outline"
