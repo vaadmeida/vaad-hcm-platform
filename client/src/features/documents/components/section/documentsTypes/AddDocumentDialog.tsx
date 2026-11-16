@@ -1,3 +1,4 @@
+
 import {
     Dialog,
     DialogContent,
@@ -42,7 +43,6 @@ const AddDocumentDialog = ({
     open,
     onOpenChange,
 }: AddDocumentDialogProps) => {
-
     const [name, setName] = useState("");
     const [category, setCategory] = useState<DocumentCategory | "">("");
     const [description, setDescription] = useState("");
@@ -74,7 +74,6 @@ const AddDocumentDialog = ({
 
                     onOpenChange(false);
                 },
-
                 onError: (error) => {
                     const message =
                         error instanceof Error
@@ -89,10 +88,10 @@ const AddDocumentDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-110 gap-0 overflow-hidden p-0 bg-white">
+            <DialogContent className="max-w-105 gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-xl">
                 {/* Header */}
-                <DialogHeader className="border-b px-5 py-4">
-                    <div className="flex items-center gap-3">
+                <DialogHeader className="border-b border-slate-200 px-4 py-3">
+                    <div className="flex items-center gap-2.5">
                         <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
                             <FileText className="size-4 text-primary" />
                         </div>
@@ -102,7 +101,7 @@ const AddDocumentDialog = ({
                                 Add document type
                             </DialogTitle>
 
-                            <DialogDescription className="mt-0.5 text-xs">
+                            <DialogDescription className="text-[11px]">
                                 Define a document for employee records.
                             </DialogDescription>
                         </div>
@@ -110,34 +109,29 @@ const AddDocumentDialog = ({
                 </DialogHeader>
 
                 {/* Form */}
-                <div className="space-y-4 px-5 py-4">
+                <div className="space-y-3 px-4 py-3">
                     {/* Name + Category */}
-                    <div className="grid grid-cols-2 gap-3">
-                        {/* Document Name */}
-                        <div className="min-w-0 space-y-1.5">
-                            <label className="text-xs font-medium">
+                    <div className="grid grid-cols-2 gap-2.5">
+                        <div className="min-w-0 space-y-1">
+                            <label className="text-xs font-medium text-slate-700">
                                 Document name
-                                <span className="ml-1 text-destructive">
-                                    *
-                                </span>
+                                <span className="ml-1 text-destructive">*</span>
                             </label>
 
                             <Input
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="e.g. International Passport"
-                                className="h-8 w-full text-sm"
+                                placeholder="e.g. Passport"
+                                className="h-8 border border-slate-200 bg-white text-xs shadow-none focus-visible:border-[#1078A9] focus-visible:ring-1 focus-visible:ring-[#1078A9]/20"
                             />
                         </div>
 
-                        {/* Category */}
-                        <div className="min-w-0 space-y-1.5">
-                            <label className="text-xs font-medium">
+                        <div className="min-w-0 space-y-1">
+                            <label className="text-xs font-medium text-slate-700">
                                 Category
-                                <span className="ml-1 text-destructive">
-                                    *
-                                </span>
+                                <span className="ml-1 text-destructive">*</span>
                             </label>
+
                             <Select
                                 value={category}
                                 onValueChange={(value) => {
@@ -146,7 +140,7 @@ const AddDocumentDialog = ({
                                     }
                                 }}
                             >
-                                <SelectTrigger className="h-8 w-full text-sm">
+                                <SelectTrigger className="h-8 w-full border border-slate-200 bg-white text-xs shadow-none focus:ring-1 focus:ring-[#1078A9]/20">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
 
@@ -165,11 +159,11 @@ const AddDocumentDialog = ({
                     </div>
 
                     {/* Description */}
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-medium">
+                    <div className="space-y-1">
+                        <label className="text-xs font-medium text-slate-700">
                             Description
                             <span className="ml-1 font-normal text-muted-foreground">
-                                Optional
+                                (Optional)
                             </span>
                         </label>
 
@@ -177,20 +171,17 @@ const AddDocumentDialog = ({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Brief description..."
-                            className="min-h-15 resize-none text-sm"
+                            className="min-h-14 resize-none border border-slate-200 bg-white text-xs shadow-none focus-visible:border-[#1078A9] focus-visible:ring-1 focus-visible:ring-[#1078A9]/20"
                         />
                     </div>
-
                     {/* Settings */}
-                    <div className="rounded-md border">
-                        {/* Required */}
-                        <div className="flex items-center justify-between px-3 py-2.5">
+                    <div className="divide-y divide-slate-100 rounded-md border border-slate-200">
+                        <div className="flex items-center justify-between px-3 py-2">
                             <div>
-                                <p className="text-xs font-medium">
+                                <p className="text-xs font-medium text-slate-700">
                                     Required
                                 </p>
-
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-[10px] text-muted-foreground">
                                     Employees must submit this document.
                                 </p>
                             </div>
@@ -201,17 +192,13 @@ const AddDocumentDialog = ({
                             />
                         </div>
 
-                        <div className="border-t" />
-
-                        {/* Has Expiry */}
-                        <div className="flex items-center justify-between px-3 py-2.5">
+                        <div className="flex items-center justify-between px-3 py-2">
                             <div>
-                                <p className="text-xs font-medium">
+                                <p className="text-xs font-medium text-slate-700">
                                     Has expiry
                                 </p>
-
-                                <p className="text-[11px] text-muted-foreground">
-                                    Track the document's expiration date.
+                                <p className="text-[10px] text-muted-foreground">
+                                    Track document expiration.
                                 </p>
                             </div>
 
@@ -224,11 +211,12 @@ const AddDocumentDialog = ({
                 </div>
 
                 {/* Footer */}
-                <DialogFooter className="border-t px-8 py-6">
+                <DialogFooter className="border-t border-slate-200 bg-slate-50/50 px-5 py-6">
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
+                        className="h-8 text-xs"
                         onClick={() => onOpenChange(false)}
                     >
                         Cancel
@@ -237,11 +225,11 @@ const AddDocumentDialog = ({
                     <Button
                         type="button"
                         size="sm"
-                        disabled={!name.trim() || !category}
+                        disabled={!name.trim() || !category || createDocumentType.isPending}
                         onClick={handleSubmit}
-                        className="text-white"
+                        className="h-8 text-xs text-white"
                     >
-                        Add document
+                        {createDocumentType.isPending ? "Adding..." : "Add document"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
