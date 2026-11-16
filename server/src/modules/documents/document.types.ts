@@ -42,3 +42,13 @@ export interface GetDocumentTypesInput {
   requirement?: "required" | "optional";
   status?: "active" | "inactive";
 }
+
+export interface UpdateDocumentTypeDto {
+    name?: string;
+    category?: DocumentCategory;
+    description?: string | null;
+    isRequired?: boolean;
+    hasExpiry?: boolean;
+    allowedExtensions?: string[];
+    maxSizeMb?: number;
+}
