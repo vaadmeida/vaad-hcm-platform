@@ -1,5 +1,8 @@
+
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Settings2 } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+
 import { useCreateLeaveType } from "@/features/leaves/hooks/useCreatLeaveTypes";
 import ButtonLoader from "@/components/common/ButtonLoader";
-import { toast } from "sonner";
-import axios from "axios";
 
 const CreateLeaveTypeDialog = () => {
     const [open, setOpen] = useState(false);
@@ -32,7 +34,6 @@ const CreateLeaveTypeDialog = () => {
     const [days, setDays] = useState("");
     const [maxCarryoverDays, setMaxCarryoverDays] = useState("");
 
-
     const handleSubmit = async () => {
         try {
             const payload = {
@@ -45,7 +46,6 @@ const CreateLeaveTypeDialog = () => {
                     ? Number(maxCarryoverDays || 0)
                     : 0,
             };
-
 
             await createLeaveType(payload);
 
@@ -79,88 +79,96 @@ const CreateLeaveTypeDialog = () => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="h-9 gap-2 rounded-md bg-[#1078A9] px-4 text-sm font-medium text-white hover:bg-[#0d668f]">
-                    <Plus className="h-4 w-4" />
+                <Button className="h-9 gap-2 rounded-lg bg-[#1078A9] px-4 text-sm font-medium text-white hover:bg-[#0d668f]">
+                    <Plus size={15} />
                     Add Leave Type
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="bg-white sm:max-w-120">
-                <DialogHeader className="border-b border-gray-100 pb-3">
-                    <DialogTitle className="text-base font-semibold text-gray-900">
-                        Add Leave Type
-                    </DialogTitle>
+            <DialogContent className="max-w-105 gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 text-slate-900 opacity-100 shadow-2xl [&>button]:right-4 [&>button]:top-4">
 
-                    <DialogDescription className="text-xs text-gray-500">
-                        Create and configure a new employee leave type.
-                    </DialogDescription>
+                {/* Header */}
+                <DialogHeader className="border-b border-slate-100 bg-slate-50/70 px-5 py-3.5 text-left">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-[#1078A9]">
+                            <Settings2 size={16} />
+                        </div>
+
+                        <div className="space-y-0.5">
+                            <DialogTitle className="text-sm font-semibold text-slate-900">
+                                Create Leave Type
+                            </DialogTitle>
+
+                            <DialogDescription className="text-xs text-slate-500">
+                                Configure a new employee leave policy.
+                            </DialogDescription>
+                        </div>
+                    </div>
                 </DialogHeader>
 
-                <div className="space-y-4 py-1">
+                {/* Form */}
+                <div className="space-y-4 px-5 py-4">
+
                     {/* Basic Information */}
-                    <section>
-                        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    <section className="space-y-2.5">
+                        <h3 className="text-xs font-semibold text-slate-800">
                             Basic Information
                         </h3>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <Label
-                                    htmlFor="name"
-                                    className="text-xs font-medium text-gray-700"
-                                >
-                                    Leave Type Name
-                                    <span className="ml-1 text-red-500">*</span>
+                                <Label htmlFor="name" className="text-xs text-slate-600">
+                                    Leave Type Name <span className="text-red-500">*</span>
                                 </Label>
 
                                 <Input
                                     id="name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="e.g'. Annual Leave"
-                                    className="h-8 text-sm"
+                                    placeholder="e.g. Annual Leave"
+                                    className="h-9 rounded-md border-slate-200 text-xs shadow-none focus-visible:border-[#1078A9] focus-visible:ring-[#1078A9]/20"
                                 />
                             </div>
 
                             <div className="space-y-1">
-                                <Label
-                                    htmlFor="days"
-                                    className="text-xs font-medium text-gray-700"
-                                >
-                                    Days Per Year
-                                    <span className="ml-1 text-red-500">*</span>
+                                <Label htmlFor="days" className="text-xs text-slate-600">
+                                    Days Per Year <span className="text-red-500">*</span>
                                 </Label>
 
                                 <Input
                                     id="days"
-                                    value={days}
-                                    onChange={(e) => setDays(e.target.value)}
                                     type="number"
                                     min={0}
+                                    value={days}
+                                    onChange={(e) => setDays(e.target.value)}
                                     placeholder="e.g. 21"
-                                    className="h-8 text-sm"
+                                    className="h-9 rounded-md border-slate-200 text-xs shadow-none focus-visible:border-[#1078A9] focus-visible:ring-[#1078A9]/20"
                                 />
                             </div>
                         </div>
                     </section>
 
                     {/* Leave Policy */}
-                    <section>
-                        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                            Leave Policy
-                        </h3>
+                    <section className="space-y-2.5">
+                        <div>
+                            <h3 className="text-xs font-semibold text-slate-800">
+                                Leave Policy Settings
+                            </h3>
+                            <p className="text-[11px] text-slate-400">
+                                Configure leave eligibility and conditions.
+                            </p>
+                        </div>
 
-                        <div className="divide-y rounded-lg border border-gray-200">
-                            {/* Paid Leave */}
-                            <div className="flex min-h-10 items-center justify-between px-3 py-2">
-                                <div className="flex min-w-0 items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-900">
+                        <div className="overflow-hidden rounded-lg border border-slate-200 divide-y divide-slate-100">
+
+                            <div className="flex items-center justify-between px-3 py-2">
+                                <div>
+                                    <p className="text-xs font-medium text-slate-800">
                                         Paid Leave
-                                    </span>
-
-                                    <span className="text-xs text-gray-400">
-                                        Employee is paid
-                                    </span>
+                                    </p>
+                                    <p className="text-[11px] text-slate-400">
+                                        Employee receives regular pay
+                                    </p>
                                 </div>
 
                                 <Switch
@@ -173,60 +181,50 @@ const CreateLeaveTypeDialog = () => {
                                             setMaxCarryoverDays("");
                                         }
                                     }}
-                                    className="shrink-0 data-[state=checked]:bg-[#1078A9] data-[state=unchecked]:bg-gray-300"
+                                    className="scale-90 data-[state=checked]:bg-[#1078A9] data-[state=unchecked]:bg-slate-300"
                                 />
                             </div>
 
-                            {/* Requires Document */}
-                            <div className="flex min-h-10 items-center justify-between px-3 py-2">
-                                <div className="flex min-w-0 items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-900">
+                            <div className="flex items-center justify-between px-3 py-2">
+                                <div>
+                                    <p className="text-xs font-medium text-slate-800">
                                         Requires Document
-                                    </span>
-
-                                    <span className="text-xs text-gray-400">
-                                        Supporting document
-                                    </span>
+                                    </p>
+                                    <p className="text-[11px] text-slate-400">
+                                        Supporting document required
+                                    </p>
                                 </div>
 
                                 <Switch
                                     checked={requiresDocument}
                                     onCheckedChange={setRequiresDocument}
-                                    className="shrink-0 data-[state=checked]:bg-[#1078A9] data-[state=unchecked]:bg-gray-300"
+                                    className="scale-90 data-[state=checked]:bg-[#1078A9] data-[state=unchecked]:bg-slate-300"
                                 />
                             </div>
 
-                            {/* Allow Carry Over */}
-                            <div className="flex min-h-10 items-center justify-between px-3 py-2">
-                                <div className="flex min-w-0 items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-900">
+                            <div className="flex items-center justify-between px-3 py-2">
+                                <div>
+                                    <p className="text-xs font-medium text-slate-800">
                                         Allow Carry Over
-                                    </span>
-
-                                    <span className="text-xs text-gray-400">
-                                        Unused days
-                                    </span>
+                                    </p>
+                                    <p className="text-[11px] text-slate-400">
+                                        Unused days roll over
+                                    </p>
                                 </div>
+
                                 <Switch
                                     checked={carriesOver}
                                     disabled={!isPaid}
                                     onCheckedChange={setCarriesOver}
-                                    className="shrink-0 data-[state=checked]:bg-[#1078A9] data-[state=unchecked]:bg-gray-300"
+                                    className="scale-90 data-[state=checked]:bg-[#1078A9] data-[state=unchecked]:bg-slate-300"
                                 />
                             </div>
 
-                            {/* Maximum Carry Over */}
                             {carriesOver && (
-                                <div className="flex items-center justify-between bg-gray-50 px-3 py-2">
-                                    <div className="flex min-w-0 items-center gap-2">
-                                        <span className="text-sm font-medium text-gray-900">
-                                            Maximum Carry Over
-                                        </span>
-
-                                        <span className="text-xs text-gray-400">
-                                            Days allowed
-                                        </span>
-                                    </div>
+                                <div className="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
+                                    <Label htmlFor="carryover" className="text-xs text-slate-700">
+                                        Maximum Carry Over Days
+                                    </Label>
 
                                     <Input
                                         id="carryover"
@@ -235,7 +233,7 @@ const CreateLeaveTypeDialog = () => {
                                         value={maxCarryoverDays}
                                         onChange={(e) => setMaxCarryoverDays(e.target.value)}
                                         placeholder="5"
-                                        className="h-8 w-20 shrink-0 bg-white text-sm"
+                                        className="h-8 w-20 rounded-md border-slate-200 bg-white text-xs shadow-none"
                                     />
                                 </div>
                             )}
@@ -244,28 +242,34 @@ const CreateLeaveTypeDialog = () => {
                 </div>
 
                 {/* Footer */}
-                <DialogFooter className="border-t border-gray-100 pt-3">
+                <DialogFooter className="flex-row justify-end gap-2 border-t border-slate-100 bg-slate-50/50 px-8 py-6">
                     <Button
                         type="button"
                         variant="outline"
-                        className="h-8 px-3 text-sm"
+                        disabled={isPending}
                         onClick={() => setOpen(false)}
+                        className="h-8 rounded-md border-slate-200 bg-white px-3 text-xs text-slate-600 shadow-none hover:bg-slate-50"
                     >
                         Cancel
                     </Button>
 
                     <Button
-                        type="submit"
+                        type="button"
                         onClick={handleSubmit}
-                        className="h-8 bg-[#1078A9] px-3 text-sm text-white hover:bg-[#0d668f]"
+                        disabled={isPending || !name.trim() || !days}
+                        className="h-8 rounded-md bg-[#1078A9] px-3 text-xs text-white hover:bg-[#0d668f]"
                     >
                         {isPending ? (
                             <ButtonLoader text="Creating..." />
                         ) : (
-                            "Create Leave Type"
+                            <>
+                                <Plus size={13} className="mr-1" />
+                                Create Leave Type
+                            </>
                         )}
                     </Button>
                 </DialogFooter>
+
             </DialogContent>
         </Dialog>
     );
