@@ -4,7 +4,7 @@ import { AppError } from "../../errors/appError.ts";
 import prisma from "../../config/prisma.ts";
 import { deleteFromStorage, getPresignedUrl, uploadFileToS3 } from "../../config/storage.ts";
 import { AuthenticatedUser } from "../../middlewares/auth.ts";
-import { CreateDocumentTypeDto, EmployeeDocumentFilters, GetDocumentTypesInput, GetEmployeeDocumentsInput, UploadDocumentDto } from "./document.types.ts";
+import { CreateDocumentTypeDto, EmployeeDocumentFilters, GetDocumentTypesInput, GetEmployeeDocumentsInput, UpdateDocumentTypeDto, UploadDocumentDto } from "./document.types.ts";
 
 
 
@@ -78,9 +78,6 @@ export const createDocumentType = async (data: CreateDocumentTypeDto) => {
     return documentType;
 }
 
-
-
-
 export const getDocumentTypes = async (
   filters: GetDocumentTypesInput
 ) => {
@@ -119,6 +116,7 @@ export const getDocumentTypes = async (
       name: true,
       description: true,
       isRequired: true,
+      category: true,
       hasExpiry: true,
       isActive: true,
       createdAt: true,
@@ -133,6 +131,170 @@ export const getDocumentTypes = async (
   return documentTypes;
 };
 
+
+export const updateDocumentType = async (
+    id: string,
+    data: UpdateDocumentTypeDto
+) => {
+    const existingDocumentType = await prisma.documentType.findUnique({
+        where: { id },
+    });
+
+    if (!existingDocumentType) {
+        throw new AppError(
+            "Document type not found",
+            404,
+            "DOCUMENT_TYPE_NOT_FOUND"
+        );
+    }
+
+    // Check duplicate name
+    if (data.name && data.name !== existingDocumentType.name) {
+        const duplicateDocumentType = await prisma.documentType.findUnique({
+            where: {
+                name: data.name,
+            },
+        });
+
+        if (duplicateDocumentType) {
+            throw new AppError(
+                "A document type with this name already exists",
+                409,
+                "DOCUMENT_TYPE_ALREADY_EXISTS"
+            );
+        }
+    }
+
+    // Validate category
+    if (
+        data.category &&
+        !Object.values(DocumentCategory).includes(data.category)
+    ) {
+        throw new AppError(
+            "Invalid document category",
+            400,
+            "INVALID_DOCUMENT_CATEGORY"
+        );
+    }
+
+    // Validate extensions
+    if (data.allowedExtensions) {
+        const invalidExtensions = data.allowedExtensions.filter(
+            (extension) =>
+                !VALID_EXTENSIONS.includes(extension.toLowerCase())
+        );
+
+        if (invalidExtensions.length > 0) {
+            throw new AppError(
+                `Invalid file extension(s): ${invalidExtensions.join(", ")}`,
+                400,
+                "INVALID_FILE_EXTENSION"
+            );
+        }
+    }
+
+    // Validate maximum file size
+    if (data.maxSizeMb !== undefined && data.maxSizeMb <= 0) {
+        throw new AppError(
+            "Maximum file size must be greater than 0",
+            400,
+            "INVALID_MAX_FILE_SIZE"
+        );
+    }
+
+    const updatedDocumentType = await prisma.documentType.update({
+        where: { id },
+        data: {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.category !== undefined && {
+                category: data.category,
+            }),
+            ...(data.description !== undefined && {
+                description: data.description,
+            }),
+            ...(data.isRequired !== undefined && {
+                isRequired: data.isRequired,
+            }),
+            ...(data.hasExpiry !== undefined && {
+                hasExpiry: data.hasExpiry,
+            }),
+            ...(data.allowedExtensions !== undefined && {
+                allowedExtensions: data.allowedExtensions.map(
+                    (extension) => extension.toLowerCase()
+                ),
+            }),
+            ...(data.maxSizeMb !== undefined && {
+                maxSizeMb: data.maxSizeMb,
+            }),
+        },
+    });
+
+    return updatedDocumentType;
+};
+
+export const updateDocumentTypeStatus = async (
+    id: string,
+    isActive: boolean
+) => {
+    const existingDocumentType = await prisma.documentType.findUnique({
+        where: { id },
+    });
+
+    if (!existingDocumentType) {
+        throw new AppError(
+            "Document type not found",
+            404,
+            "DOCUMENT_TYPE_NOT_FOUND"
+        );
+    }
+
+    const updatedDocumentType = await prisma.documentType.update({
+        where: { id },
+        data: { isActive },
+    });
+
+    return updatedDocumentType;
+};
+
+export const deleteDocumentType = async (id: string) => {
+    const existingDocumentType = await prisma.documentType.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            name: true,
+            _count: {
+                select: {
+                    employeeDocuments: true,
+                },
+            },
+        },
+    });
+
+    if (!existingDocumentType) {
+        throw new AppError(
+            "Document type not found",
+            404,
+            "DOCUMENT_TYPE_NOT_FOUND"
+        );
+    }
+
+    if (existingDocumentType._count.employeeDocuments > 0) {
+        throw new AppError(
+            "This document type cannot be deleted because employee documents are linked to it. Deactivate it instead.",
+            409,
+            "DOCUMENT_TYPE_IN_USE"
+        );
+    }
+
+    await prisma.documentType.delete({
+        where: { id },
+    });
+
+    return {
+        id: existingDocumentType.id,
+        name: existingDocumentType.name,
+    };
+};
 
 export const uploadDocument = async (data: UploadDocumentDto) => {
     // 1. Validate document type
@@ -201,7 +363,6 @@ export const uploadDocument = async (data: UploadDocumentDto) => {
 
     return document;
 };
-
 
 export const getAllEmployeeDocuments = async ({
     status,
@@ -353,7 +514,6 @@ export const getAllEmployeeDocuments = async ({
         },
     };
 };
-
 
 const fetchEmployeeDocuments = async (
     employeeId: string,
@@ -665,7 +825,6 @@ export const verifyDocument = async (
 
 }
 
-
 export const getDocumentsStats = async () => {
 
     const [total, pending, approved, rejected] = await Promise.all([
@@ -679,7 +838,6 @@ export const getDocumentsStats = async () => {
     return { total, pending, approved, rejected };
 
 }
-
 
 export const getRecentDocuments = async () => {
 
@@ -894,6 +1052,7 @@ export const getMyDocumentStats = async (employeeId: string) => {
         needsAttention,
     };
 };
+
 export const deleteEmployeeDocument = async (documentId: string) => {
     const employeeDocument = await prisma.employeeDocument.findUnique({
         where: {
