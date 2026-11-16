@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { CreateDocumentTypeDto, DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, DocumentTypeFilters, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, MyDocument, MyDocumentsResponse, MyDocumentStats, RecentDocumentsResponse, UploadDocumentPayload } from "../types/documents.types";
+import type { CreateDocumentTypeDto, DeleteDocumentTypePayload, DeleteDocumentTypeResponse, DocsFilters, DocumentDetails, DocumentsResponse, DocumentStatsResponse, DocumentType, DocumentTypeFilters, DocumentTypeResponse, EmployeeDocument, ExpiringDocumentsResponse, GetDocumentTypesResponse, MyDocument, MyDocumentsResponse, MyDocumentStats, RecentDocumentsResponse, UpdateDocumentTypePayload, UpdateDocumentTypeStatusPayload, UploadDocumentPayload } from "../types/documents.types";
 import type { ApiResponse } from "@/features/employees/types/employee.types";
 
 export const getDocumentStats = async (): Promise<DocumentStatsResponse> => {
@@ -167,4 +167,39 @@ export const getMyDocumentDownloadUrl = async (
   );
 
   return response.data.data.url;
+};
+
+
+
+export const updateDocumentType = async ({
+    id,
+    ...data
+}: UpdateDocumentTypePayload): Promise<DocumentTypeResponse> => {
+    const response = await api.patch<DocumentTypeResponse>(
+        `/api/documents/types/${id}`,
+        data,
+    );
+
+    return response.data;
+};
+
+export const updateDocumentTypeStatus = async ({
+    id,
+    isActive,
+}: UpdateDocumentTypeStatusPayload): Promise<DocumentTypeResponse> => {
+    const response = await api.patch<DocumentTypeResponse>(
+        `/api/documents/types/${id}/status`,
+        { isActive },
+    );
+
+    return response.data;
+};
+export const deleteDocumentType = async ({
+    id,
+}: DeleteDocumentTypePayload): Promise<DeleteDocumentTypeResponse> => {
+    const response = await api.delete<DeleteDocumentTypeResponse>(
+        `/api/documents/types/${id}`,
+    );
+
+    return response.data;
 };
