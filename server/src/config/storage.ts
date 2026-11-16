@@ -51,11 +51,12 @@ export async function getPresignedUrl(
     Bucket: bucket,
     Key: key,
     ResponseContentDisposition:
-      `attachment; filename*=UTF-8''${safeFileName}`,
+      `inline; filename*=UTF-8''${safeFileName}`,
   });
 
   return getSignedUrl(client, command, { expiresIn });
 }
+
 export async function deleteFromStorage(key: string): Promise<void> {
   await client.send(
     new DeleteObjectCommand({
