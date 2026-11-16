@@ -1,8 +1,8 @@
 import express from 'express';
 import { authenticate } from '../../middlewares/auth.ts'
-import { createDocumentTypeController, deleteEmployeeDocumentController, getAllEmployeeDocumentsController, getDocumentByIdController, getDocumentDownloadUrlController, getDocumentsStatsController, getDocumentTypesController, getEmployeeDocumentsController, getExpiredDocumentsController, getExpiringDocumentsController, getMyDocumentsController, getMyDocumentStatsController, getRecentDocumentsController, selfUploadDocumentController, uploadEmployeeDocumentController, verifyDocumentController } from './document.controller.ts';
+import { createDocumentTypeController, deleteDocumentTypeController, deleteEmployeeDocumentController, getAllEmployeeDocumentsController, getDocumentByIdController, getDocumentDownloadUrlController, getDocumentsStatsController, getDocumentTypesController, getEmployeeDocumentsController, getExpiredDocumentsController, getExpiringDocumentsController, getMyDocumentsController, getMyDocumentStatsController, getRecentDocumentsController, selfUploadDocumentController, updateDocumentTypeController, updateDocumentTypeStatusController, uploadEmployeeDocumentController, verifyDocumentController } from './document.controller.ts';
 import { asyncHandler } from '../../utils/asyncHandler.ts';
-import { requireRoles } from '../../middlewares/role.ts';
+import { requireRoles} from '../../middlewares/role.ts';
 import upload from '../../middlewares/upload.ts';
 
 const documentRouter = express.Router();
@@ -23,4 +23,7 @@ documentRouter.get('/:documentId', authenticate, asyncHandler(getDocumentByIdCon
 documentRouter.get('/download/:documentId', authenticate, asyncHandler(getDocumentDownloadUrlController))
 documentRouter.patch('/verify/:documentId', authenticate, requireRoles("admin","hr"), asyncHandler(verifyDocumentController))
 documentRouter.delete("/:documentId",authenticate,requireRoles("admin", "hr"),asyncHandler(deleteEmployeeDocumentController));
+documentRouter.patch("/types/:id",authenticate,requireRoles("admin", "hr"), asyncHandler(updateDocumentTypeController));
+documentRouter.patch("/types/:id/status",authenticate,requireRoles("admin", "hr"),asyncHandler(updateDocumentTypeStatusController));
+documentRouter.delete("/types/:id",authenticate, requireRoles("admin", "hr"),asyncHandler(deleteDocumentTypeController));
 export default documentRouter;
