@@ -5,7 +5,7 @@ import { calculateWorkingDays } from "../../utils/date.utils.ts";
 import { User } from "../employees/employee.service.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 import { DateTime } from "luxon";
-import { CreateLeaveTypes, GetLeaveRequestsInput, LeaveBalanceFilters, SubmitLeaveRequestType, UpdateLeaveTypes } from "./leave.types.ts";
+import { CreateLeaveTypes, DeleteLeaveType, GetLeaveRequestsInput, LeaveBalanceFilters, SubmitLeaveRequestType, UpdateLeaveTypes } from "./leave.types.ts";
 
 export const createLeaveTypes = async ({
     name,
@@ -269,14 +269,6 @@ export const updateLeaveTypes = async ({
     });
 };
 
-
-
-interface DeleteLeaveType {
-  id: string;
-  user: {
-    role: string;
-  };
-}
 
 export const deleteLeaveTypes = async ({
   id,
