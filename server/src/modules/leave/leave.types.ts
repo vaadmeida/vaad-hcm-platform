@@ -79,3 +79,10 @@ export interface UpdateLeaveTypes {
     role: string;
   };
 }
+
+export interface DeleteLeaveType {
+  id: string;
+  user: {
+    role: string;
+  };
+}
