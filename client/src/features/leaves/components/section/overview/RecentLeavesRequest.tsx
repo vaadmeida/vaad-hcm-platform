@@ -1,5 +1,5 @@
 import ErrorState from "@/components/common/ErrorState";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
+import GlobalListSkeleton from "@/features/dashboard/components/GlobalListSkeleton";
 import { useRecentLeaveRequests } from "@/features/leaves/hooks/useRecentLeaves";
 
 import { Check, X } from "lucide-react";
@@ -17,7 +17,7 @@ const RecentLeavesRequest = () => {
     }
 
     if (isLoading) {
-        return <SkeletonLoader />;
+        return <GlobalListSkeleton />;
     }
 
     const requests = data?.data ?? [];
