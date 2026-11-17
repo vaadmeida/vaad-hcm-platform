@@ -1,4 +1,13 @@
--- Add calculation fields if they do not already exist.
+DO $$
+BEGIN
+    CREATE TYPE "EarningCalculationType" AS ENUM (
+        'FIXED',
+        'PERCENTAGE'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
 ALTER TABLE "AdditionalEarning"
 ADD COLUMN IF NOT EXISTS "calculationType"
     "EarningCalculationType" NOT NULL DEFAULT 'FIXED',
