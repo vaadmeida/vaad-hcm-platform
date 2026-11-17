@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { addDays, format, startOfDay } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import {
     CalendarIcon,
     Loader2,
@@ -67,15 +67,15 @@ const calculationBaseOptions: {
     value: CalculationBaseType;
     label: string;
 }[] = [
-    { value: "GROSS_SALARY", label: "Gross Salary" },
-    { value: "BASIC_SALARY", label: "Basic Salary" },
-    { value: "HOUSING_ALLOWANCE", label: "Housing Allowance" },
-    { value: "TRANSPORT_ALLOWANCE", label: "Transport Allowance" },
-    { value: "MEDICAL_ALLOWANCE", label: "Medical Allowance" },
-    { value: "MEAL_ALLOWANCE", label: "Meal Allowance" },
-    { value: "WARDROBE_ALLOWANCE", label: "Wardrobe Allowance" },
-    { value: "CUSTOM_AMOUNT", label: "Custom Amount" },
-];
+        { value: "GROSS_SALARY", label: "Gross Salary" },
+        { value: "BASIC_SALARY", label: "Basic Salary" },
+        { value: "HOUSING_ALLOWANCE", label: "Housing Allowance" },
+        { value: "TRANSPORT_ALLOWANCE", label: "Transport Allowance" },
+        { value: "MEDICAL_ALLOWANCE", label: "Medical Allowance" },
+        { value: "MEAL_ALLOWANCE", label: "Meal Allowance" },
+        { value: "WARDROBE_ALLOWANCE", label: "Wardrobe Allowance" },
+        { value: "CUSTOM_AMOUNT", label: "Custom Amount" },
+    ];
 
 const additionalEarningSchema = z
     .object({
@@ -293,14 +293,13 @@ const ReviewEmployeeSalaryForm = ({
                         : undefined,
                 frequency: earning.frequency,
             }));
-
         const currentEffectiveDate = new Date(currentSalary.effectiveDate);
 
         reset({
             annualBaseSalary: Number(currentSalary.annualBaseSalary),
             paye: Number(currentSalary.paye),
             effectiveDate: format(
-                addDays(currentEffectiveDate, 1),
+                currentEffectiveDate,
                 "yyyy-MM-dd"
             ),
             additionalEarnings: customEarnings,
@@ -466,23 +465,23 @@ const ReviewEmployeeSalaryForm = ({
         earningDraft.calculationBaseType === "CUSTOM_AMOUNT"
             ? Number(earningDraft.calculationBase)
             : earningDraft.calculationBaseType
-              ? annualBaseSalary *
+                ? annualBaseSalary *
                 annualComponentShares[earningDraft.calculationBaseType]
-              : 0;
+                : 0;
 
     const selectedCalculationBase =
         earningDraft.calculationBaseType === "CUSTOM_AMOUNT"
             ? selectedAnnualBase
             : earningDraft.frequency === "ANNUAL"
-              ? selectedAnnualBase
-              : selectedAnnualBase / 12;
+                ? selectedAnnualBase
+                : selectedAnnualBase / 12;
 
     const estimatedAmount =
         earningDraft.calculationType === "PERCENTAGE" &&
-        Number(earningDraft.percentage) > 0 &&
-        selectedCalculationBase > 0
+            Number(earningDraft.percentage) > 0 &&
+            selectedCalculationBase > 0
             ? (selectedCalculationBase * Number(earningDraft.percentage)) /
-              100
+            100
             : null;
 
     const selectedBaseLabel = calculationBaseOptions.find(
@@ -618,11 +617,11 @@ const ReviewEmployeeSalaryForm = ({
 
                                                 {field.value
                                                     ? format(
-                                                          new Date(
-                                                              `${field.value}T12:00:00`
-                                                          ),
-                                                          "PPP"
-                                                      )
+                                                        new Date(
+                                                            `${field.value}T12:00:00`
+                                                        ),
+                                                        "PPP"
+                                                    )
                                                     : "Select effective date"}
                                             </Button>
                                         </PopoverTrigger>
@@ -636,8 +635,8 @@ const ReviewEmployeeSalaryForm = ({
                                                 selected={
                                                     field.value
                                                         ? new Date(
-                                                              `${field.value}T12:00:00`
-                                                          )
+                                                            `${field.value}T12:00:00`
+                                                        )
                                                         : undefined
                                                 }
                                                 disabled={(date) =>
@@ -753,10 +752,10 @@ const ReviewEmployeeSalaryForm = ({
                                     const earningValue = isPercentage
                                         ? `${Number(currentEarning.percentage ?? 0)}%`
                                         : formatCurrency(
-                                              Number(
-                                                  currentEarning.amount ?? 0
-                                              )
-                                          );
+                                            Number(
+                                                currentEarning.amount ?? 0
+                                            )
+                                        );
 
                                     const baseLabel =
                                         calculationBaseOptions.find(
@@ -859,7 +858,7 @@ const ReviewEmployeeSalaryForm = ({
                         <Button
                             type="button"
                             onClick={(event) => {
-                               event.preventDefault();
+                                event.preventDefault();
                                 event.stopPropagation();
                                 void handleContinue();
                             }}
@@ -1139,47 +1138,47 @@ const ReviewEmployeeSalaryForm = ({
 
                                 {earningDraft.calculationBaseType ===
                                     "CUSTOM_AMOUNT" && (
-                                    <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="calculationBase"
-                                            className="text-xs"
-                                        >
-                                            Custom calculation base (₦)
-                                        </Label>
+                                        <div className="space-y-1.5">
+                                            <Label
+                                                htmlFor="calculationBase"
+                                                className="text-xs"
+                                            >
+                                                Custom calculation base (₦)
+                                            </Label>
 
-                                        <Input
-                                            id="calculationBase"
-                                            type="number"
-                                            min="0.01"
-                                            step="0.01"
-                                            value={earningDraft.calculationBase}
-                                            onChange={(event) => {
-                                                setEarningDraft((draft) => ({
-                                                    ...draft,
-                                                    calculationBase:
-                                                        event.target.value,
-                                                }));
+                                            <Input
+                                                id="calculationBase"
+                                                type="number"
+                                                min="0.01"
+                                                step="0.01"
+                                                value={earningDraft.calculationBase}
+                                                onChange={(event) => {
+                                                    setEarningDraft((draft) => ({
+                                                        ...draft,
+                                                        calculationBase:
+                                                            event.target.value,
+                                                    }));
 
-                                                setEarningDraftErrors(
-                                                    (prev) => ({
-                                                        ...prev,
-                                                        calculationBase: "",
-                                                    })
-                                                );
-                                            }}
-                                            placeholder="Enter custom base amount"
-                                            className={inputClassName}
-                                        />
+                                                    setEarningDraftErrors(
+                                                        (prev) => ({
+                                                            ...prev,
+                                                            calculationBase: "",
+                                                        })
+                                                    );
+                                                }}
+                                                placeholder="Enter custom base amount"
+                                                className={inputClassName}
+                                            />
 
-                                        {earningDraftErrors.calculationBase && (
-                                            <p className="text-xs text-destructive">
-                                                {
-                                                    earningDraftErrors.calculationBase
-                                                }
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
+                                            {earningDraftErrors.calculationBase && (
+                                                <p className="text-xs text-destructive">
+                                                    {
+                                                        earningDraftErrors.calculationBase
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
 
                                 {estimatedAmount !== null && (
                                     <div className="rounded-md bg-[#1078A9]/5 px-3 py-2">
@@ -1197,7 +1196,7 @@ const ReviewEmployeeSalaryForm = ({
 
                                         <p className="mt-0.5 text-[10px] text-gray-500">
                                             {earningDraft.calculationBaseType ===
-                                            "CUSTOM_AMOUNT"
+                                                "CUSTOM_AMOUNT"
                                                 ? "Based on your custom calculation amount."
                                                 : `Based on ${selectedBaseLabel ?? "the selected salary component"}.`}{" "}
                                             The server calculates the final
