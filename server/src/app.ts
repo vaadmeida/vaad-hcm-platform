@@ -14,6 +14,7 @@ import documentRouter from './modules/documents/document.route.ts';
 import salaryRouter from './modules/salary/salary.routes.ts';
 import onboardingRouter from './modules/onboarding/onboarding.routes.ts';
 import notificationRouter from './modules/notifications/notification.route.ts';
+import payrollRouter from './modules/payroll/payroll.routes.ts';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/settings' , settingRouter)
 app.use("/api/salaries", salaryRouter);
 app.use("/api/onboarding", onboardingRouter);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/payrolls", payrollRouter);
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
