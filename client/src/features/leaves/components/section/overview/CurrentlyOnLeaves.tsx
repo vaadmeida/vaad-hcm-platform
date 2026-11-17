@@ -1,6 +1,6 @@
 import ErrorState from "@/components/common/ErrorState";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { useCurrentlyOnLeaves} from "../../../hooks/useCurrentlyOnLeaves";
+import GlobalListSkeleton from "@/features/dashboard/components/GlobalListSkeleton";
 
 const CurrentlyOnLeaves = () => {
   const { data, isLoading, error, refetch } = useCurrentlyOnLeaves();
@@ -15,7 +15,7 @@ const CurrentlyOnLeaves = () => {
   }
 
   if (isLoading) {
-    return <SkeletonLoader />;
+    return <GlobalListSkeleton />;
   }
 
   const requests = data?.data ?? [];
