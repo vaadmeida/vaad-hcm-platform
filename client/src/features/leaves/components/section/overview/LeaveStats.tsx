@@ -1,27 +1,22 @@
-import ErrorState from "@/components/common/ErrorState";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { CalendarDays, CircleCheck, Clock, FileText } from "lucide-react";
 import StatsCard from "@/features/dashboard/components/StatsCard";
 import { useLeaveStats } from "@/features/leaves/hooks/useLeaveStats";
-
+import ErrorState from "@/components/common/ErrorState";
+import GlobalStatsOverview from "@/features/dashboard/components/GlobalStatsOverview";
 
 const LeaveStats = () => {
+    const { data, isLoading, error, refetch } = useLeaveStats();
 
-    const { isLoading, data, error, refetch } = useLeaveStats();
+   if (isLoading) return <GlobalStatsOverview />;
 
     if (error) {
         return (
             <ErrorState
-                message="Unable to load dashboard statistics."
+                message="Unable to load leave statistics."
                 onRetry={refetch}
             />
         );
     }
-
-    if (isLoading) {
-        return <SkeletonLoader />
-    }
-
 
     const stats = data?.data;
 
@@ -56,14 +51,13 @@ const LeaveStats = () => {
         },
     ];
 
-
     return (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {cards.map((card) => (
                 <StatsCard key={card.title} {...card} />
             ))}
         </div>
-    )
-}
+    );
+};
 
-export default LeaveStats
+export default LeaveStats;
