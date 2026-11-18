@@ -63,7 +63,8 @@ export const AppRoutes = () => {
                <Route element={<RoleRoute allowedRoles={["admin", "hr"]} />}>
                   <Route path="/departments" element={<DepartmentPage />} />
                   <Route path="/documents" element={<DocumentPage />} />
-                  <Route path="/payroll" element={<PayrollPage />} />                  
+                  <Route path="/payroll" element={<PayrollPage />} />    
+                                
                   <Route path="/onboarding" element={<OnboardingPage />} />
                </Route>
 

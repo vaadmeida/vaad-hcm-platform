@@ -1,6 +1,7 @@
 import type { PayrollTabsTypes } from "@/features/payroll/components/PayrollTabs"
 import PayrollTabs from "@/features/payroll/components/PayrollTabs"
 import { PayrollToolbar } from "@/features/payroll/components/PayrollToolbar"
+import MonthlyPayroll from "@/features/payroll/components/sections/monthly-payroll/MonthlyPayroll"
 import PayrollOverview from "@/features/payroll/components/sections/overview/PayrollOverview"
 import EmployeeSalaryStructure from "@/features/salary/components/employeeSalary/EmployeeSalaryStructure"
 import { useState } from "react"
@@ -22,6 +23,11 @@ const PayrollPage = () => {
             {
                 activeTab === 'Salary Structures' && (
                     <EmployeeSalaryStructure />
+                )
+            }
+            {
+                activeTab === 'Monthly Payroll' && (
+                    <MonthlyPayroll />
                 )
             }
 
