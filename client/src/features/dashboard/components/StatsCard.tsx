@@ -2,10 +2,10 @@ import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
     title: string;
-    value: number;
+    value: string | number;
+    description: string;
     icon: LucideIcon;
-    iconColor?: string;
-    description?: string;
+    iconColor: string;
 }
 
 
