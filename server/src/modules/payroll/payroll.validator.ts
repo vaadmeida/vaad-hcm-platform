@@ -16,8 +16,9 @@ export const preparePayrollSchema = z.object({
 
 export const getPayrollsQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(10),
+    limit: z.coerce.number().int().min(1).max(100).default(7),
     year: z.coerce.number().int().min(2000).max(2100).optional(),
     month: z.coerce.number().int().min(1).max(12).optional(),
     status: z.nativeEnum(MonthlyPayrollStatus).optional(),
+    search: z.string().trim().optional(),
 });

@@ -75,7 +75,6 @@ export const getPayrollByIdController = async (
     req: Request,
     res: Response,
 ) => {
-
     const { payrollId } = req.params;
 
     if (typeof payrollId !== "string") {
@@ -83,10 +82,28 @@ export const getPayrollByIdController = async (
             "Invalid payroll ID.",
             400,
             "INVALID_PAYROLL_ID"
-        )
+        );
     }
 
-    const payroll = await getPayrollById(payrollId);
+    const search =
+        typeof req.query.search === "string"
+            ? req.query.search.trim()
+            : undefined;
+
+    const department =
+        typeof req.query.department === "string"
+            ? req.query.department
+            : undefined;
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 7;
+
+    const payroll = await getPayrollById(payrollId, {
+        search,
+        department,
+        page,
+        limit,
+    });
 
     res.status(200).json({
         success: true,
@@ -94,7 +111,6 @@ export const getPayrollByIdController = async (
         data: { payroll },
     });
 };
-
 
 export const getPayrollsController = async (
     req: Request,
@@ -117,33 +133,33 @@ export const reviewPayrollController = async (
     req: Request,
     res: Response,
 ) => {
-      const { payrollId } = req.params;
+    const { payrollId } = req.params;
 
-        if (typeof payrollId !== "string") {
-            throw new AppError(
-                "Invalid payroll ID.",
-                400,
-                "INVALID_PAYROLL_ID"
-            )
-        }
+    if (typeof payrollId !== "string") {
+        throw new AppError(
+            "Invalid payroll ID.",
+            400,
+            "INVALID_PAYROLL_ID"
+        )
+    }
 
-        const userId = req.user?.id;
+    const userId = req.user?.id;
 
-        if (!userId) {
-            throw new AppError(
-                "Unauthorized. User information is missing.",
-                401,
-                "UNAUTHORIZED"
-            );
-        }
+    if (!userId) {
+        throw new AppError(
+            "Unauthorized. User information is missing.",
+            401,
+            "UNAUTHORIZED"
+        );
+    }
 
-        const payroll = await reviewPayroll(payrollId, userId);
+    const payroll = await reviewPayroll(payrollId, userId);
 
-        res.status(200).json({
-            success: true,
-            message: "Payroll reviewed successfully.",
-            data: { payroll },
-        });
+    res.status(200).json({
+        success: true,
+        message: "Payroll reviewed successfully.",
+        data: { payroll },
+    });
 };
 
 export const approvePayrollController = async (
@@ -153,27 +169,27 @@ export const approvePayrollController = async (
 ) => {
 
 
-     const { payrollId } = req.params;
+    const { payrollId } = req.params;
 
-        if (typeof payrollId !== "string") {
-            throw new AppError(
-                "Invalid payroll ID.",
-                400,
-                "INVALID_PAYROLL_ID"
-            )
-        }
+    if (typeof payrollId !== "string") {
+        throw new AppError(
+            "Invalid payroll ID.",
+            400,
+            "INVALID_PAYROLL_ID"
+        )
+    }
 
-        const userId = req.user?.id;
+    const userId = req.user?.id;
 
-        if (!userId) {
-            throw new AppError(
-                "Unauthorized. User information is missing.",
-                401,
-                "UNAUTHORIZED"
-            );
-        }
+    if (!userId) {
+        throw new AppError(
+            "Unauthorized. User information is missing.",
+            401,
+            "UNAUTHORIZED"
+        );
+    }
 
-    const payroll = await approvePayroll(payrollId,userId);
+    const payroll = await approvePayroll(payrollId, userId);
 
     res.status(200).json({
         success: true,

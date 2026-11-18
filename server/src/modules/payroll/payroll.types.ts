@@ -75,6 +75,7 @@ export interface GetPayrollsInput {
     limit: number;
     year?: number;
     month?: number;
+    search?: string;
     status?: MonthlyPayrollStatus;
 
 }
