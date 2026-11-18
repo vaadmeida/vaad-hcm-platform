@@ -2,6 +2,7 @@ import { Prisma, CalculationBaseType, MonthlyPayrollStatus } from "@prisma/clien
 import prisma from "../../config/prisma.ts";
 import { AppError } from "../../errors/appError.ts";
 import type { EmployeePayrollSnapshot, GetPayrollsInput, PreparePayrollInput, SalaryPeriod } from "./payroll.types.ts";
+import { getPresignedUrl } from "../../config/storage.ts";
 
 export const preparePayroll = async (
     input: PreparePayrollInput,
@@ -61,7 +62,6 @@ export const preparePayroll = async (
         throw error;
     }
 };
-
 
 const ELIGIBLE_STATUSES = [
     "active",
@@ -688,20 +688,27 @@ export const calculateMonthlyPayroll = async (
     });
 };
 
-export const getPayrollById = async (payrollId: string) => {
+interface GetPayrollByIdParams {
+    search?: string;
+    department?: string;
+    page?: number;
+    limit?: number;
+}
+
+export const getPayrollById = async (
+    payrollId: string,
+    params: GetPayrollByIdParams
+) => {
+    const {
+        search,
+        department,
+        page = 1,
+        limit = 7,
+    } = params;
+
     const payroll = await prisma.monthlyPayroll.findUnique({
         where: { id: payrollId },
         include: {
-            employees: {
-                include: {
-                    components: true,
-                    earnings: true,
-                    payslip: true,
-                },
-                orderBy: {
-                    employeeName: "asc",
-                },
-            },
             annualEarningPayments: {
                 orderBy: {
                     createdAt: "asc",
@@ -718,51 +725,116 @@ export const getPayrollById = async (payrollId: string) => {
         );
     }
 
-    return payroll;
+    const where = {
+        payrollId,
+        ...(search && {
+            OR: [
+                {
+                    employeeName: {
+                        contains: search,
+                        mode: "insensitive" as const,
+                    },
+                },
+                {
+                    employeeNumber: {
+                        contains: search,
+                        mode: "insensitive" as const,
+                    },
+                },
+            ],
+        }),
+        ...(department && {
+            departmentNames: {
+                has: department,
+            },
+        }),
+    };
+
+    const [employees, totalEmployees, allEmployees] = await Promise.all([
+        prisma.monthlyPayrollEmployee.findMany({
+            where,
+            include: {
+                components: true,
+                earnings: true,
+                payslip: true,
+                employee: {
+                    select: {
+                        avatar_url: true,
+                        employee_code: true
+                    },
+                },
+            },
+            orderBy: {
+                employeeName: "asc",
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+        }),
+
+        prisma.monthlyPayrollEmployee.count({ where }),
+
+        prisma.monthlyPayrollEmployee.findMany({
+            where: { payrollId },
+            select: {
+                departmentNames: true,
+            },
+        }),
+    ]);
+
+    const departments = [
+        ...new Set(
+            allEmployees.flatMap(
+                (employee) => employee.departmentNames
+            )
+        ),
+    ].sort();
+
+    const employeesWithAvatar = await Promise.all(
+        employees.map(async (employee) => ({
+            ...employee,
+            employee: employee.employee
+                ? {
+                    ...employee.employee,
+                    avatar_url: employee.employee.avatar_url
+                        ? await getPresignedUrl(employee.employee.avatar_url)
+                        : null,
+                }
+                : null,
+        }))
+    );
+
+    return {
+        ...payroll,
+        employees: employeesWithAvatar,
+        departments,
+        pagination: {
+            page,
+            limit,
+            total: totalEmployees,
+            totalPages: Math.ceil(totalEmployees / limit),
+        },
+    };
 };
 
+
 export const getPayrolls = async (query: GetPayrollsInput) => {
-    const { page, limit, year, month, status } = query;
+    const { page, limit, year, month, status, search } = query;
 
     const skip = (page - 1) * limit;
 
-    // Filters apply to the payroll history table.
+    const searchYear =
+        search && /^\d{4}$/.test(search)
+            ? Number(search)
+            : undefined;
+
     const where: Prisma.MonthlyPayrollWhereInput = {
         ...(year && { year }),
         ...(month && { month }),
         ...(status && { status }),
+        ...(searchYear && { year: searchYear }),
     };
 
-    // Summary cards count all payroll periods.
-    const [
-        totalPayrolls,
-        statusCounts,
-        latestPayroll,
-        payrolls,
-        filteredTotal,
-    ] = await Promise.all([
-        prisma.monthlyPayroll.count(),
-
-        prisma.monthlyPayroll.groupBy({
-            by: ["status"],
-            _count: {
-                _all: true,
-            },
-        }),
-
-        prisma.monthlyPayroll.findFirst({
-            orderBy: [
-                { year: "desc" },
-                { month: "desc" },
-            ],
-            select: {
-                month: true,
-                year: true,
-                status: true,
-                totalNetPay: true,
-            },
-        }),
-
+    const [payrolls, total, availableYears] = await Promise.all([
         prisma.monthlyPayroll.findMany({
             where,
             orderBy: [
@@ -788,43 +860,28 @@ export const getPayrolls = async (query: GetPayrollsInput) => {
         }),
 
         prisma.monthlyPayroll.count({ where }),
+
+        prisma.monthlyPayroll.findMany({
+            distinct: ["year"],
+            select: {
+                year: true,
+            },
+            orderBy: {
+                year: "desc",
+            },
+        }),
     ]);
 
-    const getStatusCount = (targetStatus: MonthlyPayrollStatus) =>
-        statusCounts.find(
-            (item) => item.status === targetStatus
-        )?._count._all ?? 0;
-
-    const totalProcessed = getStatusCount("PROCESSED");
-
-    const totalPending =
-        getStatusCount("DRAFT") +
-        getStatusCount("CALCULATED") +
-        getStatusCount("REVIEWED") +
-        getStatusCount("APPROVED");
-
     return {
-        stats: {
-            totalPayrolls,
-            totalProcessed,
-            totalPending,
-            latestPayroll: latestPayroll
-                ? {
-                    month: latestPayroll.month,
-                    year: latestPayroll.year,
-                    status: latestPayroll.status,
-                    netPay: latestPayroll.totalNetPay,
-                }
-                : null,
-        },
+        years: availableYears.map((item) => item.year),
 
         payrolls,
 
         pagination: {
             page,
             limit,
-            total: filteredTotal,
-            totalPages: Math.ceil(filteredTotal / limit),
+            total,
+            totalPages: Math.ceil(total / limit),
         },
     };
 };
@@ -900,4 +957,4 @@ export const approvePayroll = async (
             },
         });
     });
-};
+}
