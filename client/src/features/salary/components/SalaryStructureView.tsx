@@ -7,10 +7,10 @@ import SalaryComponents from "@/features/salary/components/SalaryComponents";
 import AdditionalEarnings from "@/features/salary/components/AdditionalEarnings";
 
 import { useEmployeeSalary } from "@/features/salary/hooks/useEmployeeSalary";
-import SalaryHistory from "./salary-histpry/SalaryHistory";
+import SalaryHistory from "./salary-history/SalaryHistory";
 import { useState } from "react";
 import type { EmployeeSalaryHistory } from "../types/salary.types";
-import SalaryHistoryDetailsModal from "./salary-histpry/SalaryHistoryDetailsModal";
+import SalaryHistoryDetailsModal from "./salary-history/SalaryHistoryDetailsModal";
 
 interface SalaryStructureViewProps {
     employeeId: string;

@@ -7,8 +7,21 @@ import {
     History,
     TrendingUp,
     CircleDollarSign,
-    Info, 
+    Info,
+    Trash2,
 } from "lucide-react";
+
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import {
     Dialog,
@@ -22,6 +35,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import type { EmployeeSalaryHistory } from "../../types/salary.types";
+import { useDeleteSalaryHistory } from "../../hooks/useDeleteSalaryHistory";
+import { useAuthStore } from "@/store/auth.store";
+import { useState } from "react";
+import ButtonLoader from "@/components/common/ButtonLoader";
 
 interface SalaryHistoryDetailsModalProps {
     open: boolean;
@@ -56,7 +73,28 @@ const SalaryHistoryDetailsModal = ({
     onOpenChange,
     salary,
 }: SalaryHistoryDetailsModalProps) => {
+
+
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const user = useAuthStore((state) => state.user);
+    const deleteHistory = useDeleteSalaryHistory(salary?.employeeId ?? "");
+    const isDeleting = deleteHistory.isPending;
+
     if (!salary) return null;
+
+    const isAdmin = user?.role === "admin" || "hr";
+    const canDelete = isAdmin && salary.endDate !== null;
+
+    const handleDelete = () => {
+        if (!canDelete || deleteHistory.isPending) return;
+
+        deleteHistory.mutate(salary.id, {
+            onSuccess: () => {
+                setConfirmDeleteOpen(false);
+                onOpenChange(false);
+            },
+        });
+    };
 
     const overviewItems = [
         {
@@ -195,8 +233,8 @@ const SalaryHistoryDetailsModal = ({
                                     <div
                                         key={item.label}
                                         className={`rounded-xl border p-4 ${item.highlight
-                                                ? "border-[#1078A9]/25 bg-[#1078A9]/4"
-                                                : "border-gray-200 bg-white"
+                                            ? "border-[#1078A9]/25 bg-[#1078A9]/4"
+                                            : "border-gray-200 bg-white"
                                             }`}
                                     >
                                         <div className="flex items-center justify-between gap-2">
@@ -216,8 +254,8 @@ const SalaryHistoryDetailsModal = ({
 
                                         <p
                                             className={`mt-3 wrap-break-word text-lg font-semibold tracking-tight ${item.highlight
-                                                    ? "text-[#1078A9]"
-                                                    : "text-gray-900"
+                                                ? "text-[#1078A9]"
+                                                : "text-gray-900"
                                                 }`}
                                         >
                                             {item.value}
@@ -274,22 +312,22 @@ const SalaryHistoryDetailsModal = ({
                                 </div>
                             ))}
 
-                           <div className="grid grid-cols-[1.2fr_0.7fr_1.2fr] items-center gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:px-5">
-    <span className="text-sm font-semibold text-gray-900">
-        Total
-    </span>
+                            <div className="grid grid-cols-[1.2fr_0.7fr_1.2fr] items-center gap-3 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:px-5">
+                                <span className="text-sm font-semibold text-gray-900">
+                                    Total
+                                </span>
 
-    <span className="text-center text-sm font-semibold text-gray-700">
-        {salary.components.reduce(
-            (total, component) => total + Number(component.percentage),
-            0
-        )}%
-    </span>
+                                <span className="text-center text-sm font-semibold text-gray-700">
+                                    {salary.components.reduce(
+                                        (total, component) => total + Number(component.percentage),
+                                        0
+                                    )}%
+                                </span>
 
-    <span className="text-right text-sm font-bold tabular-nums text-gray-900">
-        {formatCurrency(salary.annualBaseSalary)}
-    </span>
-</div>
+                                <span className="text-right text-sm font-bold tabular-nums text-gray-900">
+                                    {formatCurrency(salary.annualBaseSalary)}
+                                </span>
+                            </div>
                         </div>
                     </section>
 
@@ -388,13 +426,72 @@ const SalaryHistoryDetailsModal = ({
                         Historical salary record
                     </p>
 
-                    <Button
-                        variant="outline"
-                        className="min-w-24 border-gray-200 cursor-pointer hover:bg-gray-100"
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Close
-                    </Button>
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-gray-100 bg-white px-6 py-4 sm:px-8">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={deleteHistory.isPending}
+                            onClick={() => onOpenChange(false)}
+                        >
+                            Close
+                        </Button>
+                        {canDelete && (
+                            <AlertDialog
+                                open={confirmDeleteOpen}
+                                onOpenChange={(open) => {
+                                    if (!isDeleting) setConfirmDeleteOpen(open);
+                                }}
+                            >
+                                <AlertDialogTrigger asChild>
+                                    <Button type="button" variant="destructive" disabled={isDeleting}>
+                                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                        Delete salary history
+                                    </Button>
+                                </AlertDialogTrigger>
+
+                                <AlertDialogContent className="max-w-100 gap-0 rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+                                    <AlertDialogHeader className="space-y-2 text-left">
+                                        <AlertDialogTitle className="text-base font-semibold text-slate-900">
+                                            Delete salary history
+                                        </AlertDialogTitle>
+
+                                        <AlertDialogDescription className="text-sm leading-6 text-slate-500">
+                                            Delete the salary structure effective{" "}
+                                            <span className="font-medium text-slate-900">
+                                                {formatDate(salary.effectiveDate)}
+                                            </span>{" "}
+                                            with an end date of{" "}
+                                            <span className="font-medium text-slate-900">
+                                                {formatDate(salary.endDate)}
+                                            </span>
+                                            ? This permanently removes its salary components and additional
+                                            earnings.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+
+                                    <AlertDialogFooter className="mt-6 flex-row justify-end gap-2 border-0 bg-white p-0 shadow-none">
+                                        <AlertDialogCancel
+                                            disabled={isDeleting}
+                                            className="mt-0 h-9 cursor-pointer rounded-md border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-none hover:bg-slate-50"
+                                        >
+                                            Cancel
+                                        </AlertDialogCancel>
+
+                                        <AlertDialogAction
+                                            disabled={isDeleting}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                handleDelete();
+                                            }}
+                                            className="h-9 cursor-pointer rounded-md border-0 bg-red-600 px-4 text-sm font-medium text-white shadow-none hover:bg-red-700 focus-visible:ring-red-500"
+                                        >
+                                            {isDeleting ? <ButtonLoader text="Deleting..." /> : "Delete"}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

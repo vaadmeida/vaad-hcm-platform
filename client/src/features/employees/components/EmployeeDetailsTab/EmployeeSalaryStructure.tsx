@@ -7,8 +7,8 @@ import AdditionalEarnings from "@/features/salary/components/AdditionalEarnings"
 import { useEmployeeSalary } from "@/features/salary/hooks/useEmployeeSalary";
 
 import { useState } from "react";
-import SalaryHistoryDetailsModal from "@/features/salary/components/salary-histpry/SalaryHistoryDetailsModal";
-import SalaryHistory from "@/features/salary/components/salary-histpry/SalaryHistory";
+import SalaryHistoryDetailsModal from "@/features/salary/components/salary-history/SalaryHistoryDetailsModal";
+import SalaryHistory from "@/features/salary/components/salary-history/SalaryHistory";
 import type { EmployeeSalaryHistory } from "@/features/salary/types/salary.types";
 import { Wallet } from "lucide-react";
 

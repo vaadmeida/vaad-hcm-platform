@@ -8,8 +8,8 @@ import SalaryComponents from "@/features/salary/components/SalaryComponents";
 import AdditionalEarnings from "@/features/salary/components/AdditionalEarnings";
 
 import { useMySalary } from "@/features/salary/hooks/useMySalary";
-import SalaryHistory from "./salary-histpry/SalaryHistory";
-import SalaryHistoryDetailsModal from "./salary-histpry/SalaryHistoryDetailsModal";
+import SalaryHistory from "./salary-history/SalaryHistory";
+import SalaryHistoryDetailsModal from "./salary-history/SalaryHistoryDetailsModal";
 
 import type { EmployeeSalaryHistory } from "@/features/salary/types/salary.types";
 
