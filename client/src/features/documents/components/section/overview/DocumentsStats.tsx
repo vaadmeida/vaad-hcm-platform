@@ -1,8 +1,8 @@
 import ErrorState from "@/components/common/ErrorState";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { CircleCheck, Clock, FileText, XCircle } from "lucide-react";
 import StatsCard from "@/features/dashboard/components/StatsCard";
 import { useDocumentStats } from "@/features/documents/hooks/useDocumentsStats";
+import GlobalStatsOverview from "@/features/dashboard/components/GlobalStatsOverview";
 
 
 const DocumentsStats = () => {
@@ -18,7 +18,7 @@ const DocumentsStats = () => {
     }
 
     if (isLoading) {
-        return <SkeletonLoader />;
+        return <GlobalStatsOverview />;
     }
 
     const stats = data?.data;
