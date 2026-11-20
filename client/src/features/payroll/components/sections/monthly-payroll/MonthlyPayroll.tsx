@@ -10,6 +10,7 @@ import type { PayrollStatus } from "@/features/payroll/types/payroll.types";
 import { useGetPayrolls } from "@/features/payroll/hooks/usePayroll";
 import PreparePayrollModal from "./PreparePayrollModal";
 import PayrollDetails from "./PayrollDetails/PayrollDetails";
+import EmptyState from "@/components/common/EmptyState";
 
 const MonthlyPayroll = () => {
     const [search, setSearch] = useState("");
@@ -52,13 +53,13 @@ const MonthlyPayroll = () => {
 
 
     if (selectedPayrollId) {
-    return (
-        <PayrollDetails
-            payrollId={selectedPayrollId}
-            onBack={() => setSelectedPayrollId(null)}
-        />
-    );
-}
+        return (
+            <PayrollDetails
+                payrollId={selectedPayrollId}
+                onBack={() => setSelectedPayrollId(null)}
+            />
+        );
+    }
 
     return (
         <div>
@@ -106,9 +107,10 @@ const MonthlyPayroll = () => {
                     </>
                 ) : (
                     <div className="flex h-40 items-center justify-center">
-                        <p className="text-sm text-muted-foreground">
-                            No payroll records found.
-                        </p>
+                        <EmptyState
+                            title="No payroll records yet"
+                            description="Prepare payroll for a month to see it here."
+                        />
                     </div>
                 )}
             </section>
