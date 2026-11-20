@@ -155,3 +155,13 @@ export interface EmployeeSalaryHistory {
   components: SalaryComponent[];
   additionalEarnings: AdditionalEarning[];
 }
+
+export type DeleteSalaryHistoryParams = {
+  employeeId: string;
+  salaryId: string;
+};
+
+export type DeleteSalaryHistoryResponse = {
+  success: boolean;
+  message: string;
+};

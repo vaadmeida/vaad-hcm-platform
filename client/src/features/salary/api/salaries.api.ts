@@ -1,5 +1,5 @@
 import { api } from "@/lib/axios.api.ts";
-import type { CreateEmployeeSalaryDTO, EmployeeSalaryHistory, EmployeeSalaryResponse, GetEmployeesSalaryParams, GetEmployeesSalaryResponse, ReviewEmployeeSalaryDTO } from "../types/salary.types.ts";
+import type { CreateEmployeeSalaryDTO, DeleteSalaryHistoryParams, DeleteSalaryHistoryResponse, EmployeeSalaryHistory, EmployeeSalaryResponse, GetEmployeesSalaryParams, GetEmployeesSalaryResponse, ReviewEmployeeSalaryDTO } from "../types/salary.types.ts";
 
 export const getEmployeesWithSalary = async (
   params: GetEmployeesSalaryParams
@@ -57,4 +57,16 @@ export const getMySalary = async (): Promise<EmployeeSalaryResponse> => {
   );
 
   return response.data;
+};
+
+
+export const deleteSalaryHistory = async ({
+  employeeId,
+  salaryId,
+}: DeleteSalaryHistoryParams): Promise<DeleteSalaryHistoryResponse> => {
+  const { data } = await api.delete<DeleteSalaryHistoryResponse>(
+    `/api/salaries/employees/${employeeId}/salary-history/${salaryId}`
+  );
+
+  return data;
 };
