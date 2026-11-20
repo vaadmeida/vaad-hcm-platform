@@ -1,7 +1,7 @@
 import ErrorState from "@/components/common/ErrorState";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
 import { useExpiringDocuments } from "../../../hooks/useExpiringDocuments";
 import EmptyState from "@/components/common/EmptyState";
+import GlobalListSkeleton from "@/features/dashboard/components/GlobalListSkeleton";
 
 const ExpiringDocuments = () => {
     const { data, isLoading, error, refetch } = useExpiringDocuments();
@@ -16,7 +16,7 @@ const ExpiringDocuments = () => {
     }
 
     if (isLoading) {
-        return <SkeletonLoader />;
+        return <GlobalListSkeleton />;
     }
 
     const documents = data?.data ?? [];
