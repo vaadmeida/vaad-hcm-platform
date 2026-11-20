@@ -34,3 +34,8 @@ export type SalaryReviewInput = {
         frequency: AdditionalEarningFrequency;
     }[];
 };
+
+export type DeleteSalaryHistoryParams = {
+  employeeId: string;
+  salaryId: string;
+};

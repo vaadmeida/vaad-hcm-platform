@@ -895,3 +895,37 @@ export const getEmployeeSalaryHistory = async (
 
   return salaryHistory;
 };
+
+
+export const deleteEmployeeSalaryHistory = async (
+  employeeId: string,
+  salaryId: string
+): Promise<void> => {
+  await prisma.$transaction(
+    async (tx) => {
+      const salary = await tx.employeeSalary.findFirst({
+        where: { id: salaryId, employeeId },
+        select: { endDate: true },
+      });
+
+      if (!salary) {
+        throw new AppError(
+          "Salary structure not found.",
+          404,
+          "SALARY_STRUCTURE_NOT_FOUND"
+        );
+      }
+
+      if (salary.endDate === null) {
+        throw new AppError(
+          "Only salary structures with an end date can be deleted from history.",
+          409,
+          "SALARY_STRUCTURE_OPEN_ENDED"
+        );
+      }
+
+      await tx.employeeSalary.delete({ where: { id: salaryId } });
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+  );
+};

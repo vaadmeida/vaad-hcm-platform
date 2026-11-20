@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import { createEmployeeSalary, EmployeeSalaryReview, getEmployeeSalary, getEmployeeSalaryHistory, getEmployeesWithSalary } from "./salary.service.ts";
+import { createEmployeeSalary, deleteEmployeeSalaryHistory, EmployeeSalaryReview, getEmployeeSalary, getEmployeeSalaryHistory, getEmployeesWithSalary } from "./salary.service.ts";
 import { AppError } from "../../errors/appError.ts";
 import { createSalarySchema, salaryReviewSchema } from "./salary.validator.ts";
 import z from "zod";
+import { asyncHandler } from "../../utils/asyncHandler.ts";
+import { DeleteSalaryHistoryParams } from "./salary.types.ts";
 
 
 export const getAllEmployeesSalaryController = async (
@@ -215,5 +217,40 @@ export const getEmployeeSalaryHistoryController = async (
         success: true,
         message: "Employee salary history retrieved successfully.",
         data: salaryHistory,
+    });
+};
+
+
+
+
+
+export const deleteEmployeeSalaryHistoryController = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    const { employeeId, salaryId } = req.params;
+
+
+    if (typeof employeeId !== "string") {
+        throw new AppError(
+            "Invalid employee ID.",
+            400,
+            "INVALID_EMPLOYEE_ID"
+        )
+    }
+    if (typeof salaryId !== "string") {
+        throw new AppError(
+            "Invalid employee ID.",
+            400,
+            "INVALID_EMPLOYEE_ID"
+        )
+    }
+
+
+    await deleteEmployeeSalaryHistory(employeeId, salaryId);
+
+    res.status(200).json({
+        success: true,
+        message: "Salary history entry deleted successfully.",
     });
 };
