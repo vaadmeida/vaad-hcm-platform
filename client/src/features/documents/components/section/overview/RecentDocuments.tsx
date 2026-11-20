@@ -1,8 +1,8 @@
 import ErrorState from "@/components/common/ErrorState";
-import SkeletonLoader from "@/components/common/SkeletonLoader";
 
 import EmptyState from "@/components/common/EmptyState";
 import { useRecentDocuments } from "@/features/documents/hooks/useRecentDocuments";
+import GlobalListSkeleton from "@/features/dashboard/components/GlobalListSkeleton";
 
 const RecentDocuments = () => {
     const { data, isLoading, error, refetch } = useRecentDocuments();
@@ -17,7 +17,7 @@ const RecentDocuments = () => {
     }
 
     if (isLoading) {
-        return <SkeletonLoader />;
+        return <GlobalListSkeleton />;
     }
 
     const documents = data?.data ?? [];
