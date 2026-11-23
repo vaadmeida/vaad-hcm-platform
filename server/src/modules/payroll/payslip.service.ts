@@ -1,7 +1,7 @@
 import { Prisma, CalculationBaseType, MonthlyPayrollStatus } from "@prisma/client";
 import prisma from "../../config/prisma.ts";
 import { AppError } from "../../errors/appError.ts";
-import type { EmployeePayrollSnapshot, GetPayrollsInput, PreparePayrollInput, SalaryPeriod } from "./payroll.types.ts";
+import type { EmployeePayrollSnapshot, GetPayrollByIdParams, GetPayrollsInput, PreparePayrollInput, SalaryPeriod } from "./payroll.types.ts";
 import { getPresignedUrl } from "../../config/storage.ts";
 
 export const preparePayroll = async (
@@ -669,6 +669,7 @@ export const calculateMonthlyPayroll = async (
                     totalPaye: totals.paye,
                     totalDeductions: totals.deductions,
                     totalNetPay: totals.net,
+                    skippedEmployees,
                 },
                 include: {
                     employees: {
@@ -687,13 +688,6 @@ export const calculateMonthlyPayroll = async (
         };
     });
 };
-
-interface GetPayrollByIdParams {
-    search?: string;
-    department?: string;
-    page?: number;
-    limit?: number;
-}
 
 export const getPayrollById = async (
     payrollId: string,
