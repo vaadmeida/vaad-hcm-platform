@@ -69,6 +69,12 @@ export interface SalaryPeriod {
     days: number;
 }
 
+export interface GetPayrollByIdParams {
+    search?: string;
+    department?: string;
+    page?: number;
+    limit?: number;
+}
 
 export interface GetPayrollsInput {
     page: number;
@@ -77,5 +83,4 @@ export interface GetPayrollsInput {
     month?: number;
     search?: string;
     status?: MonthlyPayrollStatus;
-
 }
