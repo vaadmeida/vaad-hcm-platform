@@ -1,5 +1,5 @@
 import { api } from "@/lib";
-import type { GetPayrollByIdParams, GetPayrollByIdResponse, GetPayrollsParams, PayrollApiResponse } from "../types/payroll.types";
+import type { CalculatePayrollResponse, CalculatePayrollResult, GetPayrollByIdParams, GetPayrollByIdResponse, GetPayrollsParams, PayrollApiResponse, ReviewedPayroll, ReviewPayrollResponse } from "../types/payroll.types";
 
 export const getPayrollsApi = async (
   params?: GetPayrollsParams
@@ -37,8 +37,28 @@ export const getPayrollById = async (
         { params }
     );
 
-    console.log("Filtered employees:", response.data.data.payroll.employees);
-    console.log("Pagination:", response.data.data.payroll.pagination);
+    return response.data;
+};
+
+
+export async function calculatePayroll(
+  payrollId: string
+): Promise<CalculatePayrollResult> {
+  const { data } = await api.post<CalculatePayrollResponse>(
+    `api/payrolls/${encodeURIComponent(payrollId)}/calculate`
+  );
+
+  return data.data;
+}
+
+
+export const reviewPayrollApi = async (
+    payrollId: string
+): Promise<ReviewedPayroll> => {
+    const { data: response } = await api.patch<ReviewPayrollResponse>(
+        `api/payrolls/${encodeURIComponent(payrollId)}/review`
+    );
 
     return response.data;
 };
+
