@@ -188,6 +188,7 @@ export interface PayrollDetails {
     annualEarningPayments: AnnualEarningPayment[];
     departments: string[];
     pagination: PayrollEmployeesPagination;
+    skippedEmployees: SkippedPayrollEmployee[];
 }
 export interface GetPayrollByIdResponse {
     success: boolean;
@@ -203,3 +204,61 @@ export interface GetPayrollByIdParams {
     page?: number;
     limit?: number;
 }
+
+export type SkippedPayrollEmployee = {
+  employeeId: string;
+  employeeName: string;
+  reason: "SALARY_NOT_CONFIGURED" | "NO_SALARY_FOR_PAYROLL_PERIOD";
+};
+
+export type CalculatedPayrollEmployee = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  monthlyGross: string;
+  additionalEarnings: string;
+  grossPay: string;
+  paye: string;
+  otherDeductions: string;
+  netPay: string;
+};
+export type CalculatedMonthlyPayroll = {
+  id: string;
+  month: number;
+  year: number;
+  periodStart: string;
+  periodEnd: string;
+  status: "CALCULATED";
+  totalEmployees: number;
+  totalGross: string;
+  totalEarnings: string;
+  totalPaye: string;
+  totalDeductions: string;
+  totalNetPay: string;
+  employees: CalculatedPayrollEmployee[];
+};
+
+export type CalculatePayrollResult = {
+  payroll: CalculatedMonthlyPayroll;
+  skippedEmployees: SkippedPayrollEmployee[];
+};
+
+export type CalculatePayrollResponse = {
+  success: true;
+  message: string;
+  data: CalculatePayrollResult;
+};
+
+
+export type ReviewedPayroll = {
+    id: string;
+    status: "REVIEWED";
+    reviewedBy: string;
+    reviewedAt: string;
+};
+
+export type ReviewPayrollResponse = {
+    success: true;
+    message: string;
+    data: ReviewedPayroll;
+};
