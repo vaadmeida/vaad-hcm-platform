@@ -7,7 +7,7 @@ export const useGetPayrollById = (
     params: GetPayrollByIdParams = {}
 ) => {
     return useQuery({
-        queryKey: ["payroll-details", payrollId, params],
+        queryKey: ["payrolls", payrollId, "details", params],
         queryFn: () => getPayrollById(payrollId, params),
         enabled: Boolean(payrollId),
         placeholderData: keepPreviousData,
