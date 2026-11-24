@@ -1,6 +1,6 @@
 
 import type { MonthlyPayroll } from "@/features/payroll/types/payroll.types";
-import { MoreHorizontal, Eye } from "lucide-react";
+import { MoreHorizontal, Eye, Trash2 } from "lucide-react";
 
 import {
     DropdownMenu,
@@ -8,6 +8,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDeletePayroll } from "@/features/payroll/hooks/useDeletePayroll";
+import { useState } from "react";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+
 
 interface MonthlyPayrollTableRowProps {
     payroll: MonthlyPayroll;
@@ -18,6 +23,13 @@ const MonthlyPayrollTableRow = ({
     payroll,
     onClick,
 }: MonthlyPayrollTableRowProps) => {
+
+    const [payrollToDelete, setPayrollToDelete] = useState<{
+        id: string;
+        period: string;
+    } | null>(null);
+
+    const deleteMutation = useDeletePayroll();
 
 
     const formatCurrency = (amount: string | number) =>
@@ -78,101 +90,170 @@ const MonthlyPayrollTableRow = ({
     };
 
     return (
-        <tr
-            onClick={() => onClick(payroll.id)}
-            className="cursor-pointer last:border-none hover:bg-gray-50"
-        >
-            {/* Payroll Period */}
-            <td className="px-4 py-3">
-                <div>
-                    <p className="text-sm font-medium text-gray-900">
-                        {getMonthName(payroll.month)} {payroll.year}
-                    </p>
 
-                    <p className="text-xs text-muted-foreground">
-                        Payroll
-                    </p>
-                </div>
-            </td>
+        <>
 
-            {/* Employees */}
-            <td className="hidden px-4 py-3 xl:table-cell">
-                <span className="text-sm text-gray-700">
-                    {payroll.totalEmployees}
-                </span>
-            </td>
+            <tr
+                onClick={() => onClick(payroll.id)}
+                className="cursor-pointer last:border-none hover:bg-gray-50"
+            >
+                {/* Payroll Period */}
+                <td className="px-4 py-3">
+                    <div>
+                        <p className="text-sm font-medium text-gray-900">
+                            {getMonthName(payroll.month)} {payroll.year}
+                        </p>
 
-            {/* Gross Payroll */}
-            <td className="px-4 py-3">
-                <span className="whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatCurrency(payroll.totalGross)}
-                </span>
-            </td>
+                        <p className="text-xs text-muted-foreground">
+                            Payroll
+                        </p>
+                    </div>
+                </td>
 
-            {/* PAYE */}
-            <td className="hidden px-4 py-3 lg:table-cell">
-                <span className="whitespace-nowrap text-sm text-gray-700">
-                    {formatCurrency(payroll.totalPaye)}
-                </span>
-            </td>
+                {/* Employees */}
+                <td className="hidden px-4 py-3 xl:table-cell">
+                    <span className="text-sm text-gray-700">
+                        {payroll.totalEmployees}
+                    </span>
+                </td>
 
-            {/* Net Payroll */}
-            <td className="px-4 py-3">
-                <span className="whitespace-nowrap text-sm font-semibold text-gray-900">
-                    {formatCurrency(payroll.totalNetPay)}
-                </span>
-            </td>
+                {/* Gross Payroll */}
+                <td className="px-4 py-3">
+                    <span className="whitespace-nowrap text-sm font-medium text-gray-900">
+                        {formatCurrency(payroll.totalGross)}
+                    </span>
+                </td>
 
-            {/* Status */}
-            <td className="px-4 py-3">
-                <span
-                    className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${getStatusStyles(
-                        payroll.status
-                    )}`}
-                >
+                {/* PAYE */}
+                <td className="hidden px-4 py-3 lg:table-cell">
+                    <span className="whitespace-nowrap text-sm text-gray-700">
+                        {formatCurrency(payroll.totalPaye)}
+                    </span>
+                </td>
+
+                {/* Net Payroll */}
+                <td className="px-4 py-3">
+                    <span className="whitespace-nowrap text-sm font-semibold text-gray-900">
+                        {formatCurrency(payroll.totalNetPay)}
+                    </span>
+                </td>
+
+                {/* Status */}
+                <td className="px-4 py-3">
                     <span
-                        className={`h-1.5 w-1.5 rounded-full ${getStatusDot(
+                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${getStatusStyles(
                             payroll.status
                         )}`}
-                    />
+                    >
+                        <span
+                            className={`h-1.5 w-1.5 rounded-full ${getStatusDot(
+                                payroll.status
+                            )}`}
+                        />
 
-                    {payroll.status.toLowerCase()}
-                </span>
-            </td>
+                        {payroll.status.toLowerCase()}
+                    </span>
+                </td>
 
-            {/* Actions */}
-            <td
-                className="px-3 py-3 text-center"
-                onClick={(event) => event.stopPropagation()}
+                {/* Actions */}
+                <td
+                    className="px-3 py-3 text-center"
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <div className="flex justify-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    aria-label="Payroll actions"
+                                    onClick={(event) => event.stopPropagation()}
+                                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-gray-100 hover:text-gray-900"
+                                >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-42 bg-white py-2"
+                            >
+                                <DropdownMenuItem
+                                    onSelect={() => onClick(payroll.id)}
+                                    className="cursor-pointer"
+                                >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View payroll
+                                </DropdownMenuItem>
+                                {(payroll.status === "DRAFT" || payroll.status === "CALCULATED") && (
+                                    <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive cursor-pointer"
+                                        onSelect={() => {
+                                            deleteMutation.reset();
+
+                                            const period = new Intl.DateTimeFormat("en-NG", {
+                                                month: "long",
+                                                year: "numeric",
+                                                timeZone: "UTC",
+                                            }).format(new Date(Date.UTC(payroll.year, payroll.month - 1, 1)));
+
+                                            setPayrollToDelete({ id: payroll.id, period });
+                                        }}
+                                    >
+                                        <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
+                                        Delete payroll
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </td>
+            </tr>
+
+
+            {/* Delete Dialog */}
+            <AlertDialog
+                open={payrollToDelete !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleteMutation.isPending) {
+                        setPayrollToDelete(null);
+                    }
+                }}
             >
-                <div className="flex justify-center">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button
-                                type="button"
-                                aria-label="Payroll actions"
-                                onClick={(event) => event.stopPropagation()}
-                                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-gray-100 hover:text-gray-900"
-                            >
-                                <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                        </DropdownMenuTrigger>
+                <AlertDialogContent className="bg-white">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Delete {payrollToDelete?.period} payroll?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This permanently removes the payroll and any calculated results
+                            for this period.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
 
-                        <DropdownMenuContent
-                            align="end"
-                            className="w-42 bg-white py-2"
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteMutation.isPending}>
+                            Cancel
+                        </AlertDialogCancel>
+
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={!payrollToDelete || deleteMutation.isPending}
+                            onClick={() => {
+                                if (!payrollToDelete || deleteMutation.isPending) return;
+
+                                deleteMutation.mutate(payrollToDelete.id, {
+                                    onSuccess: () => setPayrollToDelete(null),
+                                });
+                            }}
                         >
-                            <DropdownMenuItem
-                                onSelect={() => onClick(payroll.id)}
-                            >
-                                <Eye className="mr-2 h-4 w-4" />
-                                View payroll
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </td>
-        </tr>
+                            {deleteMutation.isPending ? "Deleting…" : "Delete payroll"}
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+
     );
 };
 
