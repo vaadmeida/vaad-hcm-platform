@@ -952,3 +952,138 @@ export const approvePayroll = async (
         });
     });
 }
+
+export const processPayroll = async (payrollId: string, userId: string) => {
+    return prisma.$transaction(async (tx) => {
+        const processedAt = new Date();
+
+        const { count } = await tx.monthlyPayroll.updateMany({
+            where: {
+                id: payrollId,
+                status: "APPROVED",
+            },
+            data: {
+                status: "PROCESSED",
+                processedBy: userId,
+                processedAt,
+            },
+        });
+
+        const payroll = await tx.monthlyPayroll.findUnique({
+            where: { id: payrollId },
+        });
+
+        if (!payroll) {
+            throw new AppError(
+                "Payroll period not found.",
+                404,
+                "PAYROLL_NOT_FOUND"
+            );
+        }
+
+        if (count === 0) {
+            // A retry after a successful request returns the existing result.
+            if (payroll.status === "PROCESSED") return payroll;
+
+            throw new AppError(
+                "Only approved payrolls can be processed.",
+                409,
+                "PAYROLL_NOT_READY_FOR_PROCESSING"
+            );
+        }
+
+        await tx.annualEarningPayment.updateMany({
+            where: {
+                payrollId,
+                type: "THIRTEENTH_MONTH",
+                status: "PENDING",
+            },
+            data: {
+                status: "PAID",
+                paidAt: processedAt,
+            },
+        });
+
+        return payroll;
+    });
+};
+
+export const deletePayroll = async (payrollId: string): Promise<void> => {
+    await prisma.$transaction(async (tx) => {
+        const [payroll] = await tx.$queryRaw<{ status: string }[]>`
+            SELECT "status"
+            FROM "MonthlyPayroll"
+            WHERE "id" = ${payrollId}::uuid
+            FOR UPDATE
+        `;
+
+        if (!payroll) {
+            throw new AppError(
+                "Payroll period not found.",
+                404,
+                "PAYROLL_NOT_FOUND"
+            );
+        }
+
+        if (payroll.status !== "DRAFT" && payroll.status !== "CALCULATED") {
+            throw new AppError(
+                "Only draft or calculated payrolls can be deleted.",
+                409,
+                "PAYROLL_NOT_DELETABLE"
+            );
+        }
+
+        const employees = await tx.monthlyPayrollEmployee.findMany({
+            where: { payrollId },
+            select: { id: true },
+        });
+        const employeeIds = employees.map((employee) => employee.id);
+
+        const payslip = await tx.payslip.findFirst({
+            where: { payrollEmployeeId: { in: employeeIds } },
+            select: { id: true },
+        });
+
+        if (payslip) {
+            throw new AppError(
+                "This payroll has generated payslips.",
+                409,
+                "PAYSLIPS_ALREADY_GENERATED"
+            );
+        }
+
+        const paidEarning = await tx.annualEarningPayment.findFirst({
+            where: { payrollId, status: "PAID" },
+            select: { id: true },
+        });
+
+        if (paidEarning) {
+            throw new AppError(
+                "This payroll has a paid annual earning.",
+                409,
+                "PAYROLL_HAS_PAID_EARNINGS"
+            );
+        }
+
+        await tx.annualEarningPayment.updateMany({
+            where: { payrollId, status: "PENDING" },
+            data: { payrollId: null },
+        });
+
+        await tx.payrollEmployeeEarning.deleteMany({
+            where: { payrollEmployeeId: { in: employeeIds } },
+        });
+
+        await tx.payrollEmployeeComponent.deleteMany({
+            where: { payrollEmployeeId: { in: employeeIds } },
+        });
+
+        await tx.monthlyPayrollEmployee.deleteMany({
+            where: { payrollId },
+        });
+
+        await tx.monthlyPayroll.delete({
+            where: { id: payrollId },
+        });
+    });
+};
