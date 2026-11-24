@@ -2,7 +2,7 @@ import express from "express";
 import { authenticate } from "../../middlewares/auth.ts";
 import { requireRoles } from "../../middlewares/role.ts";
 import { asyncHandler } from "../../utils/asyncHandler.ts";
-import { approvePayrollController, calculatePayrollController, getPayrollByIdController, getPayrollsController, preparePayrollController, reviewPayrollController } from "./payroll.controller.ts";
+import { approvePayrollController, calculatePayrollController, deletePayrollController, getPayrollByIdController, getPayrollsController, preparePayrollController, processPayrollController, reviewPayrollController } from "./payroll.controller.ts";
 
 const payrollRouter = express.Router();
 
@@ -11,6 +11,8 @@ payrollRouter.post("/:payrollId/calculate",authenticate,requireRoles("admin", "h
 payrollRouter.get("/:payrollId",authenticate, requireRoles("admin", "hr"), asyncHandler(getPayrollByIdController));
 payrollRouter.get("/",authenticate,requireRoles("admin", "hr"),getPayrollsController);
 payrollRouter.patch("/:payrollId/review",authenticate,requireRoles("admin", "hr"), asyncHandler(reviewPayrollController));
-payrollRouter.patch("/:payrollId/approve",authenticate,requireRoles("admin"), asyncHandler(approvePayrollController));
+payrollRouter.patch("/:payrollId/approve",authenticate,requireRoles("admin","hr"), asyncHandler(approvePayrollController));
+payrollRouter.post("/:payrollId/process",authenticate,requireRoles("admin","hr"), asyncHandler(processPayrollController));
+payrollRouter.delete("/:payrollId",authenticate,requireRoles("admin","hr"), asyncHandler(deletePayrollController));
 
 export default payrollRouter;
