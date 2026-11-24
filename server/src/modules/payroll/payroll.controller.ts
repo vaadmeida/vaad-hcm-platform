@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AppError } from "../../errors/appError.ts";
 import { getPayrollsQuerySchema, preparePayrollSchema } from "./payroll.validator.ts";
-import { approvePayroll, calculateMonthlyPayroll, getPayrollById, getPayrolls, preparePayroll, reviewPayroll } from "./payslip.service.ts";
+import { approvePayroll, calculateMonthlyPayroll, deletePayroll, getPayrollById, getPayrolls, preparePayroll, processPayroll, reviewPayroll } from "./payslip.service.ts";
 
 export const preparePayrollController = async (
     req: Request,
@@ -196,4 +196,44 @@ export const approvePayrollController = async (
         message: "Payroll approved successfully.",
         data: { payroll },
     });
+};
+
+export const processPayrollController = async (
+    req: Request,
+    res: Response
+) => {
+    const { payrollId } = req.params;
+
+    if (typeof payrollId !== "string") {
+        throw new AppError("Invalid payroll ID.", 400, "INVALID_PAYROLL_ID");
+    }
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+        throw new AppError("Authentication required.", 401, "UNAUTHENTICATED");
+    }
+
+    const payroll = await processPayroll(payrollId, userId);
+
+    return res.status(200).json({
+        success: true,
+        message: "Payroll marked as processed.",
+        data: { payroll },
+    });
+};
+
+export const deletePayrollController = async (
+    req: Request,
+    res: Response
+) => {
+    const { payrollId } = req.params;
+
+    if (typeof payrollId !== "string") {
+        throw new AppError("Invalid payroll ID.", 400, "INVALID_PAYROLL_ID");
+    }
+
+    await deletePayroll(payrollId);
+
+    return res.status(204).send();
 };
