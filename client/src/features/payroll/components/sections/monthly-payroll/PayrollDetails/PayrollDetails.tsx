@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-
 import PayrollDetailsStats from "./PayrollDetailsStats";
 import PayrollDetailsHeader from "./PayrollDetailsHeader";
 import PayrollDetailsFilters from "./PayrollDetailsFilters";
 import PayrollEmployeesTable from "./PayrollEmployeesTable";
-
 import { useGetPayrollById } from "@/features/payroll/hooks/useGetPayrollById";
 import { useCalculatePayroll } from "@/features/payroll/hooks/useCalculatePayroll";
 import { Button } from "@/components/ui/button";
 import CalculatePayrollDialog from "./CalculatePayrollDialog";
 import { useReviewPayroll } from "@/features/payroll/hooks/useReviewPayroll";
 import ReviewPayrollDrawer from "./ReviewPayrollDrawer";
+import { useApprovePayroll } from "@/features/payroll/hooks/useApprovePayroll";
+import ApprovePayrollDialog from "./ApprovePayrollDialog";
+import { useProcessPayroll } from "@/features/payroll/hooks/useProcessPayroll";
+import ProcessPayrollDialog from "./ProcessPayrollDialog";
 
 interface PayrollDetailsProps {
     payrollId: string;
@@ -24,7 +26,12 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
     const [page, setPage] = useState(1);
     const [isCalculateOpen, setIsCalculateOpen] = useState(false);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [isApproveOpen, setIsApproveOpen] = useState(false);
     const reviewMutation = useReviewPayroll();
+    const approveMutation = useApprovePayroll();
+    const [isProcessOpen, setIsProcessOpen] = useState(false);
+    const processMutation = useProcessPayroll();
+
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -77,6 +84,10 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
         );
     }
 
+    const canConfirmApproval = payroll.status === "REVIEWED";
+    const canConfirmProcessing = payroll.status === "APPROVED";
+
+
     return (
         <div className="space-y-6">
             <PayrollDetailsHeader
@@ -92,6 +103,22 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
                     setIsReviewOpen(true);
                 }}
                 isReviewing={reviewMutation.isPending}
+
+                onApprove={() => {
+                    if (!canConfirmApproval) return;
+
+                    approveMutation.reset();
+                    setIsApproveOpen(true);
+                }}
+                isApproving={approveMutation.isPending}
+
+                onProcess={() => {
+                    if (!canConfirmProcessing) return;
+
+                    processMutation.reset();
+                    setIsProcessOpen(true);
+                }}
+                isProcessing={processMutation.isPending}
             />
 
             <CalculatePayrollDialog
@@ -121,6 +148,33 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
                 onConfirm={() => {
                     reviewMutation.mutate(payroll.id, {
                         onSuccess: () => setIsReviewOpen(false),
+                    });
+                }}
+            />
+
+            <ApprovePayrollDialog
+                open={isApproveOpen}
+                onOpenChange={setIsApproveOpen}
+                isApproving={approveMutation.isPending}
+                canConfirm={canConfirmApproval}
+                onConfirm={() => {
+                    if (!canConfirmApproval || approveMutation.isPending) return;
+
+                    approveMutation.mutate(payroll.id, {
+                        onSuccess: () => setIsApproveOpen(false),
+                    });
+                }}
+            />
+            <ProcessPayrollDialog
+                open={isProcessOpen}
+                onOpenChange={setIsProcessOpen}
+                isProcessing={processMutation.isPending}
+                canConfirm={canConfirmProcessing}
+                onConfirm={() => {
+                    if (!canConfirmProcessing || processMutation.isPending) return;
+
+                    processMutation.mutate(payroll.id, {
+                        onSuccess: () => setIsProcessOpen(false),
                     });
                 }}
             />
