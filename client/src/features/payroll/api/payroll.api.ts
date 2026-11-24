@@ -62,3 +62,16 @@ export const reviewPayrollApi = async (
     return response.data;
 };
 
+
+
+export const approvePayrollApi = async (payrollId: string): Promise<void> => {
+    await api.patch(`/api/payrolls/${encodeURIComponent(payrollId)}/approve`);
+};
+
+export const processPayrollApi = async (payrollId: string): Promise<void> => {
+    await api.post(`/api/payrolls/${encodeURIComponent(payrollId)}/process`);
+};
+
+export const deletePayrollApi = async (payrollId: string): Promise<void> => {
+    await api.delete(`/api/payrolls/${encodeURIComponent(payrollId)}`);
+};
