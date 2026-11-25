@@ -13,13 +13,17 @@ import { useApprovePayroll } from "@/features/payroll/hooks/useApprovePayroll";
 import ApprovePayrollDialog from "./ApprovePayrollDialog";
 import { useProcessPayroll } from "@/features/payroll/hooks/useProcessPayroll";
 import ProcessPayrollDialog from "./ProcessPayrollDialog";
+import { useGeneratePayrollPayslips } from "@/features/payslips/hooks/useGeneratePayrollPayslips";
+import { useGetPayrollPayslips } from "@/features/payslips/hooks/useGetPayrollPayslips";
+import type { OnViewPayslips } from "@/features/payroll/types/payroll.types";
 
 interface PayrollDetailsProps {
     payrollId: string;
     onBack: () => void;
+      onViewPayslips: OnViewPayslips;
 }
 
-const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
+const PayrollDetails = ({ payrollId, onBack,onViewPayslips}: PayrollDetailsProps) => {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [department, setDepartment] = useState("all");
@@ -31,7 +35,7 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
     const approveMutation = useApprovePayroll();
     const [isProcessOpen, setIsProcessOpen] = useState(false);
     const processMutation = useProcessPayroll();
-
+    const generatePayslipsMutation = useGeneratePayrollPayslips();
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -56,6 +60,11 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
         setDepartment(value);
         setPage(1);
     };
+
+    const payslipsQuery = useGetPayrollPayslips(
+        payroll?.status === "PROCESSED" ? payroll.id : undefined,
+        { page: 1, limit: 1 }
+    );
 
     if (!payroll) {
         return (
@@ -87,6 +96,15 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
     const canConfirmApproval = payroll.status === "REVIEWED";
     const canConfirmProcessing = payroll.status === "APPROVED";
 
+    const generation = generatePayslipsMutation.data;
+    const readyCount =
+        generation?.payrollId === payroll.id
+            ? generation.readyCount
+            : payslipsQuery.data?.pagination.total;
+
+    const payslipsReady =
+        payroll.totalEmployees > 0 &&
+        readyCount === payroll.totalEmployees;
 
     return (
         <div className="space-y-6">
@@ -119,6 +137,10 @@ const PayrollDetails = ({ payrollId, onBack }: PayrollDetailsProps) => {
                     setIsProcessOpen(true);
                 }}
                 isProcessing={processMutation.isPending}
+                payslipsReady={payslipsReady}
+                isGeneratingPayslips={generatePayslipsMutation.isPending}
+                onGeneratePayslips={() => generatePayslipsMutation.mutate(payroll.id)}
+               onViewPayslips={() => onViewPayslips(payroll.year, payroll.month)}
             />
 
             <CalculatePayrollDialog
