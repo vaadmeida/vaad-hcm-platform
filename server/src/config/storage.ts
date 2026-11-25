@@ -65,3 +65,19 @@ export async function deleteFromStorage(key: string): Promise<void> {
     })
   );
 }
+
+
+
+export const signPayslipDownload = async (
+    storageKey: string,
+    payslipId: string
+) => {
+    const command = new GetObjectCommand({
+        Bucket: bucket,
+        Key: storageKey,
+        ResponseContentType: "application/pdf",
+        ResponseContentDisposition: `attachment; filename="VAAD-payslip-${payslipId}.pdf"`,
+    });
+
+    return getSignedUrl(client, command, { expiresIn: 300 });
+};
