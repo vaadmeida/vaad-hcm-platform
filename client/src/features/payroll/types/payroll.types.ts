@@ -262,3 +262,5 @@ export type ReviewPayrollResponse = {
     message: string;
     data: ReviewedPayroll;
 };
+
+export type OnViewPayslips = (year: number, month: number) => void;
