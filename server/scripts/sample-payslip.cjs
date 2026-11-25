@@ -4,8 +4,11 @@ const path = require("node:path");
 const { pipeline } = require("node:stream/promises");
 
 const serverDir = path.resolve(__dirname, "..");
-const logoPath = path.join(serverDir, "assets", "vaad_logo.png");
-const outputPath = path.join(serverDir, "sample-payslip-breakdown.pdf");
+const assetsDir = path.join(serverDir, "assets");
+const logoPath = path.join(assetsDir, "vaad_logo.png");
+const regularFontPath = path.join(assetsDir, "fonts", "Poppins-Regular.ttf");
+const semiboldFontPath = path.join(assetsDir, "fonts", "Poppins-SemiBold.ttf");
+const outputPath = path.join(serverDir, "sample-payslip-poppins.pdf");
 
 const sample = {
     period: "December 2026",
@@ -34,14 +37,29 @@ const sample = {
 };
 
 async function createPayslip() {
-    const logo = fs.readFileSync(logoPath);
-    const pdf = new PDFDocument({ size: "A4", margin: 48 });
+    for (const assetPath of [logoPath, regularFontPath, semiboldFontPath]) {
+        if (!fs.existsSync(assetPath)) {
+            throw new Error(`Required asset missing: ${assetPath}`);
+        }
+    }
+
+    const pdf = new PDFDocument({
+        size: "A4",
+        margin: 48,
+        info: {
+            Title: `VAAD Payslip - ${sample.period}`,
+            Author: "VAAD HR",
+        },
+    });
+
+    pdf.registerFont("Poppins", regularFontPath);
+    pdf.registerFont("Poppins-SemiBold", semiboldFontPath);
 
     const left = 48;
     const right = pdf.page.width - 48;
     const width = right - left;
     const ink = "#172033";
-    const muted = "#64748B";
+    const muted = "#526073";
     const gray = "#E5E7EB";
     const accent = "#214E45";
 
@@ -55,17 +73,17 @@ async function createPayslip() {
     }
 
     function drawHeading(label, y) {
-        pdf.font("Helvetica-Bold")
-            .fontSize(9)
+        pdf.font("Poppins-SemiBold")
+            .fontSize(8)
             .fillColor(muted)
             .text(label, left, y, { characterSpacing: 1 });
     }
 
-    function drawRow(label, amount, y, bold = false) {
+    function drawRow(label, amount, y, emphasized = false) {
         const amountWidth = 160;
 
-        pdf.font(bold ? "Helvetica-Bold" : "Helvetica")
-            .fontSize(10)
+        pdf.font(emphasized ? "Poppins-SemiBold" : "Poppins")
+            .fontSize(9.5)
             .fillColor(ink)
             .text(label, left, y, { width: width - amountWidth - 16 })
             .text(`NGN ${amount}`, right - amountWidth, y, {
@@ -76,65 +94,82 @@ async function createPayslip() {
         return y + 21;
     }
 
-    // Header
+    // Brand header
     pdf.roundedRect(left, 48, width, 76, 8).fill(ink);
-    pdf.image(logo, left + 16, 63, {
+    pdf.image(logoPath, left + 16, 63, {
         fit: [135, 46],
         valign: "center",
     });
 
-    pdf.font("Helvetica-Bold").fontSize(22).fillColor("#FFFFFF")
+    pdf.font("Poppins-SemiBold")
+        .fontSize(20)
+        .fillColor("#FFFFFF")
         .text("Payslip", right - 196, 63, { width: 180, align: "right" });
-    pdf.font("Helvetica").fontSize(10).fillColor("#CBD5E1")
-        .text(sample.period, right - 196, 92, { width: 180, align: "right" });
+
+    pdf.font("Poppins")
+        .fontSize(9)
+        .fillColor("#CBD5E1")
+        .text(sample.period, right - 196, 94, { width: 180, align: "right" });
 
     // Employee details
-    pdf.font("Helvetica-Bold").fontSize(14).fillColor(ink)
+    pdf.font("Poppins-SemiBold")
+        .fontSize(13)
+        .fillColor(ink)
         .text(sample.employeeName, left, 145);
-    pdf.font("Helvetica").fontSize(10).fillColor(muted)
-        .text(`${sample.employeeNumber}  |  ${sample.department}`, left, 165);
 
-    drawLine(188);
+    pdf.font("Poppins")
+        .fontSize(9)
+        .fillColor(muted)
+        .text(sample.department, left, 166, { width: width - 110 })
+        .text(sample.employeeNumber, right - 100, 166, {
+            width: 100,
+            align: "right",
+        });
 
-    // Salary components and subtotal
-    drawHeading("SALARY BREAKDOWN", 207);
-    let y = 229;
+    drawLine(189);
+
+    // Monthly salary components
+    drawHeading("SALARY BREAKDOWN", 204);
+    let y = 224;
 
     for (const [label, amount] of sample.components) {
         y = drawRow(label, amount, y);
     }
 
-    drawLine(y - 4);
-    y = drawRow("Monthly Gross Salary", sample.monthlyGross, y + 5, true);
+    drawLine(y - 2);
+    y = drawRow("Monthly Gross Salary", sample.monthlyGross, y + 6, true);
 
-    // Extra earnings and gross pay
-    drawHeading("ADDITIONAL EARNINGS", y + 14);
-    y += 36;
+    // Additional earnings and gross pay
+    drawHeading("ADDITIONAL EARNINGS", y + 13);
+    y += 33;
 
     for (const [label, amount] of sample.earnings) {
         y = drawRow(label, amount, y);
     }
 
-    drawLine(y - 4);
-    y = drawRow("Gross Pay", sample.grossPay, y + 5, true);
+    drawLine(y - 2);
+    y = drawRow("Gross Pay", sample.grossPay, y + 6, true);
 
     // Deductions
-    drawHeading("DEDUCTIONS", y + 14);
-    y += 36;
+    drawHeading("DEDUCTIONS", y + 13);
+    y += 33;
 
     for (const [label, amount] of sample.deductions) {
         y = drawRow(label, amount, y);
     }
 
     // Take-home pay
-    const netTop = y + 14;
-    pdf.roundedRect(left, netTop, width, 58, 8).fill("#F2F7F5");
+    const netTop = y + 12;
+    pdf.roundedRect(left, netTop, width, 56, 8)
+        .fillAndStroke("#F2F7F5", "#DFE9E4");
 
-    pdf.font("Helvetica-Bold").fontSize(10).fillColor(accent)
-        .text("NET PAY", left + 16, netTop + 24);
+    pdf.font("Poppins-SemiBold")
+        .fontSize(10)
+        .fillColor(accent)
+        .text("Net Pay", left + 16, netTop + 21, { width: 110 });
 
     pdf.fontSize(18)
-        .text(`NGN ${sample.netPay}`, right - 236, netTop + 18, {
+        .text(`NGN ${sample.netPay}`, right - 236, netTop + 15, {
             width: 220,
             align: "right",
         });
