@@ -1,4 +1,4 @@
-import { Calculator, Check, ClipboardCheck, CreditCard } from "lucide-react";
+import { Calculator, Check, ClipboardCheck, CreditCard, FilePlus2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PayrollStatus } from "@/features/payroll/types/payroll.types";
 
@@ -13,6 +13,10 @@ type PayrollActionButtonProps = {
     isApproving?: boolean;
     onProcess?: () => void;
     isProcessing?: boolean;
+    onGeneratePayslips?: () => void;
+    isGeneratingPayslips?: boolean;
+    onViewPayslips?: () => void;
+    payslipsReady?: boolean;
 };
 
 export function PayrollActionButton({
@@ -25,6 +29,10 @@ export function PayrollActionButton({
     isReviewing,
     isApproving,
     isProcessing,
+    onGeneratePayslips,
+    isGeneratingPayslips,
+    onViewPayslips,
+    payslipsReady
 }: PayrollActionButtonProps) {
     const actions = {
         DRAFT: {
@@ -55,11 +63,25 @@ export function PayrollActionButton({
             isPending: isProcessing,
             Icon: CreditCard,
         },
-        PROCESSED: null,
+        PROCESSED: payslipsReady
+            ? {
+                label: "View Payslips",
+                pendingLabel: "View Payslips",
+                onClick: onViewPayslips,
+                isPending: false,
+                Icon: FileText,
+            }
+            : {
+                label: "Generate Payslips",
+                pendingLabel: "Generating...",
+                onClick: onGeneratePayslips,
+                isPending: isGeneratingPayslips,
+                Icon: FilePlus2,
+            },
     };
 
     const action = actions[status];
-    if (!action) return null;
+    if (!action?.onClick) return null;
 
     const { Icon, label, pendingLabel, onClick, isPending } = action;
 
