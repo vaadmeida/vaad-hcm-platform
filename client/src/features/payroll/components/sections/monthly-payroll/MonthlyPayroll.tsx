@@ -6,13 +6,18 @@ import PayrollFilters from "./PayrollFilters";
 import MonthlyPayrollTable from "./MonthlyPayrollTable";
 import MonthlyPayrollPagination from "./MonthlyPayrollPagination";
 
-import type { PayrollStatus } from "@/features/payroll/types/payroll.types";
+import type { OnViewPayslips, PayrollStatus } from "@/features/payroll/types/payroll.types";
 import { useGetPayrolls } from "@/features/payroll/hooks/usePayroll";
 import PreparePayrollModal from "./PreparePayrollModal";
 import PayrollDetails from "./PayrollDetails/PayrollDetails";
 import EmptyState from "@/components/common/EmptyState";
 
-const MonthlyPayroll = () => {
+interface MonthlyPayrollProps {
+    onViewPayslips: OnViewPayslips;
+}
+
+
+const MonthlyPayroll = ({ onViewPayslips }: MonthlyPayrollProps) => {
     const [search, setSearch] = useState("");
     const [year, setYear] = useState("all");
     const [month, setMonth] = useState("all");
@@ -57,6 +62,7 @@ const MonthlyPayroll = () => {
             <PayrollDetails
                 payrollId={selectedPayrollId}
                 onBack={() => setSelectedPayrollId(null)}
+                 onViewPayslips={onViewPayslips}
             />
         );
     }
