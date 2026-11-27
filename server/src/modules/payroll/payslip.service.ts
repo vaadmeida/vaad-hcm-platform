@@ -1087,3 +1087,47 @@ export const deletePayroll = async (payrollId: string): Promise<void> => {
         });
     });
 };
+
+export const getPayrollOverview = async () => {
+    const [inProgressPayroll, recentProcessedPayrolls] =
+        await prisma.$transaction(
+            [
+                prisma.monthlyPayroll.findFirst({
+                    where: {
+                        status: {
+                            in: ["DRAFT", "CALCULATED", "REVIEWED", "APPROVED"],
+                        },
+                    },
+                    orderBy: [{ year: "desc" }, { month: "desc" }],
+                    select: {
+                        id: true,
+                        month: true,
+                        year: true,
+                        status: true,
+                    },
+                }),
+
+                prisma.monthlyPayroll.findMany({
+                    where: { status: "PROCESSED" },
+                    orderBy: [{ year: "desc" }, { month: "desc" }],
+                    take: 3,
+                    select: {
+                        id: true,
+                        month: true,
+                        year: true,
+                        totalEmployees: true,
+                        totalGross: true,
+                        totalPaye: true,
+                        totalNetPay: true,
+                    },
+                }),
+            ],
+            { isolationLevel: "RepeatableRead" }
+        );
+
+    return {
+        latestPayroll: recentProcessedPayrolls[0] ?? null,
+        inProgressPayroll,
+        recentProcessedPayrolls,
+    };
+};
