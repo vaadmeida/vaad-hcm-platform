@@ -2,7 +2,6 @@ import {
     FileText,
     LayoutDashboard,
     Wallet,
-    History,
     Users,
 } from "lucide-react";
 
@@ -38,11 +37,6 @@ const tabs = [
         id: "Payslips" as const,
         label: "Payslips",
         icon: FileText,
-    },
-    {
-        id: "History" as const,
-        label: "History",
-        icon: History,
     },
 ];
 
