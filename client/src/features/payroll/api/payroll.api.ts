@@ -75,3 +75,15 @@ export const processPayrollApi = async (payrollId: string): Promise<void> => {
 export const deletePayrollApi = async (payrollId: string): Promise<void> => {
     await api.delete(`/api/payrolls/${encodeURIComponent(payrollId)}`);
 };
+
+import type { PayrollOverviewData } from "../types/payroll.types";
+
+export const getPayrollOverviewApi = async (): Promise<PayrollOverviewData> => {
+    const { data } = await api.get<{
+        success: true;
+        message: string;
+        data: PayrollOverviewData;
+    }>("/api/payrolls/overview");
+
+    return data.data;
+};
