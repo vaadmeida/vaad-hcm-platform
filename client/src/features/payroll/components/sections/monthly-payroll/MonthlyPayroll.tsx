@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-
 import MonthlyPayrollHeader from "./MonthlyPayrollHeader";
 import PayrollFilters from "./PayrollFilters";
 import MonthlyPayrollTable from "./MonthlyPayrollTable";
@@ -13,11 +11,12 @@ import PayrollDetails from "./PayrollDetails/PayrollDetails";
 import EmptyState from "@/components/common/EmptyState";
 
 interface MonthlyPayrollProps {
+    initialPayrollId?: string | null;
     onViewPayslips: OnViewPayslips;
 }
 
 
-const MonthlyPayroll = ({ onViewPayslips }: MonthlyPayrollProps) => {
+const MonthlyPayroll = ({ initialPayrollId = null, onViewPayslips }: MonthlyPayrollProps) => {
     const [search, setSearch] = useState("");
     const [year, setYear] = useState("all");
     const [month, setMonth] = useState("all");
@@ -26,7 +25,7 @@ const MonthlyPayroll = ({ onViewPayslips }: MonthlyPayrollProps) => {
 
     const [prepareModalOpen, setIsPrepareModalOpen] = useState(false);
 
-    const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
+    const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(initialPayrollId);
 
     const handleViewPayroll = (payrollId: string) => {
         setSelectedPayrollId(payrollId);
