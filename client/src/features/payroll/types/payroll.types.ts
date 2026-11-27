@@ -264,3 +264,27 @@ export type ReviewPayrollResponse = {
 };
 
 export type OnViewPayslips = (year: number, month: number) => void;
+
+export type ProcessedPayrollSummary = {
+    id: string;
+    month: number;
+    year: number;
+    totalEmployees: number;
+    totalGross: PayrollAmount;
+    totalPaye: PayrollAmount;
+    totalNetPay: PayrollAmount;
+};
+
+export type PayrollOverviewData = {
+    latestPayroll: ProcessedPayrollSummary | null;
+    inProgressPayroll: {
+        id: string;
+        month: number;
+        year: number;
+        status: Extract<
+            PayrollStatus,
+            "DRAFT" | "CALCULATED" | "REVIEWED" | "APPROVED"
+        >;
+    } | null;
+    recentProcessedPayrolls: ProcessedPayrollSummary[];
+};
