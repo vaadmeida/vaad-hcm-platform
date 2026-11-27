@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AppError } from "../../errors/appError.ts";
 import { getPayrollsQuerySchema, preparePayrollSchema } from "./payroll.validator.ts";
-import { approvePayroll, calculateMonthlyPayroll, deletePayroll, getPayrollById, getPayrolls, preparePayroll, processPayroll, reviewPayroll } from "./payslip.service.ts";
+import { approvePayroll, calculateMonthlyPayroll, deletePayroll, getPayrollById, getPayrollOverview, getPayrolls, preparePayroll, processPayroll, reviewPayroll } from "./payslip.service.ts";
 
 export const preparePayrollController = async (
     req: Request,
@@ -236,4 +236,17 @@ export const deletePayrollController = async (
     await deletePayroll(payrollId);
 
     return res.status(204).send();
+};
+
+export const getPayrollOverviewController = async (
+    _req: Request,
+    res: Response
+) => {
+    const data = await getPayrollOverview();
+
+    return res.status(200).json({
+        success: true,
+        message: "Payroll overview retrieved successfully.",
+        data,
+    });
 };
